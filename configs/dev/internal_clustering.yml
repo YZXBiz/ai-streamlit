@@ -1,0 +1,51 @@
+# Development environment configuration for internal clustering
+
+job:
+  kind: internal_clustering
+
+  # Override logger configuration for development
+  logger_service:
+    level: DEBUG
+    file: logs/dev_internal_clustering_{time:YYYY-MM-DD}.log
+
+  # Data source configuration
+  source:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: dev/internal/preprocessed_data.parquet
+    format: parquet
+
+  # Clustering parameters
+  params:
+    algorithm: kmeans
+    n_clusters: 5
+    random_state: 42
+
+    # Feature importance - specific to development environment
+    feature_weights:
+      revenue: 1.5
+      transactions: 1.0
+      basket_size: 1.2
+      customer_count: 1.0
+      sales_per_sq_ft: 1.3
+      inventory_turns: 0.8
+      profit_margin: 1.4
+
+    # Experiment tracking
+    mlflow:
+      experiment_name: internal_clustering_dev
+      tags:
+        env: "development"
+        version: "dev-1.0"
+
+  # Output configuration
+  output:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: dev/internal/clustering_results.parquet
+    format: parquet
+
+    # Visualization outputs
+    visualizations:
+      enabled: true
+      output_dir: outputs/dev/internal_clustering_visuals

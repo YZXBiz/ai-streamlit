@@ -1,0 +1,58 @@
+# Internal Clustering Configuration
+
+job:
+  kind: internal_clustering # Job type
+
+  # Logger configuration
+  logger_service:
+    level: INFO
+    format: "[{time:YYYY-MM-DD HH:mm:ss}] {level} | {message}"
+    file: logs/internal_clustering_{time:YYYY-MM-DD}.log
+
+  # Alerts configuration
+  alerts_service:
+    enabled: true
+    threshold: WARNING
+
+  # Data source configuration
+  source:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: internal/preprocessed_data.parquet
+    format: parquet
+
+  # Clustering parameters
+  params:
+    algorithm: kmeans
+    n_clusters: 5
+    random_state: 42
+
+    # Feature importance
+    feature_weights:
+      revenue: 1.5
+      transactions: 1.0
+      basket_size: 1.2
+      customer_count: 1.0
+      sales_per_sq_ft: 1.3
+      inventory_turns: 0.8
+      profit_margin: 1.4
+
+    # Experiment tracking
+    mlflow:
+      enabled: true
+      experiment_name: internal_clustering
+      tags:
+        version: "1.0"
+        env: "production"
+
+  # Output configuration
+  output:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: internal/clustering_results.parquet
+    format: parquet
+
+    # Visualization outputs
+    visualizations:
+      enabled: true
+      output_dir: outputs/internal_clustering_visuals

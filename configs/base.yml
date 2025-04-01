@@ -1,0 +1,22 @@
+# Base configuration for all jobs
+# This file contains common settings that are shared across all job types
+
+job:
+  # Default logger configuration
+  logger_service:
+    level: INFO
+    format: "[{time:YYYY-MM-DD HH:mm:ss}] {level} | {message}"
+
+  # Default alerts configuration
+  alerts_service:
+    enabled: false
+    threshold: WARNING
+
+  # Common parameters
+  params:
+    # MLflow tracking
+    mlflow:
+      enabled: true
+      tags:
+        version: "1.0"
+        source: "clustering-pipeline"

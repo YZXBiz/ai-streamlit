@@ -1,0 +1,50 @@
+# Internal Preprocessing Configuration
+
+job:
+  kind: internal_preprocessing # Job type
+
+  # Logger configuration
+  logger_service:
+    level: INFO
+    format: "[{time:YYYY-MM-DD HH:mm:ss}] {level} | {message}"
+    file: logs/internal_preprocessing_{time:YYYY-MM-DD}.log
+
+  # Alerts configuration
+  alerts_service:
+    enabled: true
+    threshold: WARNING
+
+  # Data source configuration
+  source:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: internal/raw_data.csv
+
+  # Preprocessing parameters
+  params:
+    features_to_include:
+      - store_id
+      - revenue
+      - transactions
+      - basket_size
+      - customer_count
+      - sales_per_sq_ft
+      - inventory_turns
+      - profit_margin
+
+    outlier_removal:
+      method: iqr
+      threshold: 1.5
+
+    imputation:
+      method: mean
+
+    scaling:
+      method: standard
+
+  # Output configuration
+  output:
+    type: azure_blob
+    container: ${CONTAINER_NAME}
+    path: internal/preprocessed_data.parquet
+    format: parquet
