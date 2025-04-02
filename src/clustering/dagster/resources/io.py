@@ -5,7 +5,8 @@ from typing import Any, Dict
 import dagster as dg
 from pydantic import BaseModel
 
-from clustering.io import datasets, services
+from clustering.infra import AlertingService, LoggerService
+from clustering.io import CSVReader, CSVWriter, ParquetReader, ParquetWriter, Reader, Writer
 
 
 class LoggingSchema(BaseModel):
@@ -16,7 +17,7 @@ class LoggingSchema(BaseModel):
 
 
 @dg.resource(config_schema=LoggingSchema.model_json_schema())
-def logger_service(context: dg.InitResourceContext) -> services.LoggerService:
+def logger_service(context: dg.InitResourceContext) -> LoggerService:
     """Resource for logging.
 
     Args:
@@ -28,7 +29,7 @@ def logger_service(context: dg.InitResourceContext) -> services.LoggerService:
     sink = context.resource_config["sink"]
     level = context.resource_config["level"]
 
-    logger = services.LoggerService(sink=sink, level=level)
+    logger = LoggerService(sink=sink, level=level)
     logger.start()
 
     @context.resource_cleanup_fn
@@ -43,22 +44,32 @@ class AlertsSchema(BaseModel):
 
     enabled: bool = True
     threshold: str = "WARNING"
+    slack_webhook: str | None = None
+    channels: list[str] = ["slack"]
+    email_recipients: list[str] = []
 
 
 @dg.resource(config_schema=AlertsSchema.model_json_schema())
-def alerts_service(context: dg.InitResourceContext) -> services.AlertsService:
+def alerts_service(context: dg.InitResourceContext) -> AlertingService:
     """Resource for alerts.
 
     Args:
         context: The context for initializing the resource.
 
     Returns:
-        AlertsService: A configured alerts service.
+        AlertingService: A configured alerts service.
     """
-    enabled = context.resource_config["enabled"]
-    threshold = context.resource_config["threshold"]
+    config = context.resource_config
 
-    alerts = services.AlertsService(enabled=enabled, threshold=threshold)
+    alerts = AlertingService(
+        enabled=config.get("enabled", True),
+        threshold=config.get("threshold", "WARNING"),
+        channels=config.get("channels", ["slack"]),
+        slack_webhook=config.get("slack_webhook"),
+        email_recipients=config.get("email_recipients", []),
+        alertmanager_url="http://localhost:9093",  # Default value
+        logger=context.log,
+    )
     alerts.start()
 
     @context.resource_cleanup_fn
@@ -76,7 +87,7 @@ class ReaderSchema(BaseModel):
 
 
 @dg.resource(config_schema=ReaderSchema.model_json_schema())
-def data_reader(context: dg.InitResourceContext) -> datasets.Reader:
+def data_reader(context: dg.InitResourceContext) -> Reader:
     """Resource for reading data.
 
     Args:
@@ -90,15 +101,27 @@ def data_reader(context: dg.InitResourceContext) -> datasets.Reader:
 
     # Create reader based on kind
     reader_map = {
-        "ParquetReader": datasets.ParquetReader,
-        "ExcelReader": datasets.ExcelReader,
-        "CSVReader": datasets.CSVReader,
-        "PickleReader": datasets.PickleReader,
-        "SnowflakeReader": datasets.SnowflakeReader,
-        "BlobReader": datasets.BlobReader,
+        "ParquetReader": ParquetReader,
+        "CSVReader": CSVReader,
     }
 
+    # Check if requested reader exists in our map
     reader_cls = reader_map.get(kind)
+    if not reader_cls:
+        # Try to dynamically import from datasets for backwards compatibility
+        try:
+            from clustering.io.datasets import BlobReader, ExcelReader, PickleReader, SnowflakeReader
+
+            extended_map = {
+                "ExcelReader": ExcelReader,
+                "PickleReader": PickleReader,
+                "SnowflakeReader": SnowflakeReader,
+                "BlobReader": BlobReader,
+            }
+            reader_cls = extended_map.get(kind)
+        except ImportError:
+            reader_cls = None
+
     if not reader_cls:
         raise ValueError(f"Unknown reader kind: {kind}")
 
@@ -113,7 +136,7 @@ class WriterSchema(BaseModel):
 
 
 @dg.resource(config_schema=WriterSchema.model_json_schema())
-def data_writer(context: dg.InitResourceContext) -> datasets.Writer:
+def data_writer(context: dg.InitResourceContext) -> Writer:
     """Resource for writing data.
 
     Args:
@@ -127,15 +150,27 @@ def data_writer(context: dg.InitResourceContext) -> datasets.Writer:
 
     # Create writer based on kind
     writer_map = {
-        "ParquetWriter": datasets.ParquetWriter,
-        "ExcelWriter": datasets.ExcelWriter,
-        "CSVWriter": datasets.CSVWriter,
-        "PickleWriter": datasets.PickleWriter,
-        "SnowflakeWriter": datasets.SnowflakeWriter,
-        "BlobWriter": datasets.BlobWriter,
+        "ParquetWriter": ParquetWriter,
+        "CSVWriter": CSVWriter,
     }
 
+    # Check if requested writer exists in our map
     writer_cls = writer_map.get(kind)
+    if not writer_cls:
+        # Try to dynamically import from datasets for backwards compatibility
+        try:
+            from clustering.io.datasets import BlobWriter, ExcelWriter, PickleWriter, SnowflakeWriter
+
+            extended_map = {
+                "ExcelWriter": ExcelWriter,
+                "PickleWriter": PickleWriter,
+                "SnowflakeWriter": SnowflakeWriter,
+                "BlobWriter": BlobWriter,
+            }
+            writer_cls = extended_map.get(kind)
+        except ImportError:
+            writer_cls = None
+
     if not writer_cls:
         raise ValueError(f"Unknown writer kind: {kind}")
 

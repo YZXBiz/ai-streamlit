@@ -34,18 +34,18 @@ def clustering_config(context: dg.InitResourceContext) -> SimpleNamespace:
     # Load base config if it exists
     base_config = {}
     if os.path.exists(base_config_path):
-        with open(base_config_path, "r") as f:
+        with open(base_config_path) as f:
             base_config = yaml.safe_load(f)
 
     # Load environment-specific config if it exists
     env_config = {}
     env_config_path = os.path.join(os.path.dirname(config_path), env, os.path.basename(config_path))
     if os.path.exists(env_config_path):
-        with open(env_config_path, "r") as f:
+        with open(env_config_path) as f:
             env_config = yaml.safe_load(f)
 
     # Load specific config
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config_data = yaml.safe_load(f)
 
     # Merge configs with priority: base < env < specific

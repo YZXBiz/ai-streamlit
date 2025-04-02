@@ -15,22 +15,23 @@ from clustering.utils.data_processing import clean_ns, create_cat_dict, distribu
     key_prefix="raw",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"input_sales_reader", "config"},
 )
 def internal_sales_data(
     context: dg.AssetExecutionContext,
-    input_sales_reader=dg.ResourceParam(dg.InitResourceContext),
 ) -> pl.DataFrame:
     """Load raw internal sales data.
 
     Args:
         context: Asset execution context
-        input_sales_reader: Reader for sales data
 
     Returns:
         DataFrame containing raw sales data
     """
     context.log.info("Reading sales data")
-    sales_data_raw = input_sales_reader.read()
+
+    # Use the dedicated reader resource
+    sales_data_raw = context.resources.input_sales_reader.read()
 
     # Convert to Polars if needed
     if not isinstance(sales_data_raw, pl.DataFrame):
@@ -38,8 +39,18 @@ def internal_sales_data(
     else:
         sales_data = sales_data_raw
 
+    # Get validation config (if available)
+    try:
+        validation_config = context.resources.config.load("data_validation")
+        strict_validation = validation_config.get("strict", False)
+    except Exception:
+        strict_validation = False
+        context.log.info("Using default validation settings (non-strict)")
+
     # Validate the sales data
-    sales_data_validated = validate_dataframe(sales_data, schemas.InputsSalesSchema, context.log)
+    sales_data_validated = validate_dataframe(
+        sales_data, schemas.InputsSalesSchema, context.log, strict=strict_validation
+    )
 
     return sales_data_validated
 
@@ -49,22 +60,23 @@ def internal_sales_data(
     key_prefix="raw",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"input_need_state_reader", "config"},
 )
 def internal_need_state_data(
     context: dg.AssetExecutionContext,
-    input_need_state_reader=dg.ResourceParam(dg.InitResourceContext),
 ) -> pl.DataFrame:
     """Load raw internal need state data.
 
     Args:
         context: Asset execution context
-        input_need_state_reader: Reader for need state data
 
     Returns:
         DataFrame containing cleaned need state data
     """
     context.log.info("Reading need state data")
-    ns_data_raw = input_need_state_reader.read()
+
+    # Use the dedicated reader resource
+    ns_data_raw = context.resources.input_need_state_reader.read()
 
     # Convert to Polars if needed
     if not isinstance(ns_data_raw, pl.DataFrame):
@@ -72,8 +84,16 @@ def internal_need_state_data(
     else:
         ns_data = ns_data_raw
 
+    # Get validation config (if available)
+    try:
+        validation_config = context.resources.config.load("data_validation")
+        strict_validation = validation_config.get("strict", False)
+    except Exception:
+        strict_validation = False
+        context.log.info("Using default validation settings (non-strict)")
+
     # Validate the need state data
-    ns_data_validated = validate_dataframe(ns_data, schemas.InputsNSSchema, context.log)
+    ns_data_validated = validate_dataframe(ns_data, schemas.InputsNSSchema, context.log, strict=strict_validation)
 
     # Clean need state data
     context.log.info("Cleaning need state data")
@@ -150,26 +170,28 @@ def internal_category_data(
     deps=["merged_internal_data"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"output_sales_writer"},
 )
 def preprocessed_internal_sales(
     context: dg.AssetExecutionContext,
     merged_internal_data: pl.DataFrame,
-    output_sales_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> None:
     """Save preprocessed internal sales data.
 
     Args:
         context: Asset execution context
         merged_internal_data: Merged and distributed data
-        output_sales_writer: Writer for output sales data
     """
     context.log.info("Saving preprocessed sales data")
 
+    # Use the configured writer resource
+    output_writer = context.resources.output_sales_writer
+
     # Check if the writer expects Pandas DataFrame
-    if hasattr(output_sales_writer, "requires_pandas") and output_sales_writer.requires_pandas:
-        output_sales_writer.write(data=merged_internal_data.to_pandas())
+    if hasattr(output_writer, "requires_pandas") and output_writer.requires_pandas:
+        output_writer.write(data=merged_internal_data.to_pandas())
     else:
-        output_sales_writer.write(data=merged_internal_data)
+        output_writer.write(data=merged_internal_data)
 
     return None
 
@@ -179,25 +201,27 @@ def preprocessed_internal_sales(
     deps=["internal_category_data"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"output_sales_percent_writer"},
 )
 def preprocessed_internal_sales_percent(
     context: dg.AssetExecutionContext,
     internal_category_data: Dict[str, pl.DataFrame],
-    output_sales_percent_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> None:
     """Save preprocessed internal sales percentage data.
 
     Args:
         context: Asset execution context
         internal_category_data: Dictionary of category-specific dataframes
-        output_sales_percent_writer: Writer for output sales percent data
     """
     context.log.info("Saving preprocessed sales percent data")
 
+    # Use the configured writer resource
+    output_writer = context.resources.output_sales_percent_writer
+
     # Check if the writer expects Pandas DataFrame
-    if hasattr(output_sales_percent_writer, "requires_pandas") and output_sales_percent_writer.requires_pandas:
-        output_sales_percent_writer.write(data={k: df.to_pandas() for k, df in internal_category_data.items()})
+    if hasattr(output_writer, "requires_pandas") and output_writer.requires_pandas:
+        output_writer.write(data={k: df.to_pandas() for k, df in internal_category_data.items()})
     else:
-        output_sales_percent_writer.write(data=internal_category_data)
+        output_writer.write(data=internal_category_data)
 
     return None

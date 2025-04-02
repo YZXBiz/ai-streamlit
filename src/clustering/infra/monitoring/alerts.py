@@ -1,15 +1,14 @@
-"""Alerting service for Dagster pipelines.
-Author: Jackson Yang
-Date: 2025-04-02
+"""Alert service for the clustering pipeline.
+
+This is a Pydantic-based implementation for alerts that supports multiple channels.
 """
 
 import json
 import logging
-import os
+from typing import Any, Dict, List, Optional
 
-import dagster as dg
 import requests
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 class AlertConfig(BaseModel):
@@ -17,9 +16,9 @@ class AlertConfig(BaseModel):
 
     enabled: bool = Field(True, description="Whether alerting is enabled")
     threshold: str = Field("ERROR", description="Minimum log level to trigger alerts")
-    channels: list[str] = Field(["email"], description="Alert channels to use")
-    slack_webhook: str | None = Field(None, description="Slack webhook URL")
-    email_recipients: list[str | EmailStr] = Field(["Jackson.Yang@cvshealth.com"], description="Email recipients")
+    channels: List[str] = Field(["email"], description="Alert channels to use")
+    slack_webhook: Optional[str] = Field(None, description="Slack webhook URL")
+    email_recipients: List[str] = Field(["Jackson.Yang@cvshealth.com"], description="Email recipients")
     alertmanager_url: str = Field("http://localhost:9093", description="Prometheus Alertmanager URL")
 
     @property
@@ -30,45 +29,18 @@ class AlertConfig(BaseModel):
         return getattr(logging, self.threshold, logging.ERROR)
 
 
-@dg.resource(config_schema=AlertConfig.model_json_schema())
-def alerts_service(context: dg.InitResourceContext) -> "AlertingService":
-    """Resource for sending alerts from Dagster pipelines.
-
-    Args:
-        context: The Dagster resource initialization context
-
-    Returns:
-        AlertingService: Service for sending alerts
-    """
-    config = context.resource_config
-
-    # Get configuration with environment variable fallbacks
-    slack_webhook = config.get("slack_webhook", os.environ.get("SLACK_WEBHOOK_URL"))
-    alertmanager_url = config.get("alertmanager_url", os.environ.get("ALERTMANAGER_URL"))
-
-    return AlertingService(
-        enabled=config.get("enabled", True),
-        threshold=config.get("threshold", "ERROR"),
-        channels=config.get("channels", ["slack"]),
-        slack_webhook=slack_webhook,
-        email_recipients=config.get("email_recipients", []),
-        alertmanager_url=alertmanager_url,
-        logger=context.log,
-    )
-
-
 class AlertingService:
-    """Service for sending alerts from Dagster pipelines."""
+    """Service for sending alerts from pipelines."""
 
     def __init__(
         self,
         enabled: bool,
         threshold: str,
-        channels: list[str],
-        slack_webhook: str | None,
-        email_recipients: list[str],
+        channels: List[str],
+        slack_webhook: Optional[str],
+        email_recipients: List[str],
         alertmanager_url: str,
-        logger,
+        logger: Any,
     ):
         """Initialize the alerting service.
 
@@ -90,11 +62,21 @@ class AlertingService:
         self.alertmanager_url = alertmanager_url
         self.logger = logger
 
+    def start(self) -> None:
+        """Start the alerting service."""
+        # Nothing to do on start
+        pass
+
+    def stop(self) -> None:
+        """Stop the alerting service."""
+        # Nothing to do on stop
+        pass
+
     def alert(
         self,
         message: str,
         level: str = "ERROR",
-        context: dict | None = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """Send an alert.
 
@@ -142,7 +124,7 @@ class AlertingService:
 
         return success
 
-    def _send_slack_alert(self, message: str, metadata: dict) -> bool:
+    def _send_slack_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
         """Send an alert to Slack."""
         if not self.slack_webhook:
             return False
@@ -178,7 +160,7 @@ class AlertingService:
 
         return success
 
-    def _send_email_alert(self, message: str) -> bool:
+    def _send_email_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
         """Send an alert via email.
 
         Args:
@@ -193,12 +175,12 @@ class AlertingService:
         self.logger.info("Would send email to %s: %s", self.email_recipients, message)
         return True
 
-    def _send_alertmanager_alert(self, message: str, metadata: dict) -> bool:
+    def _send_alertmanager_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
         """Send an alert to Alertmanager."""
         if not self.alertmanager_url:
             return False
 
-        # Prepare OpsGenie alert payload
+        # Prepare Alertmanager alert payload
         payload = {
             "message": message,
             "description": json.dumps(metadata, indent=2),
@@ -211,58 +193,14 @@ class AlertingService:
             payload["alias"] = f"dagster-{metadata['run_id']}"
 
         response = requests.post(
-            "https://api.opsgenie.com/v2/alerts",
+            f"{self.alertmanager_url}/api/v1/alerts",
             json=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"GenieKey {self.opsgenie_api_key}",
-            },
+            headers={"Content-Type": "application/json"},
             timeout=10,
         )
 
         success = 200 <= response.status_code < 300
         if not success:
-            self.logger.error("OpsGenie alert failed with status %s: %s", response.status_code, response.text)
+            self.logger.error("Alertmanager alert failed with status %s: %s", response.status_code, response.text)
 
         return success
-
-
-@dg.failure_hook
-def send_failure_alert(context):
-    """Failure hook for sending alerts on pipeline failures.
-
-    Args:
-        context: The hook context
-    """
-    # Try to get the alerts service
-    try:
-        alerts = context.resources.alerts
-
-        # Extract failure information
-        failure_event = context.failure_event
-        failure_metadata = failure_event.metadata
-        step_key = context.step.key
-
-        # Build meaningful error message
-        error_message = f"Pipeline step '{step_key}' failed: {failure_event.message}"
-
-        # Add context for the alert
-        context_data = {
-            "run_id": context.run_id,
-            "step_key": step_key,
-            "job_name": context.job_name,
-            "failure_time": failure_event.timestamp,
-        }
-
-        if "error_stack" in failure_metadata:
-            context_data["error_stack"] = failure_metadata["error_stack"]
-
-        # Send the alert
-        alerts.alert(
-            message=error_message,
-            level="ERROR",
-            context=context_data,
-        )
-    except Exception:
-        # Fallback logging if alerting fails
-        context.log.exception("Failed to send failure alert!")

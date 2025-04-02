@@ -1,14 +1,18 @@
-"""Resources for Dagster pipelines."""
+"""Resources for the clustering pipeline."""
 
-from clustering.dagster.resources.config import clustering_config
-from clustering.dagster.resources.io import alerts_service, data_reader, data_writer, logger_service
-from clustering.dagster.resources.io_manager import clustering_io_manager
+from dagster import IOManager
+
+from .alerting import alerts_service
+from .config import clustering_config
+from .data_sources import data_writer, need_state_data_reader, sales_data_reader
+from .io import clustering_io_manager, logger_service
 
 __all__ = [
     "clustering_config",
     "logger_service",
     "alerts_service",
-    "data_reader",
-    "data_writer",
     "clustering_io_manager",
+    "sales_data_reader",
+    "need_state_data_reader",
+    "data_writer",
 ]

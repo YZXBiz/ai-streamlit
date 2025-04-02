@@ -1,7 +1,5 @@
 """Dagster definitions for the clustering pipeline."""
 
-from typing import Dict
-
 import dagster as dg
 
 from clustering.dagster.assets import (
@@ -24,7 +22,12 @@ from clustering.dagster.assets import (
     preprocessed_internal_sales,
     preprocessed_internal_sales_percent,
 )
-from clustering.dagster.resources import alerts_service, clustering_config, clustering_io_manager, logger_service
+from clustering.dagster.resources import (
+    alerts_service,
+    clustering_config,
+    clustering_io_manager,
+    logger_service,
+)
 from clustering.dagster.schedules import (
     daily_internal_clustering_schedule,
     monthly_full_pipeline_schedule,
@@ -33,7 +36,7 @@ from clustering.dagster.schedules import (
 
 
 # Define resource config by environment
-def get_resources_by_env(env: str = "dev") -> Dict[str, dg.ResourceDefinition]:
+def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     """Get resource definitions based on environment.
 
     Args:
@@ -44,9 +47,13 @@ def get_resources_by_env(env: str = "dev") -> Dict[str, dg.ResourceDefinition]:
     """
     base_resources = {
         # IO Manager
-        "io_manager": clustering_io_manager.configured({"base_dir": f"outputs/dagster_storage/{env}"}),
+        "io_manager": clustering_io_manager.configured(
+            {"base_dir": f"outputs/dagster_storage/{env}"}
+        ),
         # Config
-        "config": clustering_config.configured({"env": env, "config_path": "configs/internal_clustering.yml"}),
+        "config": clustering_config.configured(
+            {"env": env, "config_path": "configs/internal_clustering.yml"}
+        ),
         # Logger
         "logger": logger_service.configured({"sink": f"logs/dagster_{env}.log", "level": "INFO"}),
         # Alerts

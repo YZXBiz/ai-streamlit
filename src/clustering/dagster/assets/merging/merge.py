@@ -18,7 +18,7 @@ def merged_clusters(
     context: dg.AssetExecutionContext,
     internal_clustering_output: pl.DataFrame,
     external_clustering_output: pl.DataFrame,
-) -> Dict[str, pl.DataFrame]:
+) -> dict[str, pl.DataFrame]:
     """Merge internal and external clustering results.
 
     Args:
@@ -82,7 +82,7 @@ def merged_clusters(
 )
 def merged_clusters_output(
     context: dg.AssetExecutionContext,
-    merged_clusters: Dict[str, pl.DataFrame],
+    merged_clusters: dict[str, pl.DataFrame],
     merged_output_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> None:
     """Save merged clustering results.
@@ -101,4 +101,4 @@ def merged_clusters_output(
     else:
         merged_output_writer.write(data=merged_clusters)
 
-    return None
+    return

@@ -1,10 +1,11 @@
 """Configuration management resource for Dagster pipelines."""
 
 import os
-from typing import Any, Dict
+from collections.abc import Callable
+from typing import Any
 
 import dagster as dg
-import yaml
+import yaml  # type: ignore # We know yaml exists at runtime
 from pydantic import BaseModel, Field
 
 from clustering.core.schemas import ClusteringConfig
@@ -17,8 +18,41 @@ class ConfigLoaderSchema(BaseModel):
     config_dir: str = Field("configs", description="Directory containing configuration files")
 
 
+class ConfigAccessor:
+    """Class for accessing configuration."""
+
+    def __init__(self, load_fn: Callable[[str], dict[str, Any]], env: str):
+        """Initialize the config accessor.
+
+        Args:
+            load_fn: Function to load configuration
+            env: Environment name
+        """
+        self._load_fn = load_fn
+        self._env = env
+
+    def load(self, config_name: str) -> dict[str, Any]:
+        """Load configuration by name.
+
+        Args:
+            config_name: Name of the configuration to load
+
+        Returns:
+            Dictionary of configuration values
+        """
+        return self._load_fn(config_name)
+
+    def get_env(self) -> str:
+        """Get current environment.
+
+        Returns:
+            Environment name
+        """
+        return self._env
+
+
 @dg.resource(config_schema=ConfigLoaderSchema.model_json_schema())
-def config_loader(context: dg.InitResourceContext) -> Dict[str, Any]:
+def config_loader(context: dg.InitResourceContext) -> ConfigAccessor:
     """Resource that loads configuration from YAML with environment awareness.
 
     Loads configurations in the following order, with later configs overriding earlier ones:
@@ -30,22 +64,27 @@ def config_loader(context: dg.InitResourceContext) -> Dict[str, Any]:
         context: The Dagster resource initialization context
 
     Returns:
-        Dict containing merged configuration
+        ConfigAccessor: Object for accessing configuration
     """
     env = context.resource_config["env"]
     config_dir = context.resource_config["config_dir"]
+    logger = context.log
 
-    def load_yaml(path: str) -> Dict[str, Any]:
+    def load_yaml(path: str) -> dict[str, Any]:
         """Load YAML file if it exists."""
         if not os.path.exists(path):
-            context.log.debug(f"Config file not found: {path}")
+            # Safe access to logger which might be None
+            if logger is not None:
+                logger.debug(f"Config file not found: {path}")
             return {}
 
-        with open(path, "r") as f:
-            context.log.debug(f"Loading config from {path}")
+        with open(path) as f:
+            # Safe access to logger which might be None
+            if logger is not None:
+                logger.debug(f"Loading config from {path}")
             return yaml.safe_load(f) or {}
 
-    def load_config(config_name: str) -> Dict[str, Any]:
+    def load_config(config_name: str) -> dict[str, Any]:
         """Load and merge configuration files for a specific config."""
         # Base config
         base_path = os.path.join(config_dir, "base", f"{config_name}.yml")
@@ -68,14 +107,5 @@ def config_loader(context: dg.InitResourceContext) -> Dict[str, Any]:
 
         return merged
 
-    # Create a config object with methods to load different configs
-    class ConfigAccessor:
-        def load(self, config_name: str) -> Dict[str, Any]:
-            """Load configuration by name."""
-            return load_config(config_name)
-
-        def get_env(self) -> str:
-            """Get current environment."""
-            return env
-
-    return ConfigAccessor()
+    # Create and return the configuration accessor
+    return ConfigAccessor(load_config, env)
