@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import abc
 import contextlib as ctx
+import typing as T
 from datetime import datetime
 from pathlib import Path
-import typing as T
 
 import loguru
 import mlflow

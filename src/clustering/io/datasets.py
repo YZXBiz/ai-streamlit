@@ -2,22 +2,23 @@
 
 # %% IMPORTS
 import abc
-from io import BytesIO
 import io
-import os
-from pathlib import Path
-import typing as T
-import pickle
-import pandas as pd
-import pydantic as pdt
-from clustering.config import SETTINGS
-import snowflake.connector
-from snowflake.connector.pandas_tools import write_pandas
-import warnings
-import polars as pl
 import json
-from azure.storage.blob import BlobClient
+import os
+import pickle
+import typing as T
+import warnings
+from io import BytesIO
+from pathlib import Path
+
 import duckdb
+import polars as pl
+import pydantic as pdt
+import snowflake.connector
+from azure.storage.blob import BlobClient
+from snowflake.connector.pandas_tools import write_pandas
+
+from clustering.config import SETTINGS
 
 # snowflake has a warning about the sqlalchemy; not important
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -41,11 +42,11 @@ class Reader(abc.ABC, pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
     path: str | None = None
 
     @abc.abstractmethod
-    def read(self) -> pd.DataFrame:
+    def read(self) -> pl.DataFrame:
         """Read a dataframe from a dataset.
 
         Returns:
-            pd.DataFrame: dataframe representation.
+            pl.DataFrame: dataframe representation.
         """
 
 
@@ -62,9 +63,8 @@ class ParquetReader(Reader):
     backend: T.Literal["pyarrow", "numpy_nullable"] = "pyarrow"
 
     @T.override
-    def read(self) -> pd.DataFrame:
-        # can't limit rows at read time
-        data = pd.read_parquet(self.path, dtype_backend="pyarrow")
+    def read(self) -> pl.DataFrame:
+        data = pl.read_parquet(self.path, dtype_backend="pyarrow")
         if self.limit is not None:
             data = data.head(self.limit)
         return data
@@ -83,8 +83,8 @@ class ExcelReader(Reader):
     path: str
     sheet_name: str | int | None = 0
 
-    def read(self) -> pd.DataFrame:
-        data = pd.read_excel(self.path, sheet_name=self.sheet_name, engine="openpyxl")
+    def read(self) -> pl.DataFrame:
+        data = pl.read_excel(self.path, sheet_name=self.sheet_name, engine="openpyxl")
         if self.limit is not None:
             data = data.head(self.limit)  # type: ignore
         return data  # type: ignore
@@ -101,8 +101,8 @@ class CSVReader(Reader):
 
     path: str
 
-    def read(self) -> pd.DataFrame:
-        data = pd.read_csv(self.path)
+    def read(self) -> pl.DataFrame:
+        data = pl.read_csv(self.path)
         if self.limit is not None:
             data = data.head(self.limit)
         return data
@@ -119,7 +119,7 @@ class PickleReader(Reader):
 
     path: str
 
-    def read(self) -> pd.DataFrame:
+    def read(self) -> pl.DataFrame:
         with open(self.path, "rb") as file:
             data = pickle.load(file)
         if self.limit is not None:
@@ -148,7 +148,7 @@ class SnowflakeReader(Reader):
     creds_path: str = str(Path(SETTINGS.ROOT_DIR) / "creds/sf_creds.json")
 
     def _create_connection(self) -> snowflake.connector.SnowflakeConnection:
-        pkb = pd.read_pickle(self.pkb_path)
+        pkb = pl.read_pickle(self.pkb_path)
         with open(self.creds_path, "r") as file:
             sf_params = json.loads(file.read())
 
@@ -163,26 +163,26 @@ class SnowflakeReader(Reader):
         )
         return conn
 
-    def _load_cache(self) -> pd.DataFrame | None:
+    def _load_cache(self) -> pl.DataFrame | None:
         if os.path.exists(self.cache_file):
             conn = duckdb.connect(self.cache_file)
             try:
                 result = conn.execute("SELECT data FROM cache WHERE query = ?", (self.query,)).fetchone()
                 if result:
                     # Deserialize the binary format back to a DataFrame
-                    data = pd.read_parquet(io.BytesIO(result[0]))
+                    data = pl.read_parquet(io.BytesIO(result[0]))
                     return data
             except duckdb.CatalogException as e:
                 print("DuckDB CatalogException:", e)
         return None
 
-    def _save_cache(self, data: pd.DataFrame) -> None:
+    def _save_cache(self, data: pl.DataFrame) -> None:
         conn = duckdb.connect(self.cache_file)
         conn.execute("CREATE TABLE IF NOT EXISTS cache (query VARCHAR, data BLOB)")
         data_blob = data.to_parquet()
         conn.execute("INSERT INTO cache VALUES (?, ?)", (self.query, data_blob))
 
-    def read(self) -> pd.DataFrame:
+    def read(self) -> pl.DataFrame:
         # Check if the query result is already cached
         if self.use_cache:
             cached_data = self._load_cache()
@@ -195,13 +195,12 @@ class SnowflakeReader(Reader):
             query=self.query,
             connection=conn,
         )
-        data = df.to_pandas()
         # Cache the result
-        self._save_cache(data)
+        self._save_cache(df)
 
         if self.limit is not None:
-            data = data.head(self.limit)
-        return data
+            df = df.head(self.limit)
+        return df
 
 
 class BlobReader(Reader):
@@ -219,7 +218,7 @@ class BlobReader(Reader):
     # Configuration
     max_concurrency: int = 8
 
-    def read(self) -> pd.DataFrame:
+    def read(self) -> pl.DataFrame:
         _blob_client = BlobClient(
             account_url=SETTINGS.ACCOUNT_URL,
             container_name=SETTINGS.CONTAINER_NAME,
@@ -237,9 +236,9 @@ class BlobReader(Reader):
         file_extension = os.path.splitext(self.blob_name)[1].lower()
 
         if file_extension == ".csv":
-            data = pd.read_csv(BytesIO(blob_data))
+            data = pl.read_csv(BytesIO(blob_data))
         elif file_extension == ".parquet":
-            data = pd.read_parquet(BytesIO(blob_data))
+            data = pl.read_parquet(BytesIO(blob_data))
         elif file_extension == ".pkl" or file_extension == ".pickle":
             data = pickle.loads(blob_data)
         else:
@@ -269,11 +268,11 @@ class Writer(abc.ABC, pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
     KIND: str
 
     @abc.abstractmethod
-    def write(self, data: pd.DataFrame | T.Any) -> None:
+    def write(self, data: pl.DataFrame | T.Any) -> None:
         """Write a dataframe to a dataset.
 
         Args:
-            data (pd.DataFrame): dataframe representation.
+            data (pl.DataFrame): dataframe representation.
         """
 
 
@@ -288,8 +287,8 @@ class ParquetWriter(Writer):
 
     path: str
 
-    def write(self, data: pd.DataFrame) -> None:
-        pd.DataFrame.to_parquet(data, self.path)
+    def write(self, data: pl.DataFrame) -> None:
+        pl.DataFrame.to_parquet(data, self.path)
 
 
 class ExcelWriter(Writer):
@@ -305,8 +304,8 @@ class ExcelWriter(Writer):
     path: str
     sheet_name: str = "Store-Cluster"
 
-    def write(self, data: pd.DataFrame) -> None:
-        pd.DataFrame.to_excel(data, self.path, sheet_name=self.sheet_name, index=False)
+    def write(self, data: pl.DataFrame) -> None:
+        pl.DataFrame.to_excel(data, self.path, sheet_name=self.sheet_name, index=False)
 
 
 class CSVWriter(Writer):
@@ -320,8 +319,8 @@ class CSVWriter(Writer):
 
     path: str
 
-    def write(self, data: pd.DataFrame) -> None:
-        pd.DataFrame.to_csv(self=data, path_or_buf=self.path, index=False)
+    def write(self, data: pl.DataFrame) -> None:
+        pl.DataFrame.to_csv(self=data, path_or_buf=self.path, index=False)
 
 
 class PickleWriter(Writer):
@@ -335,7 +334,7 @@ class PickleWriter(Writer):
 
     path: str
 
-    def write(self, data: pd.DataFrame) -> None:
+    def write(self, data: pl.DataFrame) -> None:
         with open(self.path, "wb") as file:
             pickle.dump(data, file)
 
@@ -356,7 +355,7 @@ class SnowflakeWriter(Writer):
     creds_path: str = str(Path(SETTINGS.ROOT_DIR) / "creds/sf_creds.json")
 
     def _create_connection(self) -> snowflake.connector.SnowflakeConnection:
-        pkb = pd.read_pickle(self.pkb_path)
+        pkb = pl.read_pickle(self.pkb_path)
         with open(self.creds_path, "r") as file:
             sf_params = json.loads(file.read())
 
@@ -371,7 +370,7 @@ class SnowflakeWriter(Writer):
         )
         return conn
 
-    def write(self, data: pd.DataFrame) -> None:
+    def write(self, data: pl.DataFrame) -> None:
         conn = self._create_connection()
         write_pandas(
             conn=conn,  # type: ignore
@@ -407,7 +406,7 @@ class BlobWriter(Writer):
         buffer = BytesIO()
         file_extension = os.path.splitext(self.blob_name)[1].lower()
 
-        if isinstance(data, pd.DataFrame):
+        if isinstance(data, pl.DataFrame):
             if file_extension == ".csv":
                 data.to_csv(buffer, index=False)
             elif file_extension == ".parquet":

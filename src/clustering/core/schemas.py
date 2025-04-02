@@ -2,13 +2,20 @@
 
 import typing as T
 
+import numpy as np
 import pandas as pd
 import pandera as pa
 import pandera.typing as papd
 import polars as pl
+from pydantic import BaseModel, Field, model_validator
 
 # %% TYPES
 TSchema = T.TypeVar("TSchema", bound="pa.DataFrameModel")
+
+# Type aliases
+Inputs = T.Union[pd.DataFrame, pl.DataFrame, np.ndarray]
+Targets = T.Union[pd.Series, pl.Series, np.ndarray]
+Outputs = T.Union[pd.DataFrame, pl.DataFrame, np.array]
 
 
 # %% SCHEMAS
@@ -96,3 +103,60 @@ class TargetsSchema(Schema):
 
 
 Targets = TargetsSchema  # transformed targets ready for modeling
+
+
+# Data contract definitions for clustering
+class ClusteringConfig(BaseModel):
+    """Configuration for clustering algorithms."""
+
+    algorithm: str = Field("kmeans", description="Clustering algorithm to use")
+    n_clusters: int = Field(5, description="Number of clusters for kmeans", ge=2)
+    random_state: int = Field(42, description="Random state for reproducibility")
+    min_cluster_size: int = Field(5, description="Minimum cluster size for HDBSCAN", ge=3)
+    cluster_selection_epsilon: float = Field(0.0, description="Epsilon for HDBSCAN cluster selection", ge=0.0)
+
+    @model_validator(mode="after")
+    def validate_algorithm_params(self) -> "ClusteringConfig":
+        """Validate that the parameters match the algorithm."""
+        if self.algorithm.lower() == "kmeans" and not hasattr(self, "n_clusters"):
+            raise ValueError("n_clusters is required for kmeans algorithm")
+        if self.algorithm.lower() == "hdbscan" and not hasattr(self, "min_cluster_size"):
+            raise ValueError("min_cluster_size is required for HDBSCAN algorithm")
+        return self
+
+
+class ClusterFeature(BaseModel):
+    """Feature values for a cluster."""
+
+    name: str
+    mean: float
+    median: float = None
+    min: float = None
+    max: float = None
+
+
+class ClusterOutputSchema(BaseModel):
+    """Schema for cluster output data."""
+
+    cluster_id: str
+    size: int = Field(..., gt=0, description="Number of points in the cluster")
+    features: list[ClusterFeature] = Field([], description="Statistical features of the cluster")
+    silhouette_score: float = Field(None, description="Silhouette score for the cluster", ge=-1, le=1)
+
+
+class ClusteringResult(BaseModel):
+    """Overall result of a clustering operation."""
+
+    model_version: str
+    algorithm: str
+    parameters: dict
+    clusters: list[ClusterOutputSchema]
+    metadata: dict = Field(default_factory=dict)
+    timestamp: str
+
+    @model_validator(mode="after")
+    def validate_clusters(self) -> "ClusteringResult":
+        """Validate that clusters exist."""
+        if not self.clusters:
+            raise ValueError("Clustering result must have at least one cluster")
+        return self

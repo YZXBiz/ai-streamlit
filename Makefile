@@ -1,4 +1,4 @@
-.PHONY: install dev-install format lint type-check test clean build run-all
+.PHONY: install update format lint type-check test clean build run-all setup-configs setup-tests run-% help dagster-ui dagster-test dagster-job-% run-dagster-%
 
 # Default Python interpreter
 PYTHON := python3
@@ -14,9 +14,13 @@ CONFIGS_DIR := configs
 # Default environment
 ENV_FILE := .env
 
+# Default Dagster environment
+DAGSTER_ENV := dev
+
 # Install production dependencies
 install:
 	@echo "Sync all dependencies"
+	uv venv
 	uv sync --all-packages 
 
 # Update all dependencies
@@ -88,6 +92,26 @@ run-%:
 	@echo "Run job"
 	uv run -m $(PACKAGE_NAME) $(CONFIGS_DIR)/$*.yml
 
+# Start Dagster UI
+dagster-ui:
+	@echo "Starting Dagster UI with $(DAGSTER_ENV) environment"
+	$(PYTHON) -m $(PACKAGE_NAME).dagster_app --env $(DAGSTER_ENV)
+
+# Run Dagster tests
+dagster-test:
+	@echo "Running Dagster tests"
+	pytest $(TESTS_DIR)/test_dagster_implementation.py -v
+
+# Run a specific Dagster job with the dagster CLI
+dagster-job-%:
+	@echo "Running Dagster job $*"
+	dagster job execute -f $(PACKAGE_NAME).dagster:defs $*
+
+# Run a specific Dagster job with our run_dagster.py script
+run-dagster-%:
+	@echo "Running Dagster job $* in environment $(DAGSTER_ENV)"
+	$(PYTHON) -m $(PACKAGE_NAME).run_dagster $* --env $(DAGSTER_ENV)
+
 # Help
 help:
 	@echo "Available targets:"
@@ -100,6 +124,10 @@ help:
 	@echo "  clean         - Clean build artifacts and cache files"
 	@echo "  build         - Build package"
 	@echo "  run-all       - Run all clustering pipeline"
-	@echo "  run-<job>     - Run a specific job (e.g., make run-internal_clustering)"
+	@echo "  run-<job>     - Run a specific job using legacy method (e.g., make run-internal_clustering)"
 	@echo "  setup-configs - Create configs directory"
-	@echo "  setup-tests   - Create test directories and files" 
+	@echo "  setup-tests   - Create test directories and files"
+	@echo "  dagster-ui    - Start Dagster UI (set DAGSTER_ENV for environment)"
+	@echo "  dagster-test  - Run Dagster tests"
+	@echo "  dagster-job-<job> - Run a specific Dagster job using the dagster CLI"
+	@echo "  run-dagster-<job>  - Run a specific Dagster job using our run_dagster.py script" 

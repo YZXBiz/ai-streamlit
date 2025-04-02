@@ -1,0 +1,83 @@
+# Configuration for Dagster resources
+
+# Environment-specific configurations
+environments:
+  dev:
+    # IO Manager
+    io_manager:
+      base_dir: "outputs/dagster_storage/dev"
+
+    # Logger
+    logger:
+      sink: "logs/dagster_dev.log"
+      level: "INFO"
+
+    # Alerts
+    alerts:
+      enabled: true
+      threshold: "WARNING"
+
+  staging:
+    # IO Manager
+    io_manager:
+      base_dir: "outputs/dagster_storage/staging"
+
+    # Logger
+    logger:
+      sink: "logs/dagster_staging.log"
+      level: "INFO"
+
+    # Alerts
+    alerts:
+      enabled: true
+      threshold: "WARNING"
+
+  prod:
+    # IO Manager
+    io_manager:
+      base_dir: "outputs/dagster_storage/prod"
+
+    # Logger
+    logger:
+      sink: "logs/dagster_prod.log"
+      level: "WARNING"
+
+    # Alerts
+    alerts:
+      enabled: true
+      threshold: "ERROR"
+
+# Reader configurations
+readers:
+  internal_sales:
+    kind: "ParquetReader"
+    config:
+      path: "data/internal/sales.parquet"
+
+  internal_need_state:
+    kind: "CSVReader"
+    config:
+      path: "data/internal/need_state.csv"
+
+  external_sales:
+    kind: "SnowflakeReader"
+    config:
+      query: "SELECT * FROM external_sales"
+      use_cache: true
+
+# Writer configurations
+writers:
+  internal_sales_output:
+    kind: "ParquetWriter"
+    config:
+      path: "outputs/internal_sales.parquet"
+
+  internal_sales_percent_output:
+    kind: "ParquetWriter"
+    config:
+      path: "outputs/internal_sales_percent"
+
+  internal_clusters_output:
+    kind: "ParquetWriter"
+    config:
+      path: "outputs/internal_clusters.parquet"

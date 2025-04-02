@@ -1,0 +1,10 @@
+clustering:
+  algorithm: kmeans
+  n_clusters: 3 # Smaller clusters for dev
+
+io:
+  base_dir: outputs/dagster_storage/dev
+  format: parquet
+
+logging:
+  level: DEBUG # More verbose logging for development
