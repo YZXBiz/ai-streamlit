@@ -1,3 +1,5 @@
-"""Core modules for the clustering pipeline."""
+"""Core components for clustering."""
 
-from clustering.core import schemas, sql_engine, sql_templates
+from clustering.core import models, schemas, sql_engine, sql_templates
+
+__all__ = ["models", "schemas", "sql_engine", "sql_templates"]

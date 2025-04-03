@@ -1,17 +1,38 @@
-"""Entry point for running the Dagster webserver."""
+"""Dagster application entry point."""
 
 import os
-import subprocess
+
+from dagster import DagsterInstance
+
+from clustering.dagster.definitions import clustering_job
 
 
-def run_app(
-    host: str = "127.0.0.1",
-    port: int = 3000,
-    env: str = "dev",
-):
-    """Run the Dagster webserver."""
-    print(f"Starting Dagster webserver with {env} environment on {host}:{port}")
+def get_dagster_home() -> str:
+    """Get the DAGSTER_HOME directory based on environment.
 
-    os.environ["DAGSTER_ENV"] = env
+    Returns:
+        Path to Dagster home directory
+    """
+    dagster_home = os.environ.get("DAGSTER_HOME")
+    if not dagster_home:
+        # Create a temporary directory in the system's temp dir instead of source tree
+        import tempfile
+        from datetime import datetime
 
-    subprocess.run(["dagster-webserver", "-h", host, "-p", str(port)])
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        dagster_home = tempfile.mkdtemp(prefix=f"dagster_home_{timestamp}_")
+        os.environ["DAGSTER_HOME"] = dagster_home
+
+    # Ensure the directory exists
+    os.makedirs(dagster_home, exist_ok=True)
+
+    return dagster_home
+
+
+def run_job():
+    """Run the Dagster job."""
+    dagster_home = get_dagster_home()
+    print(f"Using Dagster home: {dagster_home}")
+
+    instance = DagsterInstance.get()
+    clustering_job.execute_in_process(instance_ref=instance.get_ref())

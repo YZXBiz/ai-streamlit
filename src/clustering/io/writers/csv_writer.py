@@ -12,13 +12,12 @@ class CSVWriter(FileWriter):
     include_header: bool = True
     include_bom: bool = False
 
-    def write(self, data: pl.DataFrame) -> None:
+    def _write_to_destination(self, data: pl.DataFrame) -> None:
         """Write data to CSV file.
 
         Args:
             data: DataFrame to write
         """
-        self._prepare_path()
         data.write_csv(
             file=self.path,
             separator=self.delimiter,

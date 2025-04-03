@@ -127,6 +127,21 @@ def main():
         help="Environment to use (dev, staging, prod)",
     )
 
+    # Add minimal example command
+    minimal_parser = subparsers.add_parser("minimal", help="Run minimal example with SQL engine")
+    minimal_parser.add_argument(
+        "--host",
+        type=str,
+        default="localhost",
+        help="Host to bind to",
+    )
+    minimal_parser.add_argument(
+        "--port",
+        type=int,
+        default=3000,
+        help="Port to bind to",
+    )
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -164,6 +179,21 @@ def main():
         # Run the UI
         print(f"Starting Dagster web UI in {args.env.upper()} environment on {args.host}:{args.port}")
         run_app(host=args.host, port=args.port, env=args.env)
+
+    elif args.command == "minimal":
+        # Import minimal example
+
+        # Run UI with minimal example
+        print(f"Starting minimal Dagster example on {args.host}:{args.port}")
+        dg.webserver.run_webserver(
+            host=args.host,
+            port=args.port,
+            workspace=dg.workspace.LoadableTargetWorkspace(
+                loadable_target=dg.workspace.LoadableTarget(
+                    attribute="defs", python_module="clustering.dagster.minimal_example"
+                )
+            ),
+        )
 
     else:
         # No command specified, show help

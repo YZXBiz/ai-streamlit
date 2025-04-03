@@ -1,0 +1,14 @@
+# Development environment configuration
+
+application:
+  log_level: DEBUG
+
+data:
+  input_limit: 1000 # Smaller limit for development
+  output_dir: outputs/dev/
+  temp_dir: /tmp/clustering/dev/
+
+# Override clustering settings for development
+clustering:
+  params:
+    n_clusters: 2 # Fewer clusters for faster development testing

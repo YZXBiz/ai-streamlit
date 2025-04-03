@@ -4,7 +4,7 @@ import glob
 import os
 
 import dagster as dg
-from clustering.dagster.definitions.definitions import define_external_clustering_job, define_internal_clustering_job
+from clustering.dagster.definitions import define_external_clustering_job, define_internal_clustering_job
 from dagster import RunRequest, SensorEvaluationContext, SensorResult
 
 

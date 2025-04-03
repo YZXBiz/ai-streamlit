@@ -50,3 +50,6 @@ Thumbs.db
 
 # Output directories
 outputs/*/
+
+# Dagster temporary files
+.tmp_dagster_home*/

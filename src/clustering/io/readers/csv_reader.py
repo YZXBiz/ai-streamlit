@@ -11,19 +11,14 @@ class CSVReader(FileReader):
     delimiter: str = ","
     has_header: bool = True
 
-    def read(self) -> pl.DataFrame:
+    def _read_from_source(self) -> pl.DataFrame:
         """Read data from CSV file.
 
         Returns:
             DataFrame containing the data
         """
-        data = pl.read_csv(
+        return pl.read_csv(
             self.path,
             separator=self.delimiter,
             has_header=self.has_header,
         )
-
-        if self.limit is not None:
-            data = data.head(self.limit)
-
-        return data

@@ -1,0 +1,49 @@
+# Default configuration for clustering application
+
+# Global settings
+application:
+  name: clustering
+  version: 0.1.0
+  log_level: INFO
+
+# Data settings
+data:
+  input_limit: 10000 # Maximum number of rows to process
+  output_dir: outputs/
+  temp_dir: /tmp/clustering/
+
+# Processing settings
+preprocessing:
+  enabled: true
+  methods:
+    - name: standardization
+      target_columns: [] # Empty list means all numeric columns
+    - name: missing_values
+      strategy: mean
+
+# Clustering settings
+clustering:
+  algorithm: kmeans
+  params:
+    n_clusters: 3
+    random_state: 42
+  feature_columns: [] # Empty list means all numeric columns
+
+# IO settings
+io:
+  readers:
+    default_format: csv
+    csv:
+      delimiter: ","
+      has_header: true
+    parquet: {}
+    excel:
+      sheet_name: Sheet1
+  writers:
+    default_format: csv
+    csv:
+      delimiter: ","
+      include_header: true
+    parquet: {}
+    excel:
+      sheet_name: Sheet1
