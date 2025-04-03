@@ -1,7 +1,5 @@
 """Utility functions for the clustering pipeline."""
 
-import os
-from pathlib import Path
 from typing import Any, ClassVar, Dict, Optional, Type, TypeVar
 
 from clustering.utils.common import ensure_directory, get_project_root, timer
@@ -13,15 +11,6 @@ __all__ = [
 ]
 
 T = TypeVar("T")
-
-
-def ensure_directory(directory: Path) -> None:
-    """Ensure that a directory exists.
-
-    Args:
-        directory: directory to ensure exists.
-    """
-    os.makedirs(directory, exist_ok=True)
 
 
 class ResourceRegistry:

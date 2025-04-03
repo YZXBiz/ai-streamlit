@@ -9,7 +9,7 @@ import dagster as dg
 import polars as pl
 from dagster import io_manager
 
-from clustering.config import SETTINGS
+from clustering.utils import get_project_root
 
 
 class ClusteringIOManagerConfig:
@@ -21,7 +21,7 @@ class ClusteringIOManagerConfig:
         Args:
             base_dir: Base directory for storing outputs
         """
-        self.base_dir = base_dir or os.path.join(SETTINGS.ROOT_DIR, "outputs/dagster_storage")
+        self.base_dir = base_dir or os.path.join(get_project_root(), "outputs/dagster_storage")
 
 
 class ClusteringIOManager:

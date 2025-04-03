@@ -1,13 +1,28 @@
 """IO resources for Dagster pipelines."""
 
-from typing import Any, Dict
+from typing import Any
 
 import dagster as dg
 from pydantic import BaseModel
 
 from clustering.infra.logging import LoggerService
 from clustering.infra.monitoring import AlertingService
-from clustering.io import *  # noqa
+from clustering.io import (
+    BlobReader,
+    BlobWriter,
+    CSVReader,
+    CSVWriter,
+    ExcelReader,
+    ExcelWriter,
+    ParquetReader,
+    ParquetWriter,
+    PickleReader,
+    PickleWriter,
+    Reader,
+    SnowflakeReader,
+    SnowflakeWriter,
+    Writer,
+)
 
 
 class LoggingSchema(BaseModel):
@@ -84,7 +99,7 @@ class ReaderSchema(BaseModel):
     """Schema for reader resource."""
 
     kind: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 @dg.resource(config_schema=ReaderSchema.model_json_schema())
@@ -123,7 +138,7 @@ class WriterSchema(BaseModel):
     """Schema for writer resource."""
 
     kind: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 @dg.resource(config_schema=WriterSchema.model_json_schema())
