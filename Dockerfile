@@ -30,5 +30,5 @@ RUN mkdir -p logs configs outputs reports cache
 ENV PYTHONPATH=/app
 
 # Command to run when the container starts
-ENTRYPOINT ["python", "-m", "clustering"]
+ENTRYPOINT ["uv", "run", "-m", "clustering"]
 CMD ["--help"] 

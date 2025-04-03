@@ -1,7 +1,7 @@
 .PHONY: install update format lint type-check test clean build run-all setup-configs setup-tests run-% help dagster-ui dagster-test dagster-job-% run-dagster-%
 
 # Default Python interpreter
-PYTHON := python3
+PYTHON := uv run
 
 # Package name
 PACKAGE_NAME := clustering
@@ -31,23 +31,23 @@ update:
 # Format code
 format:
 	@echo "Format code"
-	ruff format $(SRC_DIR) $(TESTS_DIR)
+	uv run -m ruff format $(SRC_DIR) $(TESTS_DIR)
 
 # Lint code
 lint:
 	@echo "Lint code"
-	ruff check $(SRC_DIR) $(TESTS_DIR) --fix
+	uv run -m ruff check $(SRC_DIR) $(TESTS_DIR) --fix
 
 # Type check
 type-check:
 	@echo "Type check"
-	mypy $(SRC_DIR) $(TESTS_DIR)
-	pyright $(SRC_DIR) $(TESTS_DIR)
+	uv run -m mypy $(SRC_DIR) $(TESTS_DIR)
+	uv run -m pyright $(SRC_DIR) $(TESTS_DIR)
 
 # Run tests
 test:
 	@echo "Run tests"
-	pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
+	uv run -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
 
 # Clean up build artifacts and cache files
 clean:
@@ -93,22 +93,22 @@ run-%:
 # Start Dagster UI
 dagster-ui:
 	@echo "Starting Dagster UI with $(DAGSTER_ENV) environment"
-	$(PYTHON) -m $(PACKAGE_NAME).dagster_app --env $(DAGSTER_ENV)
+	uv run -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
 
 # Run Dagster tests
 dagster-test:
 	@echo "Running Dagster tests"
-	pytest $(TESTS_DIR)/test_dagster_implementation.py -v
+	uv run -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
 
 # Run a specific Dagster job with the dagster CLI
 dagster-job-%:
 	@echo "Running Dagster job $*"
-	dagster job execute -f $(PACKAGE_NAME).dagster:defs $*
+	uv run -m dagster job execute -f $(PACKAGE_NAME).dagster.definitions:defs $*
 
 # Run a specific Dagster job with our run_dagster.py script
 run-dagster-%:
 	@echo "Running Dagster job $* in environment $(DAGSTER_ENV)"
-	$(PYTHON) -m $(PACKAGE_NAME).run_dagster $* --env $(DAGSTER_ENV)
+	uv run -m $(PACKAGE_NAME).dagster.run_dagster $* --env $(DAGSTER_ENV)
 
 # Help
 help:
