@@ -1,6 +1,6 @@
 """Infrastructure services for the clustering pipeline."""
 
-from clustering.infra.config import CONFIG, AppConfig, JobSettings, SecretSettings
+from clustering.infra.app_settings import CONFIG, AppConfig, JobSettings, SecretSettings
 from clustering.infra.logging import LoggerService
 from clustering.infra.monitoring import AlertConfig, AlertingService
 

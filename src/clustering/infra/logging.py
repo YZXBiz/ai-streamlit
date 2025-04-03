@@ -50,10 +50,10 @@ class LoggerService(pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
         # Nothing to do as loguru handles this automatically
         pass
 
-    def logger(self) -> loguru.logger:
+    def logger(self) -> loguru.Logger:
         """Return the main logger.
 
         Returns:
-            loguru.logger: the main logger.
+            loguru.Logger: the main logger.
         """
         return loguru.logger

@@ -6,7 +6,7 @@ import dagster as dg
 from pydantic import BaseModel, Field
 
 # Import client resources
-from clustering.io import CSVReader, ParquetReader
+from clustering.io import BlobReader, BlobWriter, CSVReader, ParquetReader, SnowflakeReader, SnowflakeWriter
 
 
 class SalesDataReaderSchema(BaseModel):
@@ -36,17 +36,17 @@ def sales_data_reader(context: dg.InitResourceContext):
 
     context.log.info(f"Initializing sales data reader of type: {source_type}")
 
-    if source_type == "parquet":
-        path = config.get("path")
-        if not path:
-            raise ValueError("Path is required for parquet source type")
-        reader = ParquetReader(path=path, **options)
-
-    elif source_type == "csv":
+    if source_type == "csv":
         path = config.get("path")
         if not path:
             raise ValueError("Path is required for csv source type")
         reader = CSVReader(path=path, **options)
+
+    elif source_type == "parquet":
+        path = config.get("path")
+        if not path:
+            raise ValueError("Path is required for parquet source type")
+        reader = ParquetReader(path=path, **options)
 
     elif source_type == "snowflake":
         # Use snowflake client if available
@@ -55,8 +55,6 @@ def sales_data_reader(context: dg.InitResourceContext):
             query = config.get("query")
             if not query:
                 raise ValueError("Query is required for snowflake source type")
-
-            from clustering.io.datasets import SnowflakeReader
 
             reader = SnowflakeReader(client=snowflake, query=query, **options)
         else:
@@ -71,8 +69,6 @@ def sales_data_reader(context: dg.InitResourceContext):
 
             if not container or not blob_path:
                 raise ValueError("Container and blob_path are required for azure_blob source type")
-
-            from clustering.io.datasets import BlobReader
 
             reader = BlobReader(client=azure, container=container, blob_path=blob_path, **options)
         else:
@@ -130,8 +126,6 @@ def need_state_data_reader(context: dg.InitResourceContext):
             if not query:
                 raise ValueError("Query is required for snowflake source type")
 
-            from clustering.io.datasets import SnowflakeReader
-
             reader = SnowflakeReader(client=snowflake, query=query, **options)
         else:
             raise ValueError("Snowflake client resource is required but not available")
@@ -145,8 +139,6 @@ def need_state_data_reader(context: dg.InitResourceContext):
 
             if not container or not blob_path:
                 raise ValueError("Container and blob_path are required for azure_blob source type")
-
-            from clustering.io.datasets import BlobReader
 
             reader = BlobReader(client=azure, container=container, blob_path=blob_path, **options)
         else:
@@ -208,8 +200,6 @@ def data_writer(context: dg.InitResourceContext):
             if not table_name:
                 raise ValueError("Table name is required for snowflake destination type")
 
-            from clustering.io.datasets import SnowflakeWriter
-
             writer = SnowflakeWriter(client=snowflake, table_name=table_name, **options)
         else:
             raise ValueError("Snowflake client resource is required but not available")
@@ -223,8 +213,6 @@ def data_writer(context: dg.InitResourceContext):
 
             if not container or not blob_path:
                 raise ValueError("Container and blob_path are required for azure_blob destination type")
-
-            from clustering.io.datasets import BlobWriter
 
             writer = BlobWriter(client=azure, container=container, blob_path=blob_path, **options)
         else:

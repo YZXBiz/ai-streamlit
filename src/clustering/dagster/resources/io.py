@@ -1,12 +1,13 @@
-"""Resources for I/O operations in Dagster pipelines."""
+"""IO resources for Dagster pipelines."""
 
 from typing import Any, Dict
 
 import dagster as dg
 from pydantic import BaseModel
 
-from clustering.infra import AlertingService, LoggerService
-from clustering.io import CSVReader, CSVWriter, ParquetReader, ParquetWriter, Reader, Writer
+from clustering.infra.logging import LoggerService
+from clustering.infra.monitoring import AlertingService
+from clustering.io import *  # noqa
 
 
 class LoggingSchema(BaseModel):
@@ -103,24 +104,14 @@ def data_reader(context: dg.InitResourceContext) -> Reader:
     reader_map = {
         "ParquetReader": ParquetReader,
         "CSVReader": CSVReader,
+        "ExcelReader": ExcelReader,
+        "PickleReader": PickleReader,
+        "SnowflakeReader": SnowflakeReader,
+        "BlobReader": BlobReader,
     }
 
     # Check if requested reader exists in our map
     reader_cls = reader_map.get(kind)
-    if not reader_cls:
-        # Try to dynamically import from datasets for backwards compatibility
-        try:
-            from clustering.io.datasets import BlobReader, ExcelReader, PickleReader, SnowflakeReader
-
-            extended_map = {
-                "ExcelReader": ExcelReader,
-                "PickleReader": PickleReader,
-                "SnowflakeReader": SnowflakeReader,
-                "BlobReader": BlobReader,
-            }
-            reader_cls = extended_map.get(kind)
-        except ImportError:
-            reader_cls = None
 
     if not reader_cls:
         raise ValueError(f"Unknown reader kind: {kind}")
@@ -152,24 +143,14 @@ def data_writer(context: dg.InitResourceContext) -> Writer:
     writer_map = {
         "ParquetWriter": ParquetWriter,
         "CSVWriter": CSVWriter,
+        "ExcelWriter": ExcelWriter,
+        "PickleWriter": PickleWriter,
+        "SnowflakeWriter": SnowflakeWriter,
+        "BlobWriter": BlobWriter,
     }
 
     # Check if requested writer exists in our map
     writer_cls = writer_map.get(kind)
-    if not writer_cls:
-        # Try to dynamically import from datasets for backwards compatibility
-        try:
-            from clustering.io.datasets import BlobWriter, ExcelWriter, PickleWriter, SnowflakeWriter
-
-            extended_map = {
-                "ExcelWriter": ExcelWriter,
-                "PickleWriter": PickleWriter,
-                "SnowflakeWriter": SnowflakeWriter,
-                "BlobWriter": BlobWriter,
-            }
-            writer_cls = extended_map.get(kind)
-        except ImportError:
-            writer_cls = None
 
     if not writer_cls:
         raise ValueError(f"Unknown writer kind: {kind}")

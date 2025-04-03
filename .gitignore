@@ -1,5 +1,52 @@
 # Environment configuration
 **/.env
+.env
+.env.*
+!.env.example
 
 # VS Code Configuration
 **/.vscode/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Logs
+logs/
+*.log
+
+# Cache directories
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Output directories
+outputs/*/

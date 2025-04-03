@@ -2,12 +2,12 @@
 
 from pathlib import Path
 
-from clustering.io import configs
+from clustering.io import config_parser
 
 
 def test_parse_file(temp_config_file: Path) -> None:
     """Test parsing a YAML config file."""
-    result = configs.parse_file(str(temp_config_file))
+    result = config_parser.parse_file(str(temp_config_file))
 
     # Check that the result is not empty
     assert result
@@ -29,7 +29,7 @@ def test_parse_string() -> None:
         value: 42
     """
 
-    result = configs.parse_string(config_str)
+    result = config_parser.parse_string(config_str)
 
     assert result["job"]["kind"] == "string_test_job"
     assert result["job"]["params"]["value"] == 42
@@ -56,7 +56,7 @@ def test_merge_configs() -> None:
         }
     }
 
-    merged = configs.merge_configs([config1, config2])
+    merged = config_parser.merge_configs([config1, config2])
 
     assert merged["job"]["kind"] == "test_job"
     assert merged["job"]["params"]["a"] == 1
@@ -68,7 +68,7 @@ def test_to_object() -> None:
     """Test converting a config dict to a proper Python object."""
     config = {"job": {"kind": "test_job", "params": {"nested": {"value": 42}, "list": [1, 2, 3]}}}
 
-    obj = configs.to_object(config)
+    obj = config_parser.to_object(config)
 
     assert obj.job.kind == "test_job"
     assert obj.job.params.nested.value == 42

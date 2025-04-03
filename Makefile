@@ -63,8 +63,6 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name "*.pyc" -delete
 	find . -name "*.log" -type f -delete
-	poe clean_mlruns
-	poe clean_cache
 
 # Build package	
 build:

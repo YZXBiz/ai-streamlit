@@ -8,9 +8,8 @@ from typing import Any, Dict, Generator
 import pandas as pd
 import pytest
 import yaml
-
 from clustering import settings
-from clustering.io import configs
+from clustering.io import config_parser
 
 
 @pytest.fixture
@@ -91,7 +90,7 @@ def test_preprocessing_workflow(
     sample_workflow_config["job"]["source"]["data"] = sample_data
 
     # Convert config to settings object
-    config_obj = configs.to_object(sample_workflow_config)
+    config_obj = config_parser.to_object(sample_workflow_config)
     setting = settings.MainSettings.model_validate(config_obj)
 
     # Run the preprocessing job
@@ -150,7 +149,7 @@ def test_end_to_end_workflow(sample_data: pd.DataFrame, mock_env_vars: None) -> 
     }
 
     # Convert config to settings object
-    config_obj = configs.to_object(preprocessing_config)
+    config_obj = config_parser.to_object(preprocessing_config)
     setting = settings.MainSettings.model_validate(config_obj)
 
     # Run preprocessing
@@ -179,7 +178,7 @@ def test_end_to_end_workflow(sample_data: pd.DataFrame, mock_env_vars: None) -> 
     }
 
     # Convert config to settings object
-    config_obj = configs.to_object(clustering_config)
+    config_obj = config_parser.to_object(clustering_config)
     setting = settings.MainSettings.model_validate(config_obj)
 
     # Run clustering

@@ -1,7 +1,5 @@
 """Resources for the clustering pipeline."""
 
-from dagster import IOManager
-
 from .alerting import alerts_service
 from .config import clustering_config
 from .data_sources import data_writer, need_state_data_reader, sales_data_reader
