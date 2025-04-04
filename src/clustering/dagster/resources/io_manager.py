@@ -3,184 +3,142 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import dagster as dg
-import polars as pl
-from dagster import io_manager
+from dagster import InputContext, IOManager, OutputContext
 
-from clustering.utils import get_project_root
+# Try to import polars for DataFrame handling
+try:
+    import polars as pl
+
+    POLARS_AVAILABLE = True
+except ImportError:
+    POLARS_AVAILABLE = False
+
+# Try to import pandas for DataFrame handling
+try:
+    import pandas as pd
+
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 
-class ClusteringIOManagerConfig:
-    """Configuration for the clustering IO manager."""
+class EnhancedFileSystemIOManager(IOManager):
+    """An enhanced IO manager that efficiently handles various data types."""
 
-    def __init__(self, base_dir: Optional[str] = None):
-        """Initialize the IO manager configuration.
-
-        Args:
-            base_dir: Base directory for storing outputs
-        """
-        self.base_dir = base_dir or os.path.join(get_project_root(), "outputs/dagster_storage")
-
-
-class ClusteringIOManager:
-    """IO manager for clustering pipeline assets.
-
-    This IO manager handles storage of intermediate and final outputs from
-    the clustering pipeline, supporting various data types.
-    """
-
-    def __init__(self, base_dir: Optional[str] = None):
+    def __init__(self, base_dir: str):
         """Initialize the IO manager.
 
         Args:
             base_dir: Base directory for storing outputs
         """
-        self.config = ClusteringIOManagerConfig(base_dir)
-        os.makedirs(self.config.base_dir, exist_ok=True)
+        self.base_dir = Path(base_dir)
+        os.makedirs(self.base_dir, exist_ok=True)
 
-    def _get_path(self, context: Union[dg.OutputContext, dg.InputContext]) -> Path:
+    def _get_path(self, context: InputContext | OutputContext, extension: str = None) -> Path:
         """Get the path for an asset.
 
         Args:
-            context: The context containing asset information
+            context: The input or output context
+            extension: Optional file extension override
 
         Returns:
             Path to the asset file
         """
-        asset_key_segments = context.asset_key.path
-        path = Path(self.config.base_dir)
-
-        # Create directories based on asset key path
-        for segment in asset_key_segments[:-1]:
-            path = path / segment
-            os.makedirs(path, exist_ok=True)
-
-        # Determine file extension based on data type
-        filename = f"{asset_key_segments[-1]}"
-
-        # Add the partition info to the path if it exists
-        if hasattr(context, "partition") and context.partition is not None:
-            path = path / str(context.partition)
-            os.makedirs(path, exist_ok=True)
-
-        # Return full path with filename
-        return path / filename
-
-    def _get_format(self, obj: Any) -> str:
-        """Get the appropriate format for an object.
-
-        Args:
-            obj: The object to determine the format for
-
-        Returns:
-            A string representing the format
-        """
-        if isinstance(obj, pl.DataFrame):
-            return "parquet"
-        elif isinstance(obj, dict) and all(isinstance(k, str) for k in obj.keys()):
-            # Dictionary with string keys - check values
-            values = list(obj.values())
-            if values and all(isinstance(v, pl.DataFrame) for v in values):
-                return "parquet_dict"
-        # Default format for other types
-        return "pickle"
-
-    def handle_output(self, context: dg.OutputContext, obj: Any) -> None:
-        """Handle storage of an output.
-
-        Args:
-            context: The context containing output information
-            obj: The object to store
-        """
-        if obj is None:
-            return
-
-        path = self._get_path(context)
-        os.makedirs(path.parent, exist_ok=True)
-
-        # Determine format and save accordingly
-        format_type = self._get_format(obj)
-
-        if format_type == "parquet":
-            df = obj
-            parquet_path = f"{path}.parquet"
-            df.write_parquet(parquet_path)
-            context.log.info(f"Saved DataFrame to {parquet_path}")
-
-        elif format_type == "parquet_dict":
-            # Save each DataFrame in the dictionary
-            dict_dir = path
-            os.makedirs(dict_dir, exist_ok=True)
-
-            # Save dictionary keys to a manifest file
-            with open(f"{dict_dir}/_manifest.txt", "w") as f:
-                f.write("\n".join(obj.keys()))
-
-            # Save each DataFrame
-            for key, df in obj.items():
-                df_path = f"{dict_dir}/{key}.parquet"
-                df.write_parquet(df_path)
-
-            context.log.info(f"Saved dictionary of DataFrames to {dict_dir}")
-
+        # Use asset key as filename, or metadata key if specified
+        if hasattr(context, "metadata") and context.metadata and "filename" in context.metadata:
+            filename = context.metadata["filename"]
         else:
-            # Use pickle for other object types
-            pickle_path = f"{path}.pkl"
-            with open(pickle_path, "wb") as f:
-                pickle.dump(obj, f)
-            context.log.info(f"Saved object to {pickle_path}")
+            asset_key = context.asset_key.path[-1] if context.asset_key else "default"
+            filename = asset_key
 
-    def load_input(self, context: dg.InputContext) -> Any:
-        """Load input from storage.
+        # If no extension is provided, use .pkl as default
+        if not extension:
+            return self.base_dir / f"{filename}.pkl"
+        return self.base_dir / f"{filename}{extension}"
+
+    def _get_extension_for_obj(self, obj: Any) -> str:
+        """Determine the best file extension based on object type.
 
         Args:
-            context: The context containing input information
+            obj: The object to store
 
         Returns:
-            The loaded object
+            Appropriate file extension
         """
-        path = self._get_path(context)
+        if POLARS_AVAILABLE and isinstance(obj, pl.DataFrame):
+            return ".parquet"
+        elif PANDAS_AVAILABLE and isinstance(obj, pd.DataFrame):
+            return ".parquet"
+        else:
+            return ".pkl"
 
-        # Try different formats
-        parquet_path = f"{path}.parquet"
-        pickle_path = f"{path}.pkl"
-        dict_dir = path
+    def handle_output(self, context: OutputContext, obj: Any) -> None:
+        """Handle an output from a compute function.
 
-        if os.path.exists(parquet_path):
-            # Load DataFrame from parquet
-            df = pl.read_parquet(parquet_path)
-            return df
+        Args:
+            context: The output context
+            obj: The output value
+        """
+        extension = self._get_extension_for_obj(obj)
+        path = self._get_path(context, extension)
 
-        elif os.path.exists(pickle_path):
-            # Load object from pickle
-            with open(pickle_path, "rb") as f:
+        # Handle different types of objects efficiently
+        if POLARS_AVAILABLE and isinstance(obj, pl.DataFrame):
+            obj.write_parquet(path)
+        elif PANDAS_AVAILABLE and isinstance(obj, pd.DataFrame):
+            obj.to_parquet(path)
+        else:
+            # For all other types, use pickle
+            with open(path, "wb") as f:
+                pickle.dump(obj, f)
+
+        # Log the saved location
+        context.log.info(f"Saved output to {path}")
+
+    def load_input(self, context: InputContext) -> Any:
+        """Load an input for a compute function.
+
+        Args:
+            context: The input context
+
+        Returns:
+            The input value
+        """
+        # First try .parquet extension
+        parquet_path = self._get_path(context, ".parquet")
+        if parquet_path.exists():
+            context.log.info(f"Loading Parquet data from {parquet_path}")
+            if POLARS_AVAILABLE:
+                return pl.read_parquet(parquet_path)
+            elif PANDAS_AVAILABLE:
+                return pd.read_parquet(parquet_path)
+
+        # Fall back to pickle
+        pkl_path = self._get_path(context, ".pkl")
+        if pkl_path.exists():
+            context.log.info(f"Loading pickled data from {pkl_path}")
+            with open(pkl_path, "rb") as f:
                 return pickle.load(f)
 
-        elif os.path.exists(dict_dir) and os.path.isdir(dict_dir):
-            # Check for dictionary of DataFrames
-            manifest_path = f"{dict_dir}/_manifest.txt"
-            if os.path.exists(manifest_path):
-                with open(manifest_path, "r") as f:
-                    keys = f.read().splitlines()
-
-                # Load each DataFrame
-                result = {}
-                for key in keys:
-                    df_path = f"{dict_dir}/{key}.parquet"
-                    if os.path.exists(df_path):
-                        result[key] = pl.read_parquet(df_path)
-
-                return result
-
-        # If we get here, the input doesn't exist
-        raise ValueError(f"Input not found at {path}")
+        # If we reach here, neither file exists
+        paths_tried = [parquet_path, pkl_path]
+        raise FileNotFoundError(f"Could not find input file at any of these paths: {paths_tried}")
 
 
-@io_manager
-def clustering_io_manager(init_context: dg.InitResourceContext) -> ClusteringIOManager:
-    """Factory function for clustering IO manager.
+@dg.io_manager(
+    config_schema={
+        "base_dir": dg.Field(
+            dg.String,
+            default_value="outputs",
+            description="Base directory for storing outputs",
+        ),
+    }
+)
+def clustering_io_manager(init_context: dg.InitResourceContext) -> IOManager:
+    """Factory function for the clustering IO manager.
 
     Args:
         init_context: The context for initializing the resource
@@ -188,6 +146,9 @@ def clustering_io_manager(init_context: dg.InitResourceContext) -> ClusteringIOM
     Returns:
         A configured IO manager
     """
-    # Get base directory from config if provided
-    base_dir = getattr(init_context.resource_config, "base_dir", None)
-    return ClusteringIOManager(base_dir)
+    # Get configuration
+    config = init_context.resource_config
+    base_dir = config.get("base_dir", "outputs")
+
+    # Create the IO manager
+    return EnhancedFileSystemIOManager(base_dir=base_dir)

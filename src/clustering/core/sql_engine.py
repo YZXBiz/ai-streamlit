@@ -7,7 +7,7 @@ of SQL transformations in a functional way.
 
 from dataclasses import dataclass
 from string import Template
-from typing import Any, Dict, Literal, Union
+from typing import Any, Literal
 
 import duckdb
 import pandas as pd
@@ -27,9 +27,10 @@ class SQL:
     """
 
     sql: str
-    bindings: Dict[str, Any] = None
+    bindings: dict[str, Any] | None = None
 
     def __post_init__(self):
+        """Post-initialization hook."""
         if self.bindings is None:
             object.__setattr__(self, "bindings", {})
 
@@ -79,7 +80,7 @@ class DuckDB:
 
         return Template(sql_obj.sql).safe_substitute(replacements)
 
-    def collect_dataframes(self, sql_obj: SQL) -> Dict[str, Union[pd.DataFrame, pl.DataFrame]]:
+    def collect_dataframes(self, sql_obj: SQL) -> dict[str, pd.DataFrame | pl.DataFrame]:
         """Collect all dataframes from SQL object's bindings.
 
         Args:
@@ -99,7 +100,7 @@ class DuckDB:
 
     def query(
         self, sql_obj: SQL, output_format: Literal["polars", "pandas", "raw"] = "polars"
-    ) -> Union[pl.DataFrame, pd.DataFrame, duckdb.DuckDBPyResult]:
+    ) -> pl.DataFrame | pd.DataFrame | Any:
         """Execute a SQL query against registered dataframes.
 
         Args:

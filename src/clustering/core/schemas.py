@@ -1,6 +1,6 @@
 # %% IMPORTS
 
-import typing as T
+import typing as T  # noqa
 
 import numpy as np
 import pandas as pd
@@ -13,19 +13,21 @@ from pydantic import BaseModel, Field, model_validator
 TSchema = T.TypeVar("TSchema", bound="pa.DataFrameModel")
 
 # Type aliases
-Inputs = T.Union[pd.DataFrame, pl.DataFrame, np.ndarray]
-Targets = T.Union[pd.Series, pl.Series, np.ndarray]
-Outputs = T.Union[pd.DataFrame, pl.DataFrame, np.array]
+Inputs = pd.DataFrame | pl.DataFrame | np.ndarray
+Targets = pd.Series | pl.Series | np.ndarray
+Outputs = pd.DataFrame | pl.DataFrame | np.ndarray
 
 
 # %% SCHEMAS
 class Schema(pa.DataFrameModel):
-    class Config:
+    """Base class for all schemas."""
+
+    class Config:  # noqa: D106
         coerce: bool = True
         strict: bool = True
 
     @classmethod
-    def check(cls: T.Type[TSchema], data: pd.DataFrame | pl.DataFrame) -> pd.DataFrame | pl.DataFrame:
+    def check(cls: type[TSchema], data: pd.DataFrame | pl.DataFrame) -> pd.DataFrame | pl.DataFrame:
         """Validate input data against the schema.
 
         Args:
@@ -52,7 +54,7 @@ class Schema(pa.DataFrameModel):
 
 
 # %% SCHEMAS
-class InputsSalesSchema(Schema):
+class InputsSalesSchema(Schema):  # noqa: D106
     SKU_NBR: int = pa.Field(nullable=False, gt=0)
     STORE_NBR: int = pa.Field(nullable=False, gt=0)
     CAT_DSC: str = pa.Field(nullable=False)
@@ -76,7 +78,7 @@ class InputsNSSchema(Schema):
     TO_BE_DROPPED: bool = pa.Field(nullable=False)
 
 
-class InputsMergedSchema(Schema):
+class InputsMergedSchema(Schema):  # noqa: D106
     SKU_NBR: int = pa.Field(nullable=False, gt=0)
     STORE_NBR: int = pa.Field(nullable=False, gt=0)
     CAT_DSC: str = pa.Field(nullable=False)
@@ -84,14 +86,14 @@ class InputsMergedSchema(Schema):
     TOTAL_SALES: float = pa.Field(nullable=False, ge=0)
 
 
-class InputsSchema(Schema):
+class InputsSchema(Schema):  # noqa: D106
     pass
 
 
 Inputs = InputsSchema  # transformed inputs ready for modeling
 
 
-class OuputsSchema(Schema):
+class OuputsSchema(Schema):  # noqa: D106
     pass
 
 
@@ -113,7 +115,9 @@ class ClusteringConfig(BaseModel):
     n_clusters: int = Field(5, description="Number of clusters for kmeans", ge=2)
     random_state: int = Field(42, description="Random state for reproducibility")
     min_cluster_size: int = Field(5, description="Minimum cluster size for HDBSCAN", ge=3)
-    cluster_selection_epsilon: float = Field(0.0, description="Epsilon for HDBSCAN cluster selection", ge=0.0)
+    cluster_selection_epsilon: float = Field(
+        0.0, description="Epsilon for HDBSCAN cluster selection", ge=0.0
+    )
 
     @model_validator(mode="after")
     def validate_algorithm_params(self) -> "ClusteringConfig":
@@ -125,14 +129,14 @@ class ClusteringConfig(BaseModel):
         return self
 
 
-class ClusterFeature(BaseModel):
+class ClusterFeature(BaseModel):  # noqa: D106
     """Feature values for a cluster."""
 
     name: str
     mean: float
-    median: float = None
-    min: float = None
-    max: float = None
+    median: float | None = None
+    min: float | None = None
+    max: float | None = None
 
 
 class ClusterOutputSchema(BaseModel):
@@ -141,7 +145,9 @@ class ClusterOutputSchema(BaseModel):
     cluster_id: str
     size: int = Field(..., gt=0, description="Number of points in the cluster")
     features: list[ClusterFeature] = Field([], description="Statistical features of the cluster")
-    silhouette_score: float = Field(None, description="Silhouette score for the cluster", ge=-1, le=1)
+    silhouette_score: float | None = Field(
+        None, description="Silhouette score for the cluster", ge=-1, le=1
+    )
 
 
 class ClusteringResult(BaseModel):

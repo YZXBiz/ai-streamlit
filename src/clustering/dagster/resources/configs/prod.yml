@@ -1,0 +1,46 @@
+alerts:
+  channels:
+  - slack
+  enabled: true
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  threshold: ERROR
+azure_storage:
+  account_key: ${AZURE_STORAGE_KEY}
+  account_name: ${AZURE_STORAGE_ACCOUNT}
+io_manager:
+  database: outputs/clustering_prod.duckdb
+  in_memory: false
+  schema: public
+logger:
+  level: WARNING
+  sink: logs/dagster_prod.log
+readers:
+  external_sales:
+    query: SELECT * FROM PROD_CLUSTERING_DB.RAW.EXTERNAL_SALES
+    source_type: snowflake
+  internal_need_state:
+    query: SELECT * FROM PROD_CLUSTERING_DB.RAW.INTERNAL_NEED_STATE
+    source_type: snowflake
+  internal_sales:
+    query: SELECT * FROM PROD_CLUSTERING_DB.RAW.INTERNAL_SALES
+    source_type: snowflake
+snowflake:
+  account: ${SNOWFLAKE_ACCOUNT}
+  database: PROD_CLUSTERING_DB
+  password: ${SNOWFLAKE_PASSWORD}
+  role: CLUSTERING_ROLE
+  schema: PUBLIC
+  user: ${SNOWFLAKE_USER}
+  warehouse: PROD_CLUSTERING_WH
+writers:
+  external_data_output: {}
+  internal_clusters_output:
+    destination_type: snowflake
+    table_name: PROD_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
+  internal_sales_output:
+    destination_type: snowflake
+    table_name: PROD_CLUSTERING_DB.PROCESSED.INTERNAL_SALES
+  internal_sales_percent_output:
+    destination_type: snowflake
+    table_name: PROD_CLUSTERING_DB.PROCESSED.INTERNAL_SALES_PERCENT
+  merged_clusters_output: {}

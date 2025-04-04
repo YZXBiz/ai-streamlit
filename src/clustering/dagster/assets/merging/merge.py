@@ -1,7 +1,5 @@
 """Assets for merging internal and external clustering results."""
 
-from typing import Dict
-
 import dagster as dg
 import polars as pl
 
@@ -79,20 +77,22 @@ def merged_clusters(
     deps=["merged_clusters"],
     compute_kind="merging",
     group_name="merging",
+    required_resource_keys={"output_merged_writer"},
 )
 def merged_clusters_output(
     context: dg.AssetExecutionContext,
     merged_clusters: dict[str, pl.DataFrame],
-    merged_output_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> None:
     """Save merged clustering results.
 
     Args:
         context: Asset execution context
         merged_clusters: Merged clustering results
-        merged_output_writer: Writer for merged clusters
     """
     context.log.info("Saving merged clustering results")
+
+    # Get writer from resources
+    merged_output_writer = context.resources.output_merged_writer
 
     # Check if the writer expects Pandas DataFrame
     if hasattr(merged_output_writer, "requires_pandas") and merged_output_writer.requires_pandas:

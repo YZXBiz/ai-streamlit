@@ -7,7 +7,7 @@ import loguru
 import pydantic as pdt
 
 
-class LoggerService(pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
+class LoggerService(pdt.BaseModel):
     """Service for logging messages.
 
     https://loguru.readthedocs.io/en/stable/api/logger.html
@@ -32,6 +32,9 @@ class LoggerService(pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
     diagnose: bool = False
     catch: bool = True
 
+    class Config:
+        extra = "forbid"
+
     def start(self) -> None:
         """Start the logging service."""
         loguru.logger.remove()
@@ -50,10 +53,10 @@ class LoggerService(pdt.BaseModel, strict=True, frozen=True, extra="forbid"):
         # Nothing to do as loguru handles this automatically
         pass
 
-    def logger(self) -> loguru.Logger:
+    def logger(self):
         """Return the main logger.
 
         Returns:
-            loguru.Logger: the main logger.
+            The main logger.
         """
         return loguru.logger

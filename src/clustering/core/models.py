@@ -7,6 +7,7 @@ import logging
 import typing as tp
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Self
 
 import numpy as np
 import pydantic as pdt
@@ -17,7 +18,7 @@ from yellowbrick.cluster import KElbowVisualizer
 
 from clustering.core import schemas
 
-# Set up module-level logger
+# %% Set up module-level logger
 logger = logging.getLogger(__name__)
 
 
@@ -34,12 +35,16 @@ class Model(ABC, pdt.BaseModel, strict=True, frozen=False, extra="forbid"):
     def get_params(self) -> dict[str, tp.Any]:
         """Get the model params.
 
-        Returns
+        Returns:
         -------
             Dict containing model parameters
 
         """
-        return {key: value for key, value in self.model_dump().items() if not key.startswith("_") and not key.isupper()}
+        return {
+            key: value
+            for key, value in self.model_dump().items()
+            if not key.startswith("_") and not key.isupper()
+        }
 
     def set_params(self, **params: object) -> "Model":
         """Set the model params in place.
@@ -58,7 +63,7 @@ class Model(ABC, pdt.BaseModel, strict=True, frozen=False, extra="forbid"):
         return self
 
     @abstractmethod
-    def fit(self, inputs: schemas.Inputs, targets: schemas.Targets | None = None) -> "Model":
+    def fit(self, inputs: schemas.Inputs, targets: schemas.Targets | None = None) -> Self:
         """Fit the model on the given inputs and targets.
 
         Args:
@@ -95,7 +100,7 @@ class ClusteringModel(Model):
     clustering pipeline including preprocessing, dimensionality reduction,
     model training, and evaluation.
 
-    Attributes
+    Attributes:
     ----------
         KIND: Type of the model. Default is "ClusteringModel".
         IGNORE_FEATURES: Features to ignore. Default is ["STORE_NBR"].
@@ -139,7 +144,9 @@ class ClusteringModel(Model):
     PCA_METHOD: tp.Literal["linear", "kernel", "incremental"] = "linear"
 
     # Model parameters
-    CLUS_ALGO: tp.Literal["kmeans", "ap", "meanshift", "sc", "hclust", "dbscan", "optics", "birch"] = "kmeans"
+    CLUS_ALGO: tp.Literal[
+        "kmeans", "ap", "meanshift", "sc", "hclust", "dbscan", "optics", "birch"
+    ] = "kmeans"
 
     # Additional model parameters will be added via KWARGS
     KWARGS: dict[str, tp.Any] = {}
@@ -147,7 +154,7 @@ class ClusteringModel(Model):
     # Private attributes
     _clus_exp: ClusteringExperiment = PrivateAttr(default=None)
     _model: tp.Any = PrivateAttr(default=None)
-    _optimal_clusters: int = PrivateAttr(default=None)
+    _optimal_clusters: int | None = PrivateAttr(default=None)
 
     def _raise_if_model_not_fit(self, message: str) -> None:
         """Raise an error if the model has not been fit.
@@ -287,11 +294,11 @@ class ClusteringModel(Model):
     def assign(self) -> schemas.Outputs:
         """Assign cluster labels to the input data, given a trained model.
 
-        Returns
+        Returns:
         -------
             DataFrame with cluster assignments
 
-        Raises
+        Raises:
         ------
             ValueError: If model has not been fit
 
@@ -304,7 +311,9 @@ class ClusteringModel(Model):
         if self.IGNORE_FEATURES:
             for feature in self.IGNORE_FEATURES:
                 if feature in self._clus_exp.data.columns:
-                    result[feature] = self._clus_exp.data[feature]  # the index is the same as the original data
+                    result[feature] = self._clus_exp.data[
+                        feature
+                    ]  # the index is the same as the original data
 
         return result
 
@@ -330,11 +339,11 @@ class ClusteringModel(Model):
     def evaluate(self) -> schemas.Outputs:
         """Evaluate the clustering performance.
 
-        Returns
+        Returns:
         -------
             DataFrame with evaluation metrics
 
-        Raises
+        Raises:
         ------
             ValueError: If model has not been fit
 

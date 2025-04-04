@@ -1,0 +1,56 @@
+# Merging Job Configuration
+# This file contains configuration for merging internal and external clusters
+
+# Merging strategy parameters
+merging:
+  # Method for combining clusters
+  method: "weighted" # Options: weighted, voting, ensemble
+
+  # Weights for each clustering source
+  weights:
+    internal_clusters: 0.6
+    external_clusters: 0.4
+
+  # Conflict resolution
+  conflict_resolution:
+    strategy: "majority" # Options: majority, highest_confidence, consensus
+    min_agreement: 0.7
+
+  # Harmonization settings
+  harmonization:
+    # Standardize cluster labels across sources
+    standardize_labels: true
+    # Mapping strategy when clusters don't align
+    mapping_strategy: "nearest_centroid" # Options: nearest_centroid, overlap, manual
+
+# Evaluation parameters
+evaluation:
+  # Metrics to assess merged clustering quality
+  metrics:
+    - "silhouette_score"
+    - "davies_bouldin_score"
+    - "adjusted_rand_index" # Compared to individual clusterings
+
+  # Comparison with individual clusterings
+  compare_with_source: true
+
+  # Visualization
+  visualize:
+    method: "umap" # Options: pca, tsne, umap
+    n_components: 2
+    random_state: 42
+
+# Output parameters
+output:
+  # Format for merged clustering results
+  format: "parquet" # Options: parquet, csv, json
+
+  # Additional outputs
+  include_metrics: true
+  include_source_mappings: true
+  include_confidence: true
+
+  # Export settings
+  export_to:
+    snowflake: false
+    blob_storage: false

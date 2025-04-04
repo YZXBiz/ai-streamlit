@@ -11,8 +11,8 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from clustering.dagster import create_definitions
-from clustering.dagster.assets.preprocessing.internal import merged_internal_data
+from clustering.dagster import create_definitions  # noqa: E402
+from clustering.dagster.assets.preprocessing.internal import merged_internal_data  # noqa: E402
 
 
 @pytest.fixture

@@ -3,7 +3,6 @@
 import argparse
 import os
 import sys
-from typing import Dict, List, Optional
 
 import dagster as dg
 from dagster._core.instance import DagsterInstance
@@ -15,7 +14,7 @@ from clustering.infra import CONFIG
 def run_job(
     job_name: str,
     env: str = "dev",
-    tags: Optional[Dict[str, str]] = None,
+    tags: dict[str, str] | None = None,
     raise_on_error: bool = False,
 ) -> dg.ExecuteJobResult:
     """Run a Dagster job.
@@ -59,7 +58,7 @@ def run_job(
     return result
 
 
-def parse_tags(tag_strings: List[str]) -> Dict[str, str]:
+def parse_tags(tag_strings: list[str]) -> dict[str, str]:
     """Parse tags from command line arguments.
 
     Args:
@@ -76,7 +75,7 @@ def parse_tags(tag_strings: List[str]) -> Dict[str, str]:
     return tags
 
 
-def main():
+def main() -> None:
     """Main entry point for the CLI."""
     parser = argparse.ArgumentParser(description="Run Dagster jobs for the clustering pipeline")
 
@@ -96,7 +95,7 @@ def main():
     run_parser.add_argument(
         "--env",
         choices=["dev", "staging", "prod"],
-        default=CONFIG.get_env(),
+        default=CONFIG.env,
         help="Environment to use (dev, staging, prod)",
     )
     run_parser.add_argument(
@@ -123,7 +122,7 @@ def main():
     ui_parser.add_argument(
         "--env",
         choices=["dev", "staging", "prod"],
-        default=CONFIG.get_env(),
+        default=CONFIG.env,
         help="Environment to use (dev, staging, prod)",
     )
 
@@ -177,7 +176,9 @@ def main():
         from clustering.dagster.app import run_app
 
         # Run the UI
-        print(f"Starting Dagster web UI in {args.env.upper()} environment on {args.host}:{args.port}")
+        print(
+            f"Starting Dagster web UI in {args.env.upper()} environment on {args.host}:{args.port}"
+        )
         run_app(host=args.host, port=args.port, env=args.env)
 
     elif args.command == "minimal":

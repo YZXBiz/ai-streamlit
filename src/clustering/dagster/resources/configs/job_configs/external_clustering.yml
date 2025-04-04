@@ -1,0 +1,74 @@
+# External Clustering Job Configuration
+# This file contains configuration for the external clustering job
+
+# Data preprocessing parameters
+preprocessing:
+  # Feature selection
+  feature_selection:
+    min_variance: 0.01
+    max_correlation: 0.9
+
+  # Missing value handling
+  missing_values:
+    strategy: "mean" # Options: mean, median, most_frequent, constant
+    fill_value: 0 # Used only if strategy is "constant"
+
+  # Outlier detection
+  outlier_detection:
+    method: "Z-score" # Options: IQR, Z-score, Isolation Forest
+    threshold: 3.0
+
+  # Scaling method
+  scaling:
+    method: "robust" # Options: standard, minmax, robust
+    with_centering: true
+    with_scaling: true
+
+# Model parameters
+model:
+  # Algorithm choice
+  algorithm: "gmm" # Options: kmeans, dbscan, hierarchical, gmm
+
+  # Parameters for KMeans (if used)
+  kmeans:
+    n_clusters: 6
+    random_state: 42
+    n_init: 10
+    max_iter: 300
+
+  # Parameters for GMM
+  gmm:
+    n_components: 6
+    covariance_type: "full"
+    random_state: 42
+    n_init: 3
+    reg_covar: 1e-6
+
+  # Parameters for DBSCAN (if used)
+  dbscan:
+    eps: 0.5
+    min_samples: 10
+    algorithm: "auto"
+
+# Evaluation parameters
+evaluation:
+  metrics:
+    - "silhouette_score"
+    - "davies_bouldin_score"
+    - "calinski_harabasz_score"
+    - "bic" # For GMM
+
+  # Visualization
+  visualize:
+    method: "tsne" # Options: pca, tsne, umap
+    n_components: 2
+    perplexity: 30
+    random_state: 42
+
+# Output parameters
+output:
+  # Format for clustering results
+  format: "parquet" # Options: parquet, csv, json
+  include_metrics: true
+  include_probabilities: true # For GMM
+  save_model: true

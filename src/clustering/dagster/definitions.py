@@ -29,10 +29,8 @@ from clustering.dagster.resources import (
     alerts_service,
     clustering_config,
     clustering_io_manager,
-    data_writer,
+    data_io,
     logger_service,
-    need_state_data_reader,
-    sales_data_reader,
 )
 from clustering.dagster.schedules import (
     daily_internal_clustering_schedule,
@@ -51,24 +49,25 @@ def load_resource_config(env: str = "dev") -> dict:
         Dictionary with resource configuration
     """
     # Get the resource config file path
-    resource_config_path = os.path.join(os.path.dirname(__file__), "resources", "resource_configs.yml")
+    config_file_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
 
     try:
         # Load the YAML file
-        with open(resource_config_path, "r") as f:
+        with open(config_file_path, "r") as f:
             config_data = yaml.safe_load(f)
 
-        # Get the environment-specific configuration
-        env_config = config_data.get(env)
-        if not env_config:
-            print(f"Warning: Environment '{env}' not found in config. Using 'dev' instead.")
-            env_config = config_data.get("dev", {})
-
-        return env_config
+        return config_data
     except Exception as e:
-        print(f"Error loading resource config: {e}")
-        # Return empty dict as fallback
-        return {}
+        print(f"Error loading resource config for environment '{env}': {e}")
+        # Fall back to base config
+        base_config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", "base.yml")
+        try:
+            with open(base_config_path, "r") as f:
+                return yaml.safe_load(f)
+        except Exception as base_error:
+            print(f"Error loading base config: {base_error}")
+            # Return empty dict as fallback
+            return {}
 
 
 # Define resource config by environment
@@ -88,11 +87,22 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     base_resources = {
         # IO Manager
         "io_manager": clustering_io_manager.configured(
-            {"base_dir": env_config.get("io_manager", {}).get("base_dir", f"outputs/dagster_storage/{env}")}
+            {
+                "base_dir": os.path.join("outputs", env),
+            }
         ),
         # Config
         "config": clustering_config.configured(
-            {"env": env, "config_path": env_config.get("config", {}).get("path", "configs/internal_clustering.yml")}
+            {
+                "env": env,
+                # Use the job config files from the root configs directory, not the old unused structure
+                "config_path": env_config.get("config", {}).get(
+                    "path",
+                    os.path.join(
+                        os.path.dirname(__file__), "resources", "configs", "job_configs", "internal_clustering.yml"
+                    ),
+                ),
+            }
         ),
         # Logger
         "logger": logger_service.configured(
@@ -111,71 +121,194 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         ),
     }
 
-    # Client resources
-    client_resources = {}
-    if env_config.get("use_snowflake", False):
-        from clustering.dagster.resources.clients.snowflake_client import snowflake_client
-
-        client_resources["snowflake"] = snowflake_client
-
-    if env_config.get("use_azure", False):
-        from clustering.dagster.resources.clients.azure_storage_client import azure_blob_client
-
-        client_resources["azure_blob"] = azure_blob_client
-
-    # Reader resources
-    reader_resources = {
+    # Configure data reader and writer resources based on environment config
+    io_resources = {
         # Internal sales reader
-        "input_sales_reader": sales_data_reader.configured(
-            env_config.get("readers", {}).get(
-                "internal_sales", {"source_type": "parquet", "path": "data/raw/internal_sales.parquet"}
-            )
+        "input_sales_reader": data_io.data_reader.configured(
+            {
+                "kind": "ParquetReader" if env == "dev" else "BlobReader" if env == "staging" else "SnowflakeReader",
+                "config": {
+                    "path": env_config.get("readers", {})
+                    .get("internal_sales", {})
+                    .get("path", "data/raw/internal_sales.parquet")
+                }
+                if env == "dev"
+                else (
+                    {
+                        "container": env_config.get("readers", {})
+                        .get("internal_sales", {})
+                        .get("container", "data-container"),
+                        "blob_path": env_config.get("readers", {})
+                        .get("internal_sales", {})
+                        .get("blob_path", "internal/sales.parquet"),
+                    }
+                    if env == "staging"
+                    else {
+                        "query": env_config.get("readers", {})
+                        .get("internal_sales", {})
+                        .get("query", "SELECT * FROM PROD_DB.RAW.INTERNAL_SALES")
+                    }
+                ),
+            }
         ),
         # Internal need state reader
-        "input_need_state_reader": need_state_data_reader.configured(
-            env_config.get("readers", {}).get(
-                "internal_need_state", {"source_type": "csv", "path": "data/raw/need_state.csv"}
-            )
+        "input_need_state_reader": data_io.data_reader.configured(
+            {
+                "kind": "CSVReader" if env == "dev" else "BlobReader" if env == "staging" else "SnowflakeReader",
+                "config": {
+                    "path": env_config.get("readers", {})
+                    .get("internal_need_state", {})
+                    .get("path", "data/raw/need_state.csv")
+                }
+                if env == "dev"
+                else (
+                    {
+                        "container": env_config.get("readers", {})
+                        .get("internal_need_state", {})
+                        .get("container", "data-container"),
+                        "blob_path": env_config.get("readers", {})
+                        .get("internal_need_state", {})
+                        .get("blob_path", "internal/need_state.csv"),
+                    }
+                    if env == "staging"
+                    else {
+                        "query": env_config.get("readers", {})
+                        .get("internal_need_state", {})
+                        .get("query", "SELECT * FROM PROD_DB.RAW.INTERNAL_NEED_STATE")
+                    }
+                ),
+            }
         ),
         # External sales reader
-        "input_external_sales_reader": sales_data_reader.configured(
-            env_config.get("readers", {}).get(
-                "external_sales", {"source_type": "parquet", "path": "data/raw/external_sales.parquet"}
-            )
+        "input_external_sales_reader": data_io.data_reader.configured(
+            {
+                "kind": "ParquetReader" if env == "dev" else "SnowflakeReader",
+                "config": {
+                    "path": env_config.get("readers", {})
+                    .get("external_sales", {})
+                    .get("path", "data/raw/external_sales.parquet")
+                }
+                if env == "dev"
+                else {
+                    "query": env_config.get("readers", {})
+                    .get("external_sales", {})
+                    .get("query", "SELECT * FROM STAGING_CLUSTERING_DB.RAW.EXTERNAL_SALES")
+                },
+            }
         ),
-    }
-
-    # Writer resources
-    writer_resources = {
-        # Internal sales output
-        "output_sales_writer": data_writer.configured(
-            env_config.get("writers", {}).get(
-                "internal_sales_output",
-                {"destination_type": "parquet", "path": "data/processed/internal_sales_processed.parquet"},
-            )
+        # Output writers using the data_writer resource
+        "output_sales_writer": data_io.data_writer.configured(
+            {
+                "kind": "ParquetWriter" if env == "dev" else "BlobWriter" if env == "staging" else "SnowflakeWriter",
+                "config": {
+                    "path": env_config.get("writers", {})
+                    .get("internal_sales_output", {})
+                    .get("path", "data/processed/internal_sales_processed.parquet")
+                }
+                if env == "dev"
+                else (
+                    {
+                        "container": env_config.get("writers", {})
+                        .get("internal_sales_output", {})
+                        .get("container", "processed-container"),
+                        "blob_path": env_config.get("writers", {})
+                        .get("internal_sales_output", {})
+                        .get("blob_path", "internal/sales_processed.parquet"),
+                    }
+                    if env == "staging"
+                    else {
+                        "table_name": env_config.get("writers", {})
+                        .get("internal_sales_output", {})
+                        .get("table_name", "PROD_DB.PROCESSED.INTERNAL_SALES")
+                    }
+                ),
+            }
         ),
-        # Internal sales percent output
-        "output_sales_percent_writer": data_writer.configured(
-            env_config.get("writers", {}).get(
-                "internal_sales_percent_output",
-                {"destination_type": "parquet", "path": "data/processed/internal_sales_percent.parquet"},
-            )
+        # Internal sales percent output writer
+        "output_sales_percent_writer": data_io.data_writer.configured(
+            {
+                "kind": "ParquetWriter" if env == "dev" else "BlobWriter" if env == "staging" else "SnowflakeWriter",
+                "config": {
+                    "path": env_config.get("writers", {})
+                    .get("internal_sales_percent_output", {})
+                    .get("path", "data/processed/internal_sales_percent.parquet")
+                }
+                if env == "dev"
+                else (
+                    {
+                        "container": env_config.get("writers", {})
+                        .get("internal_sales_percent_output", {})
+                        .get("container", "processed-container"),
+                        "blob_path": env_config.get("writers", {})
+                        .get("internal_sales_percent_output", {})
+                        .get("blob_path", "internal/sales_percent.parquet"),
+                    }
+                    if env == "staging"
+                    else {
+                        "table_name": env_config.get("writers", {})
+                        .get("internal_sales_percent_output", {})
+                        .get("table_name", "PROD_DB.PROCESSED.INTERNAL_SALES_PERCENT")
+                    }
+                ),
+            }
         ),
-        # Internal clusters output
-        "output_clusters_writer": data_writer.configured(
-            env_config.get("writers", {}).get(
-                "internal_clusters_output",
-                {"destination_type": "parquet", "path": "data/processed/internal_clusters.parquet"},
-            )
+        # Internal clusters output writer
+        "output_clusters_writer": data_io.data_writer.configured(
+            {
+                "kind": "ParquetWriter" if env == "dev" else "SnowflakeWriter",
+                "config": {
+                    "path": env_config.get("writers", {})
+                    .get("internal_clusters_output", {})
+                    .get("path", "data/processed/internal_clusters.parquet")
+                }
+                if env == "dev"
+                else {
+                    "table_name": env_config.get("writers", {})
+                    .get("internal_clusters_output", {})
+                    .get("table_name", "STAGING_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS")
+                },
+            }
+        ),
+        # External data output writer
+        "output_external_data_writer": data_io.data_writer.configured(
+            {
+                "kind": "ParquetWriter" if env == "dev" else "SnowflakeWriter",
+                "config": {
+                    "path": env_config.get("writers", {})
+                    .get("external_data_output", {})
+                    .get("path", "data/processed/external_data_processed.parquet")
+                }
+                if env == "dev"
+                else {
+                    "table_name": env_config.get("writers", {})
+                    .get("external_data_output", {})
+                    .get("table_name", "STAGING_CLUSTERING_DB.PROCESSED.EXTERNAL_DATA")
+                },
+            }
+        ),
+        # External clusters output writer
+        "output_merged_writer": data_io.data_writer.configured(
+            {
+                "kind": "ParquetWriter" if env == "dev" else "SnowflakeWriter",
+                "config": {
+                    "path": env_config.get("writers", {})
+                    .get("merged_clusters_output", {})
+                    .get("path", "data/processed/merged_clusters.parquet")
+                }
+                if env == "dev"
+                else {
+                    "table_name": env_config.get("writers", {})
+                    .get("merged_clusters_output", {})
+                    .get("table_name", "STAGING_CLUSTERING_DB.PROCESSED.MERGED_CLUSTERS")
+                },
+            }
         ),
     }
 
     # Combine all resources
     all_resources = {
         **base_resources,
-        **client_resources,
-        **reader_resources,
-        **writer_resources,
+        **io_resources,
     }
 
     return all_resources

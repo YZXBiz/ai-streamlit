@@ -36,3 +36,33 @@ def run_job():
 
     instance = DagsterInstance.get()
     clustering_job.execute_in_process(instance_ref=instance.get_ref())
+
+
+def run_app(host: str = "localhost", port: int = 3000, env: str = "dev") -> None:
+    """Run the Dagster web UI.
+
+    Args:
+        host: Host to bind to
+        port: Port to bind to
+        env: Environment to use
+    """
+    import dagster as dg
+
+    from clustering.dagster import create_definitions
+
+    # Set environment variable
+    os.environ["DAGSTER_ENV"] = env
+
+    # Get dagster home
+    dagster_home = get_dagster_home()
+    print(f"Using Dagster home: {dagster_home}")
+
+    # Create definitions
+    defs = create_definitions(env=env)
+
+    # Run webserver
+    dg.webserver.run_webserver(
+        host=host,
+        port=port,
+        workspace=dg.workspace.UnscopedDefinitionsWorkspace(defs),
+    )

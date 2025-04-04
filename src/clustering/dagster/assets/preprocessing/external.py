@@ -8,24 +8,25 @@ from clustering.utils.helpers import merge_dataframes
 
 @dg.asset(
     io_manager_key="io_manager",
-    key_prefix="raw",
     compute_kind="external_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"input_external_sales_reader"},
 )
 def external_features_data(
     context: dg.AssetExecutionContext,
-    input_external_readers=dg.ResourceParam(dg.InitResourceContext),
 ) -> pl.DataFrame:
     """Load and merge external feature data.
 
     Args:
         context: Asset execution context
-        input_external_readers: List of readers for external data
 
     Returns:
         DataFrame containing merged external data
     """
     context.log.info("Reading external features data")
+
+    # Get reader from resources
+    input_external_readers = context.resources.input_external_sales_reader
 
     # Check if input_external_readers is a list
     if not isinstance(input_external_readers, list):
@@ -58,21 +59,20 @@ def external_features_data(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["raw/external_features_data"],
+    deps=["external_features_data"],
     compute_kind="external_preprocessing",
     group_name="preprocessing",
+    required_resource_keys={"output_external_data_writer"},
 )
 def preprocessed_external_data(
     context: dg.AssetExecutionContext,
     external_features_data: pl.DataFrame,
-    output_data_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> pl.DataFrame:
     """Process external data and save the results.
 
     Args:
         context: Asset execution context
         external_features_data: External features data
-        output_data_writer: Writer for output data
 
     Returns:
         Processed external data
@@ -85,6 +85,9 @@ def preprocessed_external_data(
 
     # Save the data
     context.log.info("Saving preprocessed external data")
+
+    # Get writer from resources
+    output_data_writer = context.resources.output_external_data_writer
 
     # Check if the writer expects pandas DataFrame
     if hasattr(output_data_writer, "requires_pandas") and output_data_writer.requires_pandas:

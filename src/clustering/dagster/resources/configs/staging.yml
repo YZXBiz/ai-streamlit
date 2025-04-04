@@ -1,0 +1,45 @@
+alerts:
+  enabled: true
+  threshold: WARNING
+azure_storage:
+  account_key: ${AZURE_STORAGE_KEY}
+  account_name: ${AZURE_STORAGE_ACCOUNT}
+io_manager:
+  database: outputs/clustering_staging.duckdb
+  in_memory: false
+  schema: public
+logger:
+  level: INFO
+  sink: logs/dagster_staging.log
+readers:
+  external_sales:
+    query: SELECT * FROM STAGING_CLUSTERING_DB.RAW.EXTERNAL_SALES
+    source_type: snowflake
+  internal_need_state:
+    blob_path: internal/need_state.csv
+    container: staging-data
+    source_type: azure_blob
+  internal_sales:
+    blob_path: internal/sales.parquet
+    container: staging-data
+    source_type: azure_blob
+snowflake:
+  account: ${SNOWFLAKE_ACCOUNT}
+  database: STAGING_CLUSTERING_DB
+  password: ${SNOWFLAKE_PASSWORD}
+  user: ${SNOWFLAKE_USER}
+  warehouse: STAGING_CLUSTERING_WH
+writers:
+  external_data_output: {}
+  internal_clusters_output:
+    destination_type: snowflake
+    table_name: STAGING_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
+  internal_sales_output:
+    blob_path: internal/sales_processed.parquet
+    container: staging-processed
+    destination_type: azure_blob
+  internal_sales_percent_output:
+    blob_path: internal/sales_percent.parquet
+    container: staging-processed
+    destination_type: azure_blob
+  merged_clusters_output: {}

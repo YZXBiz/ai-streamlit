@@ -1,0 +1,48 @@
+alerts:
+  enabled: true
+  threshold: WARNING
+azure_storage:
+  account_name: devstorageaccount
+  connection_string: ${AZURE_STORAGE_CONNECTION_STRING}
+io_manager:
+  database: outputs/clustering_dev.duckdb
+  in_memory: false
+  schema: public
+logger:
+  level: INFO
+  sink: logs/dagster_dev.log
+readers:
+  external_sales:
+    options:
+      use_threads: true
+    path: data/external/sales.parquet
+    source_type: parquet
+  internal_need_state:
+    options:
+      delimiter: ','
+      header: true
+    path: data/raw/need_state.csv
+    source_type: csv
+  internal_sales:
+    options:
+      use_threads: true
+    path: data/raw/sales.parquet
+    source_type: parquet
+writers:
+  external_data_output: {}
+  internal_clusters_output:
+    destination_type: parquet
+    options:
+      compression: snappy
+    path: outputs/internal_clusters.parquet
+  internal_sales_output:
+    destination_type: parquet
+    options:
+      compression: snappy
+    path: outputs/internal_sales.parquet
+  internal_sales_percent_output:
+    destination_type: parquet
+    options:
+      compression: snappy
+    path: outputs/internal_sales_percent.parquet
+  merged_clusters_output: {}

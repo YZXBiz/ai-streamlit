@@ -5,17 +5,16 @@ from types import SimpleNamespace
 
 import dagster as dg
 import yaml
-from pydantic import BaseModel
 
 
-class ConfigSchema(BaseModel):
-    """Schema for configuration resource."""
-
-    config_path: str
-    env: str = "dev"
-
-
-@dg.resource(config_schema=ConfigSchema.model_json_schema())
+@dg.resource(
+    config_schema={
+        "config_path": dg.Field(
+            dg.String, is_required=True, description="Path to the configuration file"
+        ),
+        "env": dg.Field(dg.String, default_value="dev", description="Environment name"),
+    }
+)
 def clustering_config(context: dg.InitResourceContext) -> SimpleNamespace:
     """Resource that loads clustering configuration from YAML.
 
@@ -29,7 +28,8 @@ def clustering_config(context: dg.InitResourceContext) -> SimpleNamespace:
     env = context.resource_config["env"]
 
     # First load base config
-    base_config_path = os.path.join(os.path.dirname(config_path), "base.yml")
+    configs_dir = os.path.join(os.path.dirname(__file__), "configs")
+    base_config_path = os.path.join(configs_dir, "base.yml")
 
     # Load base config if it exists
     base_config = {}
@@ -39,7 +39,7 @@ def clustering_config(context: dg.InitResourceContext) -> SimpleNamespace:
 
     # Load environment-specific config if it exists
     env_config = {}
-    env_config_path = os.path.join(os.path.dirname(config_path), env, os.path.basename(config_path))
+    env_config_path = os.path.join(configs_dir, f"{env}.yml")
     if os.path.exists(env_config_path):
         with open(env_config_path) as f:
             env_config = yaml.safe_load(f)

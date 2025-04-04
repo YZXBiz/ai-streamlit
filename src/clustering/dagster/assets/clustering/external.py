@@ -1,12 +1,13 @@
 """External clustering assets for the clustering pipeline."""
 
-from typing import Any, Dict
+from typing import Any
 
 import dagster as dg
 import polars as pl
 from pydantic import BaseModel
 
-from clustering.core import models
+# Import from our PyCaret-based implementation
+from clustering.core.models import ClusteringModel
 
 
 class ExternalClusteringConfig(BaseModel):
@@ -18,7 +19,7 @@ class ExternalClusteringConfig(BaseModel):
     pca_active: bool = True
     pca_components: float = 0.8
     ignore_features: list[str] = ["STORE_NBR"]
-    kwargs: Dict[str, Any] = {}
+    kwargs: dict[str, Any] = {}
 
 
 @dg.asset(
@@ -26,35 +27,37 @@ class ExternalClusteringConfig(BaseModel):
     deps=["preprocessed_external_data"],
     compute_kind="external_clustering",
     group_name="clustering",
+    required_resource_keys={"config"},
 )
 def external_clustering_model(
     context: dg.AssetExecutionContext,
     preprocessed_external_data: pl.DataFrame,
-    clustering_config=dg.ResourceParam(dg.InitResourceContext),
-) -> models.ClusteringModel:
+) -> ClusteringModel:
     """Train clustering model on external data.
 
     Args:
         context: Asset execution context
         preprocessed_external_data: Preprocessed external data
-        clustering_config: Configuration for clustering
 
     Returns:
         Trained clustering model
     """
     context.log.info("Training external clustering model")
 
+    # Get config from resources
+    clustering_config = context.resources.config
+
     # Create clustering model with configuration from Dagster config
     algorithm = getattr(clustering_config, "algorithm", "kmeans")
     normalize = getattr(clustering_config, "normalize", False)
-    norm_method = getattr(clustering_config, "norm_method", "clr")
+    norm_method = getattr(clustering_config, "norm_method", "robust")  # Changed from clr to robust
     pca_active = getattr(clustering_config, "pca_active", True)
     pca_components = getattr(clustering_config, "pca_components", 0.8)
     ignore_features = getattr(clustering_config, "ignore_features", ["STORE_NBR"])
     kwargs = getattr(clustering_config, "kwargs", {})
 
     # Create model with the specified parameters
-    model = models.ClusteringModel(
+    model = ClusteringModel(
         CLUS_ALGO=algorithm,
         NORMALIZE=normalize,
         NORM_METHOD=norm_method,
@@ -84,7 +87,7 @@ def external_clustering_model(
 )
 def external_clusters(
     context: dg.AssetExecutionContext,
-    external_clustering_model: models.ClusteringModel,
+    external_clustering_model: ClusteringModel,
     preprocessed_external_data: pl.DataFrame,
 ) -> pl.DataFrame:
     """Assign cluster labels to external data.
@@ -122,8 +125,8 @@ def external_clusters(
 )
 def external_cluster_evaluation(
     context: dg.AssetExecutionContext,
-    external_clustering_model: models.ClusteringModel,
-) -> Dict[str, Any]:
+    external_clustering_model: ClusteringModel,
+) -> dict[str, Any]:
     """Evaluate external clustering quality.
 
     Args:
@@ -138,13 +141,8 @@ def external_cluster_evaluation(
     # Evaluate model
     scores = external_clustering_model.evaluate()
 
-    # Convert to dictionary if it's a DataFrame
-    if hasattr(scores, "to_dict"):
-        scores_dict = scores.to_dict()
-    else:
-        scores_dict = scores
-
-    return scores_dict
+    # scores is now a dictionary, not a DataFrame
+    return scores
 
 
 @dg.asset(
@@ -152,23 +150,28 @@ def external_cluster_evaluation(
     deps=["external_clusters"],
     compute_kind="external_clustering",
     group_name="clustering",
+    required_resource_keys={"output_clusters_writer"},
 )
 def external_clustering_output(
     context: dg.AssetExecutionContext,
     external_clusters: pl.DataFrame,
-    output_clusters_writer=dg.ResourceParam(dg.InitResourceContext),
 ) -> None:
     """Save external clustering results.
 
     Args:
         context: Asset execution context
         external_clusters: External clusters data
-        output_clusters_writer: Writer for output clusters
     """
     context.log.info("Saving external clustering results")
 
+    # Get writer from resources
+    output_clusters_writer = context.resources.output_clusters_writer
+
     # Check if the writer expects Pandas DataFrame
-    if hasattr(output_clusters_writer, "requires_pandas") and output_clusters_writer.requires_pandas:
+    if (
+        hasattr(output_clusters_writer, "requires_pandas")
+        and output_clusters_writer.requires_pandas
+    ):
         output_clusters_writer.write(data=external_clusters.to_pandas())
     else:
         output_clusters_writer.write(data=external_clusters)

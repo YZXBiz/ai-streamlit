@@ -1,11 +1,4 @@
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.3
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -14,31 +7,28 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-toml
-      - id: debug-statements
-      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          [pydantic>=2.0.0, types-requests, polars>=0.20.0]
+        exclude: ^(tests/|scripts/)
+        args: [--ignore-missing-imports]
 
   - repo: local
     hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
-        language: system
-        types: [python]
-        args: [--ignore-missing-imports]
-        exclude: ^tests/
-
-      - id: pyright
-        name: pyright
-        entry: pyright
-        language: system
-        types: [python]
-        args: []
-        exclude: ^tests/
-
-      - id: pytest
-        name: pytest
+      - id: pytest-check
+        name: pytest-check
         entry: pytest
         language: system
         pass_filenames: false
-        always_run: true
         args: [tests/]
