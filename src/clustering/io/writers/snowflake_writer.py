@@ -34,7 +34,7 @@ class SnowflakeWriter(Writer):
         with open(self.pkb_path, "rb") as file:
             pkb = pickle.load(file)
 
-        with open(self.creds_path, "r") as file:
+        with open(self.creds_path) as file:
             sf_params = json.loads(file.read())
 
         conn = snowflake.connector.connect(

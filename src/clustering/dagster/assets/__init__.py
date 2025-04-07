@@ -8,12 +8,15 @@ from clustering.dagster.assets.clustering.external import (
 )
 from clustering.dagster.assets.clustering.internal import (
     internal_cluster_evaluation,
+    internal_clustering_model,
     internal_clustering_output,
     internal_clusters,
-    normalized_internal_data,
 )
 from clustering.dagster.assets.merging import merged_clusters, merged_clusters_output
-from clustering.dagster.assets.preprocessing.external import external_features_data, preprocessed_external_data
+from clustering.dagster.assets.preprocessing.external import (
+    external_features_data,
+    preprocessed_external_data,
+)
 from clustering.dagster.assets.preprocessing.internal import (
     internal_category_data,
     internal_need_state_data,
@@ -37,7 +40,7 @@ __all__ = [
     "external_features_data",
     "preprocessed_external_data",
     # Clustering assets - Internal
-    "normalized_internal_data",
+    "internal_clustering_model",
     "internal_clusters",
     "internal_cluster_evaluation",
     "internal_clustering_output",

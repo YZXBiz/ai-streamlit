@@ -8,10 +8,18 @@ from clustering.infra.monitoring import AlertingService
 @dg.resource(
     config_schema={
         "enabled": dg.Field(dg.Bool, default_value=True, description="Whether alerting is enabled"),
-        "threshold": dg.Field(dg.String, default_value="WARNING", description="Minimum log level to trigger alerts"),
-        "slack_webhook": dg.Field(dg.Noneable(dg.String), default_value=None, description="Slack webhook URL"),
-        "channels": dg.Field(dg.Array(dg.String), default_value=["slack"], description="Alert channels to use"),
-        "email_recipients": dg.Field(dg.Array(dg.String), default_value=[], description="Email recipients"),
+        "threshold": dg.Field(
+            dg.String, default_value="WARNING", description="Minimum log level to trigger alerts"
+        ),
+        "slack_webhook": dg.Field(
+            dg.Noneable(dg.String), default_value=None, description="Slack webhook URL"
+        ),
+        "channels": dg.Field(
+            dg.Array(dg.String), default_value=["slack"], description="Alert channels to use"
+        ),
+        "email_recipients": dg.Field(
+            dg.Array(dg.String), default_value=[], description="Email recipients"
+        ),
     }
 )
 def alerts_service(context: dg.InitResourceContext) -> AlertingService:

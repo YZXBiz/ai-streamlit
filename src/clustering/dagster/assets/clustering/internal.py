@@ -1,95 +1,14 @@
 """Internal clustering assets for the clustering pipeline."""
 
 import datetime
-from typing import Any
+from typing import Any, cast
 
 import dagster as dg
 import polars as pl
-from sklearn import metrics as sk_metrics
+from sklearn import metrics as sk_metrics  # type: ignore
 
 # Import from our PyCaret-based implementation
 from clustering.core.models import ClusteringModel
-
-
-# Define schemas for internal use
-class ClusterFeature:
-    """Feature statistics for a cluster."""
-
-    def __init__(self, name: str, mean: float, median: float, min: float, max: float):
-        self.name = name
-        self.mean = mean
-        self.median = median
-        self.min = min
-        self.max = max
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-
-class ClusterOutputSchema:
-    """Output schema for a cluster."""
-
-    def __init__(
-        self,
-        cluster_id: str,
-        size: int,
-        features: list[ClusterFeature],
-        silhouette_score: float | None = None,
-    ):
-        self.cluster_id = cluster_id
-        self.size = size
-        self.features = features
-        self.silhouette_score = silhouette_score
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-
-class ClusteringResult:
-    """Result schema for clustering operation."""
-
-    def __init__(
-        self,
-        model_version: str,
-        algorithm: str,
-        parameters: dict,
-        clusters: list[ClusterOutputSchema],
-        metadata: dict,
-        timestamp: str,
-    ):
-        self.model_version = model_version
-        self.algorithm = algorithm
-        self.parameters = parameters
-        self.clusters = clusters
-        self.metadata = metadata
-        self.timestamp = timestamp
-
-    def model_dump(self):
-        return {
-            "model_version": self.model_version,
-            "algorithm": self.algorithm,
-            "parameters": self.parameters,
-            "clusters": [
-                {
-                    "cluster_id": c.cluster_id,
-                    "size": c.size,
-                    "features": [
-                        {
-                            "name": f.name,
-                            "mean": f.mean,
-                            "median": f.median,
-                            "min": f.min,
-                            "max": f.max,
-                        }
-                        for f in c.features
-                    ],
-                    "silhouette_score": c.silhouette_score,
-                }
-                for c in self.clusters
-            ],
-            "metadata": self.metadata,
-            "timestamp": self.timestamp,
-        }
 
 
 @dg.asset(
@@ -97,54 +16,25 @@ class ClusteringResult:
     deps=["preprocessed_internal_sales"],
     compute_kind="internal_clustering",
     group_name="clustering",
-)
-def normalized_internal_data(
-    context: dg.AssetExecutionContext,
-    preprocessed_internal_sales: pl.DataFrame,
-) -> pl.DataFrame:
-    """Normalize internal data for clustering.
-
-    Args:
-        context: Asset execution context
-        preprocessed_internal_sales: Preprocessed sales data
-
-    Returns:
-        Normalized data for clustering
-    """
-    context.log.info("Normalizing internal data")
-
-    # Log environment info
-    context.log.info(f"Using environment: {context.resources.config.get_env()}")
-
-    # We don't need to normalize here since the ClusteringModel handles normalization
-    # Just return the preprocessed data
-    context.log.info(
-        "Skipping explicit normalization as it will be handled by the clustering model"
-    )
-    return preprocessed_internal_sales
-
-
-@dg.asset(
-    io_manager_key="io_manager",
-    deps=["normalized_internal_data"],
-    compute_kind="internal_clustering",
-    group_name="clustering",
     required_resource_keys={"config", "alerts"},
 )
 def internal_clustering_model(
     context: dg.AssetExecutionContext,
-    normalized_internal_data: pl.DataFrame,
+    preprocessed_internal_sales: pl.DataFrame,
 ) -> ClusteringModel:
     """Train clustering model on internal data.
 
     Args:
         context: Asset execution context
-        normalized_internal_data: Normalized internal data
+        preprocessed_internal_sales: Preprocessed internal data
 
     Returns:
         Trained clustering model
     """
     context.log.info("Training internal clustering model")
+
+    # Log environment info
+    context.log.info(f"Using environment: {context.resources.config.get_env()}")
 
     # Load clustering configuration from environment-specific config
     config = context.resources.config.load("internal_clustering")
@@ -153,9 +43,7 @@ def internal_clustering_model(
     # Extract clustering parameters from config
     algorithm = clustering_config.get("algorithm", "kmeans")
     normalize = clustering_config.get("normalize", True)
-    norm_method = clustering_config.get(
-        "norm_method", "robust"
-    )  # Changed from clr to robust
+    norm_method = clustering_config.get("norm_method", "robust")  # Changed from clr to robust
     pca_active = clustering_config.get("pca_active", True)
     pca_components = clustering_config.get("pca_components", 0.8)
     ignore_features = clustering_config.get("ignore_features", ["STORE_NBR"])
@@ -164,6 +52,7 @@ def internal_clustering_model(
     # Log configuration
     context.log.info(f"Using algorithm: {algorithm}")
     context.log.info(f"Model configuration: normalize={normalize}, pca={pca_active}")
+    context.log.info("Normalization will be handled by the clustering model")
 
     # Create model with the specified parameters
     model = ClusteringModel(
@@ -177,7 +66,7 @@ def internal_clustering_model(
     )
 
     # Convert polars DataFrame to pandas for ClusteringModel
-    inputs = normalized_internal_data.to_pandas()
+    inputs = preprocessed_internal_sales.to_pandas()
 
     try:
         # Fit the model
@@ -187,15 +76,13 @@ def internal_clustering_model(
     except Exception as e:
         error_msg = f"Failed to fit clustering model: {e}"
         context.log.error(error_msg)
-        context.resources.alerts.alert(
-            message=error_msg, level="ERROR", context={"error": str(e)}
-        )
+        context.resources.alerts.alert(message=error_msg, level="ERROR", context={"error": str(e)})
         raise
 
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["internal_clustering_model", "normalized_internal_data"],
+    deps=["internal_clustering_model"],
     compute_kind="internal_clustering",
     group_name="clustering",
     required_resource_keys={"config", "alerts"},
@@ -203,14 +90,12 @@ def internal_clustering_model(
 def internal_clusters(
     context: dg.AssetExecutionContext,
     internal_clustering_model: ClusteringModel,
-    normalized_internal_data: pl.DataFrame,
 ) -> dict[str, Any]:
     """Generate internal clusters.
 
     Args:
         context: Asset execution context
         internal_clustering_model: Trained clustering model
-        normalized_internal_data: Normalized data for clustering
 
     Returns:
         Dictionary containing cluster results
@@ -224,43 +109,28 @@ def internal_clusters(
         # Convert to polars for further processing
         result_df = pl.from_pandas(clustered_data)
 
-        # Extract feature columns (numeric columns excluding the cluster column)
+        # Extract feature columns from the result data
         feature_cols = [
             col
-            for col in normalized_internal_data.select(pl.col(pl.Float64)).columns
+            for col in result_df.columns
             if col != "Cluster"
+            and result_df[col].dtype in [pl.Float32, pl.Float64, pl.Int32, pl.Int64]
         ]
 
         # Compute detailed cluster statistics
-        cluster_stats = {}
-        cluster_schemas = []
+        cluster_stats: dict[str, Any] = {}
 
         # Process each cluster
         for cluster_id in result_df["Cluster"].unique():
             cluster_rows = result_df.filter(pl.col("Cluster") == cluster_id)
             cluster_size = len(cluster_rows)
 
-            # Compute feature statistics for the cluster
-            cluster_features = []
-            for col in feature_cols:
-                if col in cluster_rows.columns:
-                    feature_stats = {
-                        "name": col,
-                        "mean": float(cluster_rows[col].mean()),
-                        "median": float(cluster_rows[col].median()),
-                        "min": float(cluster_rows[col].min()),
-                        "max": float(cluster_rows[col].max()),
-                    }
-                    cluster_features.append(ClusterFeature(**feature_stats))
-
             # Calculate silhouette score for this cluster if possible
             silhouette_score = None
             if cluster_size > 1 and len(result_df["Cluster"].unique()) > 1:
                 try:
                     # Only calculate for clusters with enough data points
-                    cluster_features_array = cluster_rows.select(
-                        feature_cols
-                    ).to_numpy()
+                    cluster_features_array = cluster_rows.select(feature_cols).to_numpy()
                     if len(cluster_features_array) >= 2:
                         # Use a sample to make computation faster for large clusters
                         sample_size = min(1000, len(cluster_features_array))
@@ -274,25 +144,19 @@ def internal_clusters(
                         f"Could not calculate silhouette score for cluster {cluster_id}: {e}"
                     )
 
-            # Create a validated cluster schema
-            cluster_schema = ClusterOutputSchema(
-                cluster_id=str(cluster_id),
-                size=cluster_size,
-                features=cluster_features,
-                silhouette_score=silhouette_score,
-            )
+            # Keep the raw stats dictionary for analysis
+            mean_values: dict[str, float] = {}
+            for col in feature_cols:
+                if col in cluster_rows.columns:
+                    mean_val = cluster_rows[col].mean()
+                    if mean_val is not None:
+                        mean_values[col] = float(mean_val)  # type: ignore
+                    else:
+                        mean_values[col] = 0.0
 
-            # Store the validated cluster schema
-            cluster_schemas.append(cluster_schema)
-
-            # Also keep the raw stats dictionary for backward compatibility
             cluster_stats[f"cluster_{cluster_id}"] = {
                 "count": cluster_size,
-                "mean": {
-                    col: float(cluster_rows[col].mean())
-                    for col in feature_cols
-                    if col in cluster_rows.columns
-                },
+                "mean": mean_values,
                 "silhouette_score": silhouette_score,
             }
 
@@ -306,41 +170,48 @@ def internal_clusters(
         }
         parameters.update(internal_clustering_model.KWARGS)
 
-        # Validate and create the full clustering result
-        clustering_result = ClusteringResult(
-            model_version="1.0",
-            algorithm=algorithm,
-            parameters=parameters,
-            clusters=cluster_schemas,
-            metadata={
+        # Create a simplified result schema as a dictionary
+        result_schema = {
+            "model_version": "1.0",
+            "algorithm": algorithm,
+            "parameters": parameters,
+            "clusters": [
+                {
+                    "cluster_id": str(cluster_id),
+                    "size": stats["count"],
+                    "silhouette_score": stats["silhouette_score"],
+                }
+                for cluster_id, stats in cluster_stats.items()
+            ],
+            "metadata": {
                 "feature_columns": feature_cols,
                 "environment": context.resources.config.get_env(),
-                "row_count": len(normalized_internal_data),
+                "row_count": len(result_df),
             },
-            timestamp=datetime.datetime.now().isoformat(),
-        )
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
 
         # Log successful clustering
-        context.log.info(f"Created {len(cluster_schemas)} clusters")
+        context.log.info(f"Created {len(cluster_stats)} clusters")
 
         return {
             "clustered_data": result_df,
             "model": internal_clustering_model,
             "stats": cluster_stats,
-            "result_schema": clustering_result.model_dump(),
+            "result_schema": result_schema,
         }
 
     except Exception as e:
         error_msg = f"Failed to generate clusters: {e}"
         context.log.error(error_msg)
-        context.resources.alerts.alert(
-            message=error_msg, level="ERROR", context={"error": str(e)}
-        )
+        context.resources.alerts.alert(message=error_msg, level="ERROR", context={"error": str(e)})
         raise
 
 
 @dg.asset_check(asset="internal_clusters")
-def validate_cluster_quality(context: dg.AssetExecutionContext, internal_clusters):
+def validate_cluster_quality(
+    context: dg.AssetExecutionContext, internal_clusters: dict[str, Any]
+) -> dg.AssetCheckResult:
     """Validate the quality of internal clusters."""
     # Extract silhouette scores from the clusters
     stats = internal_clusters["stats"]
@@ -354,9 +225,7 @@ def validate_cluster_quality(context: dg.AssetExecutionContext, internal_cluster
     # Check if there's at least one valid cluster
     valid_clusters = 0
     for cluster_name, cluster_data in stats.items():
-        if (
-            cluster_data.get("count", 0) > 10
-        ):  # Consider clusters with at least 10 items as valid
+        if cluster_data.get("count", 0) > 10:  # Consider clusters with at least 10 items as valid
             valid_clusters += 1
 
     # Check if we have enough valid clusters
@@ -431,10 +300,11 @@ def internal_cluster_evaluation(
     if model:
         metrics = model.evaluate()
         context.log.info(f"Evaluation metrics: {metrics}")
-        return metrics
+        # Ensure return value meets the promised type
+        return cast(dict[str, float], metrics)
     else:
         context.log.error("No model found in internal_clusters")
-        return {"error": "No model found for evaluation"}
+        return {"error_code": 1.0}  # Use a numeric value to match return type
 
 
 @dg.asset(

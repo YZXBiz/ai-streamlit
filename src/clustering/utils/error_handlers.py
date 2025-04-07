@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Optional, TypeVar
 
 # Type for error classes
 E = TypeVar("E", bound=Exception)
@@ -16,7 +16,7 @@ class ErrorContext:
         operation: str = "",
         source: str = "",
         data: Any = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ):
         """Initialize error context.
 
@@ -107,8 +107,8 @@ class TypeBasedErrorHandler(ErrorHandler):
 
     def __init__(
         self,
-        error_types: list[Type[Exception]],
-        successor: Optional[ErrorHandler] = None,
+        error_types: list[type[Exception]],
+        successor: ErrorHandler | None = None,
     ):
         """Initialize the type-based error handler.
 
@@ -137,10 +137,10 @@ class LoggingErrorHandler(TypeBasedErrorHandler):
 
     def __init__(
         self,
-        error_types: list[Type[Exception]],
-        logger: Optional[logging.Logger] = None,
+        error_types: list[type[Exception]],
+        logger: logging.Logger | None = None,
         log_level: int = logging.ERROR,
-        successor: Optional[ErrorHandler] = None,
+        successor: ErrorHandler | None = None,
     ):
         """Initialize the logging error handler.
 
@@ -171,10 +171,10 @@ class RetryErrorHandler(TypeBasedErrorHandler):
 
     def __init__(
         self,
-        error_types: list[Type[Exception]],
+        error_types: list[type[Exception]],
         max_retries: int = 3,
-        retry_callback: Optional[callable] = None,
-        successor: Optional[ErrorHandler] = None,
+        retry_callback: callable | None = None,
+        successor: ErrorHandler | None = None,
     ):
         """Initialize the retry error handler.
 
@@ -187,7 +187,7 @@ class RetryErrorHandler(TypeBasedErrorHandler):
         super().__init__(error_types, successor)
         self.max_retries = max_retries
         self.retry_callback = retry_callback
-        self._retry_counts: Dict[str, int] = {}
+        self._retry_counts: dict[str, int] = {}
 
     def _get_operation_key(self, context: ErrorContext) -> str:
         """Get a unique key for the operation to track retry counts.
@@ -234,7 +234,9 @@ class RetryErrorHandler(TypeBasedErrorHandler):
             return self.retry_callback(context)
         else:
             # Max retries exceeded, pass to successor
-            logging.warning(f"Max retries ({self.max_retries}) exceeded for {context.operation}: {str(error)}")
+            logging.warning(
+                f"Max retries ({self.max_retries}) exceeded for {context.operation}: {str(error)}"
+            )
             if self._successor:
                 return self._successor.handle_error(error, context)
             else:
@@ -246,9 +248,9 @@ class FallbackErrorHandler(TypeBasedErrorHandler):
 
     def __init__(
         self,
-        error_types: list[Type[Exception]],
+        error_types: list[type[Exception]],
         fallback_value: Any,
-        successor: Optional[ErrorHandler] = None,
+        successor: ErrorHandler | None = None,
     ):
         """Initialize the fallback error handler.
 
@@ -292,7 +294,7 @@ class ErrorHandlerChain:
         return logging_handler
 
     @staticmethod
-    def create_io_chain(retry_callback: Optional[callable] = None) -> ErrorHandler:
+    def create_io_chain(retry_callback: callable | None = None) -> ErrorHandler:
         """Create an error handler chain for IO operations.
 
         Args:

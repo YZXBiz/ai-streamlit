@@ -13,6 +13,7 @@ from clustering.dagster.assets import (
     external_features_data,
     internal_category_data,
     internal_cluster_evaluation,
+    internal_clustering_model,
     internal_clustering_output,
     internal_clusters,
     internal_need_state_data,
@@ -20,7 +21,6 @@ from clustering.dagster.assets import (
     merged_clusters,
     merged_clusters_output,
     merged_internal_data,
-    normalized_internal_data,
     preprocessed_external_data,
     preprocessed_internal_sales,
     preprocessed_internal_sales_percent,
@@ -53,16 +53,18 @@ def load_resource_config(env: str = "dev") -> dict:
 
     try:
         # Load the YAML file
-        with open(config_file_path, "r") as f:
+        with open(config_file_path) as f:
             config_data = yaml.safe_load(f)
 
         return config_data
     except Exception as e:
         print(f"Error loading resource config for environment '{env}': {e}")
         # Fall back to base config
-        base_config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", "base.yml")
+        base_config_path = os.path.join(
+            os.path.dirname(__file__), "resources", "configs", "base.yml"
+        )
         try:
-            with open(base_config_path, "r") as f:
+            with open(base_config_path) as f:
                 return yaml.safe_load(f)
         except Exception as base_error:
             print(f"Error loading base config: {base_error}")
@@ -99,7 +101,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
                 "config_path": env_config.get("config", {}).get(
                     "path",
                     os.path.join(
-                        os.path.dirname(__file__), "resources", "configs", "job_configs", "internal_clustering.yml"
+                        os.path.dirname(__file__),
+                        "resources",
+                        "configs",
+                        "job_configs",
+                        "internal_clustering.yml",
                     ),
                 ),
             }
@@ -126,7 +132,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Internal sales reader
         "input_sales_reader": data_io.data_reader.configured(
             {
-                "kind": "ParquetReader" if env == "dev" else "BlobReader" if env == "staging" else "SnowflakeReader",
+                "kind": "ParquetReader"
+                if env == "dev"
+                else "BlobReader"
+                if env == "staging"
+                else "SnowflakeReader",
                 "config": {
                     "path": env_config.get("readers", {})
                     .get("internal_sales", {})
@@ -154,7 +164,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Internal need state reader
         "input_need_state_reader": data_io.data_reader.configured(
             {
-                "kind": "CSVReader" if env == "dev" else "BlobReader" if env == "staging" else "SnowflakeReader",
+                "kind": "CSVReader"
+                if env == "dev"
+                else "BlobReader"
+                if env == "staging"
+                else "SnowflakeReader",
                 "config": {
                     "path": env_config.get("readers", {})
                     .get("internal_need_state", {})
@@ -199,7 +213,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Output writers using the data_writer resource
         "output_sales_writer": data_io.data_writer.configured(
             {
-                "kind": "ParquetWriter" if env == "dev" else "BlobWriter" if env == "staging" else "SnowflakeWriter",
+                "kind": "ParquetWriter"
+                if env == "dev"
+                else "BlobWriter"
+                if env == "staging"
+                else "SnowflakeWriter",
                 "config": {
                     "path": env_config.get("writers", {})
                     .get("internal_sales_output", {})
@@ -227,7 +245,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Internal sales percent output writer
         "output_sales_percent_writer": data_io.data_writer.configured(
             {
-                "kind": "ParquetWriter" if env == "dev" else "BlobWriter" if env == "staging" else "SnowflakeWriter",
+                "kind": "ParquetWriter"
+                if env == "dev"
+                else "BlobWriter"
+                if env == "staging"
+                else "SnowflakeWriter",
                 "config": {
                     "path": env_config.get("writers", {})
                     .get("internal_sales_percent_output", {})
@@ -344,7 +366,7 @@ def define_internal_clustering_job() -> dg.AssetsDefinition:
     return dg.define_asset_job(
         name="internal_clustering_job",
         selection=[
-            normalized_internal_data,
+            internal_clustering_model,
             internal_clusters,
             internal_cluster_evaluation,
             internal_clustering_output,
@@ -420,7 +442,7 @@ def define_full_pipeline_job() -> dg.AssetsDefinition:
             preprocessed_internal_sales,
             preprocessed_internal_sales_percent,
             # Internal clustering
-            normalized_internal_data,
+            internal_clustering_model,
             internal_clusters,
             internal_cluster_evaluation,
             internal_clustering_output,
@@ -474,7 +496,7 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
             external_features_data,
             preprocessed_external_data,
             # Clustering assets - Internal
-            normalized_internal_data,
+            internal_clustering_model,
             internal_clusters,
             internal_cluster_evaluation,
             internal_clustering_output,

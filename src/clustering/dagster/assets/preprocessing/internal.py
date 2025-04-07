@@ -1,5 +1,7 @@
 """Internal preprocessing assets for the clustering pipeline."""
 
+from typing import Any
+
 import dagster as dg
 import polars as pl
 
@@ -32,7 +34,6 @@ def internal_sales_data(
     """
     context.log.info("Reading sales data")
 
-    # Use the dedicated reader resource
     sales_data_raw = context.resources.input_sales_reader.read()
 
     # Convert to Polars if needed
@@ -45,7 +46,7 @@ def internal_sales_data(
     column_mapping = {
         "product_id": "SKU_NBR",
         "store_id": "STORE_NBR",
-        "category_id": "CAT_DSC",  # Using category_id as CAT_DSC for now
+        "category_id": "CAT_DSC",
         "sales_amount": "TOTAL_SALES",
     }
 
@@ -53,11 +54,7 @@ def internal_sales_data(
     existing_columns = [col for col in column_mapping.keys() if col in sales_data.columns]
     rename_mapping = {col: column_mapping[col] for col in existing_columns}
 
-    # Rename columns
     sales_data_renamed = sales_data.rename(rename_mapping)
-
-    # Skip validation for now as the schema may not fully match
-    # sales_data_validated = schemas.InputsSalesSchema.check(sales_data_renamed)
 
     return sales_data_renamed
 
@@ -81,7 +78,6 @@ def internal_need_state_data(
     """
     context.log.info("Reading need state data")
 
-    # Use the dedicated reader resource
     ns_data_raw = context.resources.input_need_state_reader.read()
 
     # Convert to Polars if needed
@@ -90,19 +86,12 @@ def internal_need_state_data(
     else:
         ns_data = ns_data_raw
 
-    # Skip validation as the schema doesn't match the actual CSV columns
-    # ns_data_validated = schemas.InputsNSSchema.check(ns_data)
-    ns_data_validated = ns_data
-
-    # Clean need state data using DuckDB SQL
     context.log.info("Cleaning need state data")
 
-    # Execute cleaning using the functional SQL approach
+    # Execute cleaning using DuckDB SQL
     db = DuckDB()
     try:
-        # Create a SQL object for the cleaning operation
-        clean_sql = clean_need_state(ns_data_validated)
-        # Execute the query and convert to a DataFrame
+        clean_sql = clean_need_state(ns_data)
         result = db.query(clean_sql)
     finally:
         db.close()
@@ -131,10 +120,8 @@ def merged_internal_data(
     Returns:
         DataFrame containing merged data with sales distributed evenly
     """
-    # Use the functional SQL approach for transforms
     db = DuckDB()
     try:
-        # Merge data using a SQL object
         context.log.info("Merging sales and need state data")
 
         # Validate required columns before creating SQL
@@ -143,38 +130,25 @@ def merged_internal_data(
         if "SKU_NBR" not in internal_sales_data.columns:
             raise ValueError("Required column 'SKU_NBR' missing from sales data")
 
-        # Create a SQL object for the merge operation
+        # Create and execute merge operation
         merge_sql = merge_sales_with_need_state(
             sales_df=internal_sales_data, need_state_df=internal_need_state_data
         )
-
-        # Execute the query
         merged_data = db.query(merge_sql)
 
-        # Skip validation for now as the schema doesn't match exactly
-        # merged_validated = schemas.InputsMergedSchema.check(merged_data)
-        merged_validated = merged_data
-
-        # Redistribute sales using a SQL object
         context.log.info("Redistributing sales based on need states")
 
         # Validate required columns for distribution
         required_cols = ["SKU_NBR", "STORE_NBR", "NEED_STATE", "TOTAL_SALES"]
-        if not all(col in merged_validated.columns for col in required_cols):
-            missing_cols = [col for col in required_cols if col not in merged_validated.columns]
+        if not all(col in merged_data.columns for col in required_cols):
+            missing_cols = [col for col in required_cols if col not in merged_data.columns]
             raise ValueError(f"Required columns missing: {missing_cols}")
 
-        # Create a SQL object for the distribution operation
-        distribute_sql = distribute_sales(merged_validated)
-
-        # Execute the query
+        # Create and execute distribution operation
+        distribute_sql = distribute_sales(merged_data)
         distributed_sales = db.query(distribute_sql)
 
-        # Skip validation for now as the schema doesn't match exactly
-        # distributed_validated = schemas.InputsMergedSchema.check(distributed_sales)
-        distributed_validated = distributed_sales
-
-        return distributed_validated
+        return distributed_sales
     finally:
         db.close()
 
@@ -198,7 +172,6 @@ def internal_category_data(
     Returns:
         Dictionary of category-specific dataframes
     """
-    # Create category dictionary using functional SQL approach
     context.log.info("Creating category dictionary")
 
     # Validate required column
@@ -209,11 +182,11 @@ def internal_category_data(
     try:
         # Get unique categories
         categories_sql = get_categories(merged_internal_data)
-        categories_result = db.query(categories_sql, output_format="raw")
+        categories_result: Any = db.query(categories_sql, output_format="raw")
         categories = [cat[0] for cat in categories_result.fetchall()]
 
         # Create dictionary by filtering for each category
-        cat_dict = {}
+        cat_dict: dict[str, pl.DataFrame] = {}
         for cat in categories:
             category_sql = get_category_data(merged_internal_data, cat)
             cat_df = db.query(category_sql)
@@ -243,7 +216,6 @@ def preprocessed_internal_sales(
     """
     context.log.info("Saving preprocessed sales data")
 
-    # Use the configured writer resource
     output_writer = context.resources.output_sales_writer
 
     # Check if the writer expects Pandas DataFrame
@@ -251,8 +223,6 @@ def preprocessed_internal_sales(
         output_writer.write(data=merged_internal_data.to_pandas())
     else:
         output_writer.write(data=merged_internal_data)
-
-    return None
 
 
 @dg.asset(
@@ -274,7 +244,6 @@ def preprocessed_internal_sales_percent(
     """
     context.log.info("Saving preprocessed sales percent data")
 
-    # Use the configured writer resource
     output_writer = context.resources.output_sales_percent_writer
 
     # Check if the writer expects Pandas DataFrame
@@ -282,5 +251,3 @@ def preprocessed_internal_sales_percent(
         output_writer.write(data={k: df.to_pandas() for k, df in internal_category_data.items()})
     else:
         output_writer.write(data=internal_category_data)
-
-    return None

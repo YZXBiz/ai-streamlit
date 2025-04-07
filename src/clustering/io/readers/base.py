@@ -1,7 +1,6 @@
 """Base classes for data readers."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import polars as pl
 import pydantic as pdt
@@ -10,7 +9,7 @@ import pydantic as pdt
 class Reader(pdt.BaseModel, ABC):
     """Base class for data readers."""
 
-    limit: Optional[int] = None
+    limit: int | None = None
 
     def read(self) -> pl.DataFrame:
         """Template method defining the reading algorithm.

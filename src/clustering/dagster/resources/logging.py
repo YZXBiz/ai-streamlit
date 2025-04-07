@@ -7,7 +7,9 @@ from clustering.infra.logging import LoggerService
 
 @dg.resource(
     config_schema={
-        "sink": dg.Field(dg.String, default_value="logs/dagster_log.log", description="Path to log file"),
+        "sink": dg.Field(
+            dg.String, default_value="logs/dagster_log.log", description="Path to log file"
+        ),
         "level": dg.Field(dg.String, default_value="INFO", description="Log level"),
     }
 )

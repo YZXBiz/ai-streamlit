@@ -5,7 +5,7 @@ This is a Pydantic-based implementation for alerts that supports multiple channe
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
 from pydantic import BaseModel, Field
@@ -16,14 +16,19 @@ class AlertConfig(BaseModel):
 
     enabled: bool = Field(True, description="Whether alerting is enabled")
     threshold: str = Field("ERROR", description="Minimum log level to trigger alerts")
-    channels: List[str] = Field(["email"], description="Alert channels to use")
-    slack_webhook: Optional[str] = Field(None, description="Slack webhook URL")
-    email_recipients: List[str] = Field(["Jackson.Yang@cvshealth.com"], description="Email recipients")
-    alertmanager_url: str = Field("http://localhost:9093", description="Prometheus Alertmanager URL")
+    channels: list[str] = Field(["email"], description="Alert channels to use")
+    slack_webhook: str | None = Field(None, description="Slack webhook URL")
+    email_recipients: list[str] = Field(
+        ["Jackson.Yang@cvshealth.com"], description="Email recipients"
+    )
+    alertmanager_url: str = Field(
+        "http://localhost:9093", description="Prometheus Alertmanager URL"
+    )
 
     @property
     def threshold_level(self) -> int:
         """Get the numeric log level threshold.
+
         If the threshold is not a valid log level, use ERROR as the default.
         """
         return getattr(logging, self.threshold, logging.ERROR)
@@ -36,9 +41,9 @@ class AlertingService:
         self,
         enabled: bool,
         threshold: str,
-        channels: List[str],
-        slack_webhook: Optional[str],
-        email_recipients: List[str],
+        channels: list[str],
+        slack_webhook: str | None,
+        email_recipients: list[str],
         alertmanager_url: str,
         logger: Any,
     ):
@@ -76,7 +81,7 @@ class AlertingService:
         self,
         message: str,
         level: str = "ERROR",
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> bool:
         """Send an alert.
 
@@ -94,7 +99,9 @@ class AlertingService:
 
         level_num = getattr(logging, level, logging.ERROR)
         if level_num < self.threshold_level:
-            self.logger.debug("Alert level %s below threshold %s, not sending", level, self.threshold)
+            self.logger.debug(
+                "Alert level %s below threshold %s, not sending", level, self.threshold
+            )
             return False
 
         context = context or {}
@@ -124,7 +131,7 @@ class AlertingService:
 
         return success
 
-    def _send_slack_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
+    def _send_slack_alert(self, message: str, metadata: dict[str, Any]) -> bool:
         """Send an alert to Slack."""
         if not self.slack_webhook:
             return False
@@ -156,11 +163,13 @@ class AlertingService:
 
         success = 200 <= response.status_code < 300
         if not success:
-            self.logger.error("Slack alert failed with status %s: %s", response.status_code, response.text)
+            self.logger.error(
+                "Slack alert failed with status %s: %s", response.status_code, response.text
+            )
 
         return success
 
-    def _send_email_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
+    def _send_email_alert(self, message: str, metadata: dict[str, Any]) -> bool:
         """Send an alert via email.
 
         Args:
@@ -175,7 +184,7 @@ class AlertingService:
         self.logger.info("Would send email to %s: %s", self.email_recipients, message)
         return True
 
-    def _send_alertmanager_alert(self, message: str, metadata: Dict[str, Any]) -> bool:
+    def _send_alertmanager_alert(self, message: str, metadata: dict[str, Any]) -> bool:
         """Send an alert to Alertmanager."""
         if not self.alertmanager_url:
             return False
@@ -201,6 +210,8 @@ class AlertingService:
 
         success = 200 <= response.status_code < 300
         if not success:
-            self.logger.error("Alertmanager alert failed with status %s: %s", response.status_code, response.text)
+            self.logger.error(
+                "Alertmanager alert failed with status %s: %s", response.status_code, response.text
+            )
 
         return success

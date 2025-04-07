@@ -1,13 +1,16 @@
 """Time-based partitions for the clustering pipeline."""
 
 import datetime
-from typing import Optional
 
-from dagster import DailyPartitionsDefinition, MonthlyPartitionsDefinition, WeeklyPartitionsDefinition
+from dagster import (
+    DailyPartitionsDefinition,
+    MonthlyPartitionsDefinition,
+    WeeklyPartitionsDefinition,
+)
 
 
 def get_daily_partitions(
-    start_date: Optional[str] = None,
+    start_date: str | None = None,
     end_offset: int = 1,
     timezone: str = "UTC",
 ) -> DailyPartitionsDefinition:
@@ -34,7 +37,7 @@ def get_daily_partitions(
 
 
 def get_weekly_partitions(
-    start_date: Optional[str] = None,
+    start_date: str | None = None,
     end_offset: int = 1,
     timezone: str = "UTC",
     start_day_of_week: int = 0,  # Monday
@@ -67,7 +70,7 @@ def get_weekly_partitions(
 
 
 def get_monthly_partitions(
-    start_date: Optional[str] = None,
+    start_date: str | None = None,
     end_offset: int = 1,
     timezone: str = "UTC",
 ) -> MonthlyPartitionsDefinition:

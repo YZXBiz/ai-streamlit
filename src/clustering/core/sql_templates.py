@@ -204,10 +204,3 @@ def get_category_data(data_df: pl.DataFrame, category_value: str) -> SQL:
         """,
         bindings={"data": data_df, "category_value": category_value},
     )
-
-
-def check_column_types(
-    df: pl.DataFrame, expected_types: dict[str, type | list[type]], context: str = ""
-) -> dict[str, tuple[type | list[type], str]]:
-    # Implementation of the function
-    pass

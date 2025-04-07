@@ -29,7 +29,7 @@ class SQL:
     sql: str
     bindings: dict[str, Any] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post-initialization hook."""
         if self.bindings is None:
             object.__setattr__(self, "bindings", {})
@@ -46,11 +46,11 @@ class DuckDB:
         """
         self.connection = duckdb.connect(database=":memory:")
 
-    def close(self):
+    def close(self) -> None:
         """Close the DuckDB connection."""
         if self.connection:
             self.connection.close()
-            self.connection = None
+            self.connection = None  # type: ignore
 
     def sql_to_string(self, sql_obj: SQL) -> str:
         """Convert SQL object to string, recursively handling bindings.
@@ -62,8 +62,12 @@ class DuckDB:
             Resolved SQL string
         """
         replacements = {}
-        for key, value in sql_obj.bindings.items():
-            if isinstance(value, pd.DataFrame) or isinstance(value, pl.DataFrame):
+
+        # Ensure bindings is not None before iterating
+        bindings = sql_obj.bindings or {}
+
+        for key, value in bindings.items():
+            if isinstance(value, pd.DataFrame | pl.DataFrame):  # type: ignore
                 # For dataframes, we use a unique identifier
                 replacements[key] = f"df_{id(value)}"
             elif isinstance(value, SQL):
@@ -90,8 +94,12 @@ class DuckDB:
             Dictionary of dataframe IDs to dataframe objects
         """
         dataframes = {}
-        for _, value in sql_obj.bindings.items():
-            if isinstance(value, (pd.DataFrame, pl.DataFrame)):
+
+        # Ensure bindings is not None before iterating
+        bindings = sql_obj.bindings or {}
+
+        for _, value in bindings.items():
+            if isinstance(value, pd.DataFrame | pl.DataFrame):  # type: ignore
                 dataframes[f"df_{id(value)}"] = value
             elif isinstance(value, SQL):
                 # Recursively collect dataframes from nested SQL

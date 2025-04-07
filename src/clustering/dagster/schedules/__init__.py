@@ -11,4 +11,3 @@ __all__ = [
     "weekly_external_clustering_schedule",
     "monthly_full_pipeline_schedule",
 ]
-

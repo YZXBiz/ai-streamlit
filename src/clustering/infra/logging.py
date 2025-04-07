@@ -33,6 +33,11 @@ class LoggerService(pdt.BaseModel):
     catch: bool = True
 
     class Config:
+        """Pydantic configuration for LoggerSettings.
+
+        Forbids extra attributes in the configuration.
+        """
+
         extra = "forbid"
 
     def start(self) -> None:

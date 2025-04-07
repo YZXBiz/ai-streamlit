@@ -1,11 +1,9 @@
 """Helper functions for the clustering pipeline."""
 
-from typing import Dict, List
-
 import pandas as pd
 
 
-def merge_dataframes(df_list: List[pd.DataFrame]) -> pd.DataFrame:
+def merge_dataframes(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     """Merge multiple dataframes based on common columns.
 
     Args:
@@ -36,7 +34,9 @@ def merge_dataframes(df_list: List[pd.DataFrame]) -> pd.DataFrame:
     return result
 
 
-def merge_int_ext(internal_dict: Dict[str, pd.DataFrame], external_df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
+def merge_int_ext(
+    internal_dict: dict[str, pd.DataFrame], external_df: pd.DataFrame
+) -> dict[str, pd.DataFrame]:
     """Merge internal and external clustering results.
 
     Args:
@@ -65,7 +65,9 @@ def merge_int_ext(internal_dict: Dict[str, pd.DataFrame], external_df: pd.DataFr
         else:
             # If no common columns, try to merge on index
             # First ensure both DataFrames have meaningful indices
-            merged = pd.merge(internal_df, external_df, left_index=True, right_index=True, how="outer")
+            merged = pd.merge(
+                internal_df, external_df, left_index=True, right_index=True, how="outer"
+            )
 
         result[category] = merged
 

@@ -1,21 +1,23 @@
-# %% IMPORTS
+"""Data schema definitions for the clustering pipeline.
 
-import typing as T  # noqa
+This module contains Pydantic schemas for validating input and output data
+across the pipeline. These schemas ensure data consistency and quality.
+"""
+
+# %% IMPORTS
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
 import pandera as pa
-import pandera.typing as papd
 import polars as pl
-from pydantic import BaseModel, Field, model_validator
 
 # %% TYPES
-TSchema = T.TypeVar("TSchema", bound="pa.DataFrameModel")
+TSchema = TypeVar("TSchema", bound="pa.DataFrameModel")
 
-# Type aliases
-Inputs = pd.DataFrame | pl.DataFrame | np.ndarray
-Targets = pd.Series | pl.Series | np.ndarray
-Outputs = pd.DataFrame | pl.DataFrame | np.ndarray
+# Raw data type aliases
+DataFrameType = pd.DataFrame | pl.DataFrame | np.ndarray
+SeriesType = pd.Series | pl.Series | np.ndarray
 
 
 # %% SCHEMAS
@@ -36,25 +38,18 @@ class Schema(pa.DataFrameModel):
         Returns:
             Validated data, preserving the original type (Pandas or Polars)
         """
-        is_polars = isinstance(data, pl.DataFrame)
-
-        # Convert Polars to Pandas for validation
-        if is_polars:
-            pandas_data = data.to_pandas()
-        else:
-            pandas_data = data
-
-        # Validate with Pandera
-        validated_pandas = T.cast(papd.DataFrame[TSchema], cls.validate(check_obj=pandas_data))
-
-        # Convert back to Polars if the input was Polars
-        if is_polars:
-            return pl.from_pandas(validated_pandas)
-        return validated_pandas
+        # Validate with Pandera directly - it supports both Pandas and Polars
+        validated_data = cls.validate(data)
+        return validated_data
 
 
-# %% SCHEMAS
-class InputsSalesSchema(Schema):  # noqa: D106
+# Input schemas
+class InputsSalesSchema(Schema):
+    """Schema for sales input data.
+
+    Contains columns required for sales data processing.
+    """
+
     SKU_NBR: int = pa.Field(nullable=False, gt=0)
     STORE_NBR: int = pa.Field(nullable=False, gt=0)
     CAT_DSC: str = pa.Field(nullable=False)
@@ -62,6 +57,11 @@ class InputsSalesSchema(Schema):  # noqa: D106
 
 
 class InputsNSSchema(Schema):
+    """Schema for need state input data.
+
+    Defines the structure for need state categorical data.
+    """
+
     PRODUCT_ID: int = pa.Field(nullable=False, gt=0)
     CATEGORY: str = pa.Field(nullable=False)
     NEED_STATE: str = pa.Field(nullable=False)
@@ -78,7 +78,12 @@ class InputsNSSchema(Schema):
     TO_BE_DROPPED: bool = pa.Field(nullable=False)
 
 
-class InputsMergedSchema(Schema):  # noqa: D106
+class InputsMergedSchema(Schema):
+    """Schema for merged input data.
+
+    Combines fields from sales and needs state data.
+    """
+
     SKU_NBR: int = pa.Field(nullable=False, gt=0)
     STORE_NBR: int = pa.Field(nullable=False, gt=0)
     CAT_DSC: str = pa.Field(nullable=False)
@@ -86,83 +91,35 @@ class InputsMergedSchema(Schema):  # noqa: D106
     TOTAL_SALES: float = pa.Field(nullable=False, ge=0)
 
 
-class InputsSchema(Schema):  # noqa: D106
+class InputsSchema(Schema):
+    """Base schema for all input data.
+
+    Abstract base class for input schemas.
+    """
+
     pass
 
 
-Inputs = InputsSchema  # transformed inputs ready for modeling
+# Output schemas
+class OutputsSchema(Schema):
+    """Base schema for all output data.
 
+    Abstract base class for output schemas.
+    """
 
-class OuputsSchema(Schema):  # noqa: D106
     pass
-
-
-Outputs = InputsSchema
 
 
 class TargetsSchema(Schema):
+    """Schema for target data.
+
+    Abstract base class for target schemas.
+    """
+
     pass
 
 
-Targets = TargetsSchema  # transformed targets ready for modeling
-
-
-# Data contract definitions for clustering
-class ClusteringConfig(BaseModel):
-    """Configuration for clustering algorithms."""
-
-    algorithm: str = Field("kmeans", description="Clustering algorithm to use")
-    n_clusters: int = Field(5, description="Number of clusters for kmeans", ge=2)
-    random_state: int = Field(42, description="Random state for reproducibility")
-    min_cluster_size: int = Field(5, description="Minimum cluster size for HDBSCAN", ge=3)
-    cluster_selection_epsilon: float = Field(
-        0.0, description="Epsilon for HDBSCAN cluster selection", ge=0.0
-    )
-
-    @model_validator(mode="after")
-    def validate_algorithm_params(self) -> "ClusteringConfig":
-        """Validate that the parameters match the algorithm."""
-        if self.algorithm.lower() == "kmeans" and not hasattr(self, "n_clusters"):
-            raise ValueError("n_clusters is required for kmeans algorithm")
-        if self.algorithm.lower() == "hdbscan" and not hasattr(self, "min_cluster_size"):
-            raise ValueError("min_cluster_size is required for HDBSCAN algorithm")
-        return self
-
-
-class ClusterFeature(BaseModel):  # noqa: D106
-    """Feature values for a cluster."""
-
-    name: str
-    mean: float
-    median: float | None = None
-    min: float | None = None
-    max: float | None = None
-
-
-class ClusterOutputSchema(BaseModel):
-    """Schema for cluster output data."""
-
-    cluster_id: str
-    size: int = Field(..., gt=0, description="Number of points in the cluster")
-    features: list[ClusterFeature] = Field([], description="Statistical features of the cluster")
-    silhouette_score: float | None = Field(
-        None, description="Silhouette score for the cluster", ge=-1, le=1
-    )
-
-
-class ClusteringResult(BaseModel):
-    """Overall result of a clustering operation."""
-
-    model_version: str
-    algorithm: str
-    parameters: dict
-    clusters: list[ClusterOutputSchema]
-    metadata: dict = Field(default_factory=dict)
-    timestamp: str
-
-    @model_validator(mode="after")
-    def validate_clusters(self) -> "ClusteringResult":
-        """Validate that clusters exist."""
-        if not self.clusters:
-            raise ValueError("Clustering result must have at least one cluster")
-        return self
+# Type aliases for use in function signatures
+Inputs = DataFrameType
+Outputs = DataFrameType
+Targets = SeriesType

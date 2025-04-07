@@ -7,13 +7,13 @@ import logging
 import typing as tp
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Self
 
 import numpy as np
 import pydantic as pdt
 from pycaret.clustering import ClusteringExperiment
 from pydantic import PrivateAttr
 from sklearn.cluster import KMeans
+from typing_extensions import Self  # Use typing_extensions for Python 3.10 compatibility
 from yellowbrick.cluster import KElbowVisualizer
 
 from clustering.core import schemas

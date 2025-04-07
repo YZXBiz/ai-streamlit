@@ -4,7 +4,6 @@ import io
 import json
 import os
 import pickle
-from typing import Optional
 
 import duckdb
 import polars as pl
@@ -36,7 +35,7 @@ class SnowflakeReader(Reader):
         with open(self.pkb_path, "rb") as file:
             pkb = pickle.load(file)
 
-        with open(self.creds_path, "r") as file:
+        with open(self.creds_path) as file:
             sf_params = json.loads(file.read())
 
         conn = snowflake.connector.connect(
@@ -50,7 +49,7 @@ class SnowflakeReader(Reader):
         )
         return conn
 
-    def _load_cache(self) -> Optional[pl.DataFrame]:
+    def _load_cache(self) -> pl.DataFrame | None:
         """Load cached query results if available.
 
         Returns:
@@ -59,7 +58,9 @@ class SnowflakeReader(Reader):
         if os.path.exists(self.cache_file):
             conn = duckdb.connect(self.cache_file)
             try:
-                result = conn.execute("SELECT data FROM cache WHERE query = ?", (self.query,)).fetchone()
+                result = conn.execute(
+                    "SELECT data FROM cache WHERE query = ?", (self.query,)
+                ).fetchone()
                 if result:
                     return pl.read_parquet(io.BytesIO(result[0]))
             except duckdb.CatalogException as e:

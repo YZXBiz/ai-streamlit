@@ -4,8 +4,12 @@ import glob
 import os
 
 import dagster as dg
-from clustering.dagster.definitions import define_external_clustering_job, define_internal_clustering_job
 from dagster import RunRequest, SensorEvaluationContext, SensorResult
+
+from clustering.dagster.definitions import (
+    define_external_clustering_job,
+    define_internal_clustering_job,
+)
 
 
 def _parse_s3_path(s3_path: str) -> tuple[str, str]:
@@ -86,7 +90,9 @@ def new_internal_data_sensor(
     context.log.info(f"Detected new file: {latest_file}, triggering run with key {run_key}")
 
     # Update the cursor to the latest file
-    return SensorResult(run_requests=[RunRequest(run_key=run_key, run_config=run_config)], cursor=latest_file)
+    return SensorResult(
+        run_requests=[RunRequest(run_key=run_key, run_config=run_config)], cursor=latest_file
+    )
 
 
 @dg.sensor(
@@ -136,9 +142,14 @@ def external_data_sensor(context: SensorEvaluationContext) -> SensorResult:
 
             context.log.info(f"Detected new external file: {latest_file}")
 
-            run_config = {"resources": {"io_manager": {"config": {"external_data_path": latest_file}}}}
+            run_config = {
+                "resources": {"io_manager": {"config": {"external_data_path": latest_file}}}
+            }
 
             # Update the cursor to the latest file
-            return SensorResult(run_requests=[RunRequest(run_key=run_key, run_config=run_config)], cursor=latest_file)
+            return SensorResult(
+                run_requests=[RunRequest(run_key=run_key, run_config=run_config)],
+                cursor=latest_file,
+            )
 
     return SensorResult(skip_reason="No new external files detected")

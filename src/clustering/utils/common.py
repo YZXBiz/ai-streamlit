@@ -2,9 +2,10 @@
 
 import os
 import time
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 T = TypeVar("T")
 
