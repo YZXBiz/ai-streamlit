@@ -1,10 +1,12 @@
 """Dagster application entry point."""
 
 import os
+import tempfile
+from datetime import datetime
 
-from dagster import DagsterInstance
+import dagster as dg
 
-from clustering.dagster.definitions import clustering_job
+from clustering.dagster.definitions import create_definitions
 
 
 def get_dagster_home() -> str:
@@ -16,9 +18,6 @@ def get_dagster_home() -> str:
     dagster_home = os.environ.get("DAGSTER_HOME")
     if not dagster_home:
         # Create a temporary directory in the system's temp dir instead of source tree
-        import tempfile
-        from datetime import datetime
-
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         dagster_home = tempfile.mkdtemp(prefix=f"dagster_home_{timestamp}_")
         os.environ["DAGSTER_HOME"] = dagster_home
@@ -29,13 +28,29 @@ def get_dagster_home() -> str:
     return dagster_home
 
 
-def run_job():
-    """Run the Dagster job."""
+def run_job(env: str = "dev") -> None:
+    """Run the Dagster job.
+
+    Args:
+        env: Environment to use (dev, staging, prod)
+    """
     dagster_home = get_dagster_home()
     print(f"Using Dagster home: {dagster_home}")
 
-    instance = DagsterInstance.get()
-    clustering_job.execute_in_process(instance_ref=instance.get_ref())
+    # Set environment variable
+    os.environ["DAGSTER_ENV"] = env
+
+    # Get the definitions with the specified environment
+    definitions = create_definitions(env=env)
+
+    # Get the full pipeline job
+    full_pipeline_job = definitions.get_job_def("full_pipeline_job")
+
+    # Create Dagster instance
+    instance = dg.DagsterInstance.get()
+
+    # Execute the job
+    full_pipeline_job.execute_in_process(instance_ref=instance.get_ref())
 
 
 def run_app(host: str = "localhost", port: int = 3000, env: str = "dev") -> None:
@@ -44,12 +59,8 @@ def run_app(host: str = "localhost", port: int = 3000, env: str = "dev") -> None
     Args:
         host: Host to bind to
         port: Port to bind to
-        env: Environment to use
+        env: Environment to use (dev, staging, prod)
     """
-    import dagster as dg
-
-    from clustering.dagster import create_definitions
-
     # Set environment variable
     os.environ["DAGSTER_ENV"] = env
 
@@ -58,11 +69,11 @@ def run_app(host: str = "localhost", port: int = 3000, env: str = "dev") -> None
     print(f"Using Dagster home: {dagster_home}")
 
     # Create definitions
-    defs = create_definitions(env=env)
+    definitions = create_definitions(env=env)
 
     # Run webserver
     dg.webserver.run_webserver(
         host=host,
         port=port,
-        workspace=dg.workspace.UnscopedDefinitionsWorkspace(defs),
+        workspace=dg.workspace.UnscopedDefinitionsWorkspace(definitions),
     )
