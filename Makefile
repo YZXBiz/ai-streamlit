@@ -63,6 +63,7 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name "*.pyc" -delete
 	find . -name "*.log" -type f -delete
+	find . -name ".tmp_dagster*" -type d -exec rm -rf {} +
 
 # Build package	
 build:

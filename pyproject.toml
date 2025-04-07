@@ -134,3 +134,6 @@ exclude_lines = [
     "pass",
     "raise ImportError",
 ]
+
+[tool.dagster]
+module_name = "clustering.dagster"

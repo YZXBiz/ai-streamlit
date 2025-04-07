@@ -45,16 +45,22 @@ def external_clustering_model(
     context.log.info("Training external clustering model")
 
     # Get config from resources
-    clustering_config = context.resources.config
+    config = context.resources.config
 
-    # Create clustering model with configuration from Dagster config
-    algorithm = getattr(clustering_config, "algorithm", "kmeans")
-    normalize = getattr(clustering_config, "normalize", False)
-    norm_method = getattr(clustering_config, "norm_method", "robust")  # Changed from clr to robust
-    pca_active = getattr(clustering_config, "pca_active", True)
-    pca_components = getattr(clustering_config, "pca_components", 0.8)
-    ignore_features = getattr(clustering_config, "ignore_features", ["STORE_NBR"])
-    kwargs = getattr(clustering_config, "kwargs", {})
+    # Access parameters from job_params
+    job_params = config.job_params
+
+    # Create clustering model with configuration from job_params
+    algorithm = getattr(job_params, "algorithm", "kmeans")
+    normalize = getattr(job_params, "normalize", False)
+    norm_method = getattr(job_params, "norm_method", "robust")
+    pca_active = getattr(job_params, "pca_active", True)
+    pca_components = getattr(job_params, "pca_components", 0.8)
+    ignore_features = getattr(job_params, "ignore_features", ["STORE_NBR"])
+
+    # Get algorithm-specific parameters (like kmeans parameters)
+    algo_params = getattr(job_params, algorithm, {})
+    kwargs = getattr(algo_params, "__dict__", {})
 
     # Create model with the specified parameters
     model = ClusteringModel(

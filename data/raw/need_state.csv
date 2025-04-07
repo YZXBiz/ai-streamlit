@@ -1,4 +1,4 @@
-category_id,need_state_id,need_state_name,need_state_description
+PRODUCT_ID,need_state_id,need_state_name,need_state_description
 101,1,Convenience,"Products that save time and effort"
 101,2,Value,"Products that are cost-effective"
 101,3,Premium,"High-quality products at premium prices"

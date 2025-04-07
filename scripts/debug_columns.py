@@ -13,16 +13,19 @@ from dagster import DagsterInstance, materialize
 # Add src directory to Python path if needed
 sys.path.append(".")
 
-from src.clustering.core.sql_engine import SQL, DuckDB
-from src.clustering.core.sql_templates import clean_need_state
-from src.clustering.dagster.assets.preprocessing.internal import internal_need_state_data, internal_sales_data
+# Removed SQL and DuckDB imports
+# from src.clustering.core.sql_engine import SQL, DuckDB
+# from src.clustering.core.sql_templates import clean_need_state
+from src.clustering.dagster.assets.preprocessing.internal import (
+    internal_need_state_data,
+    internal_sales_data,
+)
 from src.clustering.dagster.resources.data_io import data_reader
 from src.clustering.dagster.resources.io_manager import clustering_io_manager
 
 
 def debug_columns():
     """Debug column names at different stages of the pipeline."""
-
     # Create output directory
     output_dir = "outputs/debug"
     os.makedirs(output_dir, exist_ok=True)
@@ -40,15 +43,32 @@ def debug_columns():
     need_state_df = pl.from_pandas(need_state_pd)
     print("Original need state columns:", need_state_df.columns)
 
-    # Clean need state data
-    db = DuckDB()
-    try:
-        print("\nCleaning need state data...")
-        clean_sql = clean_need_state(need_state_df)
-        cleaned_need_state = db.query(clean_sql)
-        print("Cleaned need state columns:", cleaned_need_state.columns)
-    finally:
-        db.close()
+    # Clean need state data using Polars instead of SQL
+    print("\nCleaning need state data...")
+    # Replace SQL template with direct Polars operations
+    cleaned_need_state = need_state_df.filter(pl.col("category_id").is_not_null()).with_columns(
+        [
+            pl.col("category_id").alias("CATEGORY_ID"),
+            pl.col("need_state_id").alias("NEED_STATE_ID"),
+            pl.col("need_state_name").alias("NEED_STATE_NAME"),
+            pl.col("need_state_description").alias("NEED_STATE_DESCRIPTION"),
+            pl.col("category_id").cast(pl.Int64).alias("PRODUCT_ID"),
+            pl.col("need_state_name").str.to_uppercase().alias("NEED_STATE"),
+            pl.col("need_state_description").alias("CATEGORY"),
+            pl.lit("Unknown").alias("CDT"),
+            pl.lit("Unknown").alias("ATTRIBUTE_1"),
+            pl.lit("Unknown").alias("ATTRIBUTE_2"),
+            pl.lit("Unknown").alias("ATTRIBUTE_3"),
+            pl.lit("Unknown").alias("ATTRIBUTE_4"),
+            pl.lit("Unknown").alias("ATTRIBUTE_5"),
+            pl.lit("Unknown").alias("ATTRIBUTE_6"),
+            pl.col("need_state_name").alias("PLANOGRAM_DSC"),
+            pl.col("need_state_id").alias("PLANOGRAM_NBR"),
+            pl.lit(False).alias("NEW_ITEM"),
+            pl.lit(False).alias("TO_BE_DROPPED"),
+        ]
+    )
+    print("Cleaned need state columns:", cleaned_need_state.columns)
 
     print("\n=== Using Dagster Assets ===")
 
@@ -97,56 +117,42 @@ def debug_columns():
             print("\nProcessed need state columns:", need_state_processed.columns)
             print("First few rows of processed need state:", need_state_processed.head(3))
 
-        # Now try a test merge
+        # Now try a test merge using Polars instead of DuckDB
         print("\n=== Testing Merge Query ===")
-        db = DuckDB()
         try:
-            test_merge_sql = SQL(
-                """
-                SELECT
-                    s."SKU_NBR",
-                    s."CAT_DSC",
-                    n."PRODUCT_ID",
-                    n."NEED_STATE"
-                FROM
-                    $sales s
-                JOIN
-                    $need_state n
-                ON
-                    s."CAT_DSC" = CAST(n."CATEGORY_ID" AS VARCHAR)
-                LIMIT 5
-                """,
-                bindings={"sales": sales_processed, "need_state": need_state_processed},
-            )
-
-            try:
-                result = db.query(test_merge_sql)
-                print("Test merge succeeded!")
-                print("Result columns:", result.columns)
-                print("First few rows of result:", result.head(3))
-            except Exception as e:
-                print(f"Test merge failed: {e}")
-
-                # Try another approach
-                print("\nTrying alternative merge...")
-                alt_merge_sql = SQL(
-                    """
-                    SELECT * FROM $sales s, $need_state n 
-                    WHERE s."CAT_DSC" = n."CATEGORY_ID"::VARCHAR
-                    LIMIT 5
-                    """,
-                    bindings={"sales": sales_processed, "need_state": need_state_processed},
+            # Using Polars for join
+            result = (
+                sales_processed.join(
+                    need_state_processed, left_on="CAT_DSC", right_on="CATEGORY_ID", how="inner"
                 )
+                .select(
+                    [
+                        pl.col("SKU_NBR"),
+                        pl.col("CAT_DSC"),
+                        pl.col("PRODUCT_ID"),
+                        pl.col("NEED_STATE"),
+                    ]
+                )
+                .limit(5)
+            )
+            print("Test merge succeeded!")
+            print("Result columns:", result.columns)
+            print("First few rows of result:", result.head(3))
+        except Exception as e:
+            print(f"Test merge failed: {e}")
 
-                try:
-                    alt_result = db.query(alt_merge_sql)
-                    print("Alternative merge succeeded!")
-                    print("Result columns:", alt_result.columns)
-                    print("First few rows of result:", alt_result.head(3))
-                except Exception as e2:
-                    print(f"Alternative merge also failed: {e2}")
-        finally:
-            db.close()
+            # Try another approach
+            print("\nTrying alternative merge...")
+            try:
+                # Using Polars with different join syntax
+                alt_result = sales_processed.join(
+                    need_state_processed, left_on="CAT_DSC", right_on="CATEGORY_ID", how="inner"
+                ).limit(5)
+                print("Alternative merge succeeded!")
+                print("Result columns:", alt_result.columns)
+                print("First few rows of result:", alt_result.head(3))
+            except Exception as e2:
+                print(f"Alternative merge also failed: {e2}")
     else:
         print("Asset materialization failed!")
 

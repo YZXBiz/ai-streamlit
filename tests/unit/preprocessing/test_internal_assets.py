@@ -20,6 +20,9 @@ from clustering.dagster.assets.preprocessing.internal import (
 )
 from tests.unit.preprocessing.conftest import MockReader
 
+# Remove unused imports
+# from clustering.core.sql_engine import DuckDB
+
 
 @pytest.fixture
 def mock_sales_data() -> pl.DataFrame:
@@ -48,9 +51,9 @@ def mock_need_state_data() -> pl.DataFrame:
     return pl.DataFrame(
         {
             "PRODUCT_ID": ["P001", "P002", "P003"],
-            "NEED_STATE": ["Everyday", "Health", "Treat"],
+            "NEED_STATE": ["everyday", "health", "treat"],  # lowercase to test uppercase conversion
             "WEIGHT": [0.7, 0.8, 0.9],
-            # Required columns for validation
+            # Other columns needed for the test
             "category_id": ["Grocery", "Produce", "Bakery"],
             "need_state_id": ["NS001", "NS002", "NS003"],
             "need_state_name": ["Everyday", "Health", "Treat"],
@@ -59,7 +62,6 @@ def mock_need_state_data() -> pl.DataFrame:
                 "Health products",
                 "Treat yourself",
             ],
-            # Required for merge function
             "CATEGORY_ID": ["Grocery", "Produce", "Bakery"],
             "NEED_STATE_DESCRIPTION": [
                 "Daily essentials",
@@ -83,9 +85,8 @@ def mock_merged_data() -> pl.DataFrame:
             "STORE_NBR": ["S001", "S001", "S001", "S002", "S002"],
             "CAT_DSC": ["Grocery", "Produce", "Bakery", "Grocery", "Produce"],
             "TOTAL_SALES": [100.0, 150.0, 75.0, 120.0, 90.0],
-            "NEED_STATE": ["Everyday", "Health", "Treat", "Everyday", "Health"],
+            "NEED_STATE": ["EVERYDAY", "HEALTH", "TREAT", "EVERYDAY", "HEALTH"],
             "WEIGHT": [0.7, 0.8, 0.9, 0.7, 0.8],
-            # Required for distribute_sales function
             "NEED_STATE_DESCRIPTION": [
                 "Daily essentials",
                 "Health products",
@@ -93,6 +94,8 @@ def mock_merged_data() -> pl.DataFrame:
                 "Daily essentials",
                 "Health products",
             ],
+            "PRODUCT_ID": ["P001", "P002", "P003", "P001", "P002"],
+            "SALES_PCT": [1.0, 1.0, 1.0, 1.0, 1.0],  # Added for the new implementation
         }
     )
 
@@ -123,23 +126,12 @@ def test_internal_sales_data_asset(mock_sales_data):
     assert len(result) == len(mock_sales_data)
 
 
-def test_internal_need_state_data_asset(mock_need_state_data, monkeypatch):
+def test_internal_need_state_data_asset(mock_need_state_data):
     """Test the internal_need_state_data asset.
 
     Args:
         mock_need_state_data: Sample need state data
-        monkeypatch: Pytest monkeypatch fixture
     """
-
-    # Mock the DuckDB query method to return the input dataframe
-    def mock_query(self, query, output_format=None):
-        return mock_need_state_data
-
-    # Apply the monkey patch
-    from clustering.core.sql_engine import DuckDB
-
-    monkeypatch.setattr(DuckDB, "query", mock_query)
-
     # Create mock context with resources
     context = dg.build_op_context(
         resources={
@@ -154,29 +146,17 @@ def test_internal_need_state_data_asset(mock_need_state_data, monkeypatch):
     # Check the result
     assert isinstance(result, pl.DataFrame)
     assert len(result) == len(mock_need_state_data)
+    # Check that NEED_STATE was converted to uppercase
+    assert all(ns.isupper() for ns in result["NEED_STATE"].to_list())
 
 
-def test_merged_internal_data_asset(
-    mock_sales_data, mock_need_state_data, mock_merged_data, monkeypatch
-):
+def test_merged_internal_data_asset(mock_sales_data, mock_need_state_data):
     """Test the merged_internal_data asset.
 
     Args:
         mock_sales_data: Sample sales data
         mock_need_state_data: Sample need state data
-        mock_merged_data: Sample merged data
-        monkeypatch: Pytest monkeypatch fixture
     """
-
-    # Mock the DuckDB query method to return the mock merged data
-    def mock_query(self, query, output_format=None):
-        return mock_merged_data
-
-    # Apply the monkey patch
-    from clustering.core.sql_engine import DuckDB
-
-    monkeypatch.setattr(DuckDB, "query", mock_query)
-
     # Create mock context
     context = dg.build_op_context()
 
@@ -186,80 +166,25 @@ def test_merged_internal_data_asset(
     # Check the result
     assert isinstance(result, pl.DataFrame)
     assert "SKU_NBR" in result.columns
+    assert "STORE_NBR" in result.columns
     assert "NEED_STATE" in result.columns
     assert "TOTAL_SALES" in result.columns
-    assert len(result) == len(mock_merged_data)
+    assert "SALES_PCT" in result.columns  # Check for new column in the Polars implementation
+
+    # In our Polars implementation, values will be grouped and aggregated
+    # So we should check that we have the right structure rather than exact count
+    grouped_count = result.group_by(["SKU_NBR", "STORE_NBR", "NEED_STATE"]).agg(pl.count()).height
+    assert grouped_count > 0
 
 
-def test_internal_category_data_asset(mock_merged_data, monkeypatch):
+def test_internal_category_data_asset(mock_merged_data):
     """Test the internal_category_data asset.
 
     Args:
         mock_merged_data: Sample merged data
-        monkeypatch: Pytest monkeypatch fixture
     """
-    # Expected categories
-    categories = ["Grocery", "Produce", "Bakery"]
-
-    # Mock data for each category
-    category_dfs = {
-        "Grocery": pl.DataFrame(
-            {
-                "SKU_NBR": ["P001", "P001"],
-                "STORE_NBR": ["S001", "S002"],
-                "CAT_DSC": ["Grocery", "Grocery"],
-                "TOTAL_SALES": [100.0, 120.0],
-                "NEED_STATE": ["Everyday", "Everyday"],
-                "WEIGHT": [0.7, 0.7],
-                "NEED_STATE_DESCRIPTION": ["Daily essentials", "Daily essentials"],
-            }
-        ),
-        "Produce": pl.DataFrame(
-            {
-                "SKU_NBR": ["P002", "P002"],
-                "STORE_NBR": ["S001", "S002"],
-                "CAT_DSC": ["Produce", "Produce"],
-                "TOTAL_SALES": [150.0, 90.0],
-                "NEED_STATE": ["Health", "Health"],
-                "WEIGHT": [0.8, 0.8],
-                "NEED_STATE_DESCRIPTION": ["Health products", "Health products"],
-            }
-        ),
-        "Bakery": pl.DataFrame(
-            {
-                "SKU_NBR": ["P003"],
-                "STORE_NBR": ["S001"],
-                "CAT_DSC": ["Bakery"],
-                "TOTAL_SALES": [75.0],
-                "NEED_STATE": ["Treat"],
-                "WEIGHT": [0.9],
-                "NEED_STATE_DESCRIPTION": ["Treat yourself"],
-            }
-        ),
-    }
-
-    # Mock the DuckDB query method
-    def mock_query(self, query, output_format=None):
-        if output_format == "raw":
-            # Return categories for get_categories query
-            class MockResult:
-                def fetchall(self):
-                    return [(cat,) for cat in categories]
-
-            return MockResult()
-        else:
-            # Return the appropriate category dataframe for get_category_data query
-            # Handle SQL objects by checking their string representation
-            query_str = str(query)
-            for cat in categories:
-                if cat in query_str:
-                    return category_dfs[cat]
-            return pl.DataFrame()
-
-    # Apply the monkey patch
-    from clustering.core.sql_engine import DuckDB
-
-    monkeypatch.setattr(DuckDB, "query", mock_query)
+    # Expected categories based on mock data
+    expected_categories = ["Grocery", "Produce", "Bakery"]
 
     # Create mock context
     context = dg.build_op_context()
@@ -267,9 +192,18 @@ def test_internal_category_data_asset(mock_merged_data, monkeypatch):
     # Run the asset
     result = internal_category_data(context, mock_merged_data)
 
-    # Check the result
+    # Check that the result is a dictionary
     assert isinstance(result, dict)
-    assert len(result) == len(categories)
-    for cat in categories:
-        assert cat in result
-        assert isinstance(result[cat], pl.DataFrame)
+
+    # Check that all expected categories are in the result
+    assert set(result.keys()) == set(expected_categories)
+
+    # Check that each value is a DataFrame
+    for df in result.values():
+        assert isinstance(df, pl.DataFrame)
+
+    # Check that each DataFrame has the correct data
+    for cat in expected_categories:
+        cat_df = result[cat]
+        assert len(cat_df) > 0
+        assert all(cat_df["CAT_DSC"] == cat)

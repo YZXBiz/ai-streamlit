@@ -59,3 +59,6 @@ outputs/*/
 
 # Cursor IDE
 .cursor/
+# Environment variable files
+.env
+.env.*

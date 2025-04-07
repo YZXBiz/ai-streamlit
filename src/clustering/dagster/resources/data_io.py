@@ -1,23 +1,11 @@
 """Data IO resources for Dagster pipelines."""
 
+import inspect
+
 import dagster as dg
 
-from clustering.io import (
-    BlobReader,
-    BlobWriter,
-    CSVReader,
-    CSVWriter,
-    ExcelReader,
-    ExcelWriter,
-    ParquetReader,
-    ParquetWriter,
-    PickleReader,
-    PickleWriter,
-    Reader,
-    SnowflakeReader,
-    SnowflakeWriter,
-    Writer,
-)
+import clustering.io as io_module
+from clustering.io import Reader, Writer
 
 
 @dg.resource(
@@ -42,21 +30,18 @@ def data_reader(context: dg.InitResourceContext) -> Reader:
     kind = context.resource_config["kind"]
     config = context.resource_config["config"]
 
-    # Create reader based on kind
+    # Dynamically build reader map from io module
     reader_map = {
-        "ParquetReader": ParquetReader,
-        "CSVReader": CSVReader,
-        "ExcelReader": ExcelReader,
-        "PickleReader": PickleReader,
-        "SnowflakeReader": SnowflakeReader,
-        "BlobReader": BlobReader,
+        name: cls
+        for name, cls in inspect.getmembers(io_module)
+        if inspect.isclass(cls) and issubclass(cls, Reader) and cls is not Reader
     }
 
     # Check if requested reader exists in our map
     reader_cls = reader_map.get(kind)
 
     if not reader_cls:
-        raise ValueError(f"Unknown reader kind: {kind}")
+        raise ValueError(f"Unknown reader kind: {kind}, available readers: {reader_map.keys()}")
 
     return reader_cls(**config)
 
@@ -83,20 +68,17 @@ def data_writer(context: dg.InitResourceContext) -> Writer:
     kind = context.resource_config["kind"]
     config = context.resource_config["config"]
 
-    # Create writer based on kind
+    # Dynamically build writer map from io module
     writer_map = {
-        "ParquetWriter": ParquetWriter,
-        "CSVWriter": CSVWriter,
-        "ExcelWriter": ExcelWriter,
-        "PickleWriter": PickleWriter,
-        "SnowflakeWriter": SnowflakeWriter,
-        "BlobWriter": BlobWriter,
+        name: cls
+        for name, cls in inspect.getmembers(io_module)
+        if inspect.isclass(cls) and issubclass(cls, Writer) and cls is not Writer
     }
 
     # Check if requested writer exists in our map
     writer_cls = writer_map.get(kind)
 
     if not writer_cls:
-        raise ValueError(f"Unknown writer kind: {kind}")
+        raise ValueError(f"Unknown writer kind: {kind}, available writers: {writer_map.keys()}")
 
     return writer_cls(**config)

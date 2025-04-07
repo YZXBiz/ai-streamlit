@@ -3,12 +3,51 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import dagster as dg
 from dagster._core.instance import DagsterInstance
 
 from clustering.dagster import create_definitions
 from clustering.infra import CONFIG
+
+# Add dotenv import
+try:
+    from dotenv import load_dotenv
+except ImportError:
+
+    def load_dotenv(dotenv_path=None):
+        """Fallback implementation if dotenv is not installed."""
+        print(
+            "Warning: python-dotenv not installed. Environment variables from .env files will not be loaded."
+        )
+        return False
+
+
+def load_env_file(env: str = "dev") -> bool:
+    """Load environment variables from .env file.
+
+    Args:
+        env: Environment name (dev, staging, prod)
+
+    Returns:
+        Whether the .env file was loaded successfully
+    """
+    # First try environment-specific .env file
+    root_dir = Path(__file__).parent.parent.parent.parent  # Get to project root
+    env_file = root_dir / f".env.{env}"
+    if env_file.exists():
+        print(f"Loading environment variables from {env_file}")
+        return load_dotenv(dotenv_path=env_file)
+
+    # Fall back to default .env file
+    default_env_file = root_dir / ".env"
+    if default_env_file.exists():
+        print(f"Loading environment variables from {default_env_file}")
+        return load_dotenv(dotenv_path=default_env_file)
+
+    print("No .env file found")
+    return False
 
 
 def run_job(
@@ -147,6 +186,8 @@ def main() -> None:
     # Set environment variable for environment
     if hasattr(args, "env"):
         os.environ["DAGSTER_ENV"] = args.env
+        # Load environment variables from .env file
+        load_env_file(args.env)
 
     # Execute the requested command
     if args.command == "run":

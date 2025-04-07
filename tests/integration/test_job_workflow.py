@@ -2,18 +2,19 @@
 
 import os
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Dict, Generator
+from typing import Any
 
 import pandas as pd
 import pytest
 import yaml
+
 from clustering import settings
-from clustering.io import config_parser
 
 
 @pytest.fixture
-def sample_workflow_config() -> Dict[str, Any]:
+def sample_workflow_config() -> dict[str, Any]:
     """Create a sample workflow configuration.
 
     Returns:
@@ -57,7 +58,9 @@ def sample_workflow_config() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def sample_workflow_config_file(sample_workflow_config: Dict[str, Any]) -> Generator[Path, None, None]:
+def sample_workflow_config_file(
+    sample_workflow_config: dict[str, Any],
+) -> Generator[Path, None, None]:
     """Create a temporary workflow config file.
 
     Args:
@@ -77,7 +80,7 @@ def sample_workflow_config_file(sample_workflow_config: Dict[str, Any]) -> Gener
 
 
 def test_preprocessing_workflow(
-    sample_data: pd.DataFrame, sample_workflow_config: Dict[str, Any], mock_env_vars: None
+    sample_data: pd.DataFrame, sample_workflow_config: dict[str, Any], mock_env_vars: None
 ) -> None:
     """Test the preprocessing workflow end-to-end.
 
@@ -90,8 +93,7 @@ def test_preprocessing_workflow(
     sample_workflow_config["job"]["source"]["data"] = sample_data
 
     # Convert config to settings object
-    config_obj = config_parser.to_object(sample_workflow_config)
-    setting = settings.MainSettings.model_validate(config_obj)
+    setting = settings.MainSettings.model_validate(sample_workflow_config)
 
     # Run the preprocessing job
     with setting.job as runner:
@@ -149,8 +151,7 @@ def test_end_to_end_workflow(sample_data: pd.DataFrame, mock_env_vars: None) -> 
     }
 
     # Convert config to settings object
-    config_obj = config_parser.to_object(preprocessing_config)
-    setting = settings.MainSettings.model_validate(config_obj)
+    setting = settings.MainSettings.model_validate(preprocessing_config)
 
     # Run preprocessing
     with setting.job as runner:
@@ -178,8 +179,7 @@ def test_end_to_end_workflow(sample_data: pd.DataFrame, mock_env_vars: None) -> 
     }
 
     # Convert config to settings object
-    config_obj = config_parser.to_object(clustering_config)
-    setting = settings.MainSettings.model_validate(config_obj)
+    setting = settings.MainSettings.model_validate(clustering_config)
 
     # Run clustering
     with setting.job as runner:

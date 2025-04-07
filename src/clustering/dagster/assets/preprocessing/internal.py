@@ -1,25 +1,14 @@
 """Internal preprocessing assets for the clustering pipeline."""
 
-from typing import Any
-
 import dagster as dg
 import polars as pl
-
-from clustering.core.sql_engine import DuckDB
-from clustering.core.sql_templates import (
-    clean_need_state,
-    distribute_sales,
-    get_categories,
-    get_category_data,
-    merge_sales_with_need_state,
-)
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_sales_reader", "config"},
+    required_resource_keys={"input_sales_reader"},
 )
 def internal_sales_data(
     context: dg.AssetExecutionContext,
@@ -34,15 +23,7 @@ def internal_sales_data(
     """
     context.log.info("Reading sales data")
 
-    sales_data_raw = context.resources.input_sales_reader.read()
-
-    # Convert to Polars if needed
-    if not isinstance(sales_data_raw, pl.DataFrame):
-        sales_data = pl.from_pandas(sales_data_raw)
-    else:
-        sales_data = sales_data_raw
-
-    # Rename columns to match expected schema
+    # Define column mapping
     column_mapping = {
         "product_id": "SKU_NBR",
         "store_id": "STORE_NBR",
@@ -50,20 +31,23 @@ def internal_sales_data(
         "sales_amount": "TOTAL_SALES",
     }
 
-    # Only rename columns that exist in the dataframe
-    existing_columns = [col for col in column_mapping.keys() if col in sales_data.columns]
-    rename_mapping = {col: column_mapping[col] for col in existing_columns}
-
-    sales_data_renamed = sales_data.rename(rename_mapping)
-
-    return sales_data_renamed
+    # Read data, convert to Polars, and rename columns in a chain
+    return (
+        context.resources.input_sales_reader.read()
+        .pipe(lambda df: pl.from_pandas(df) if not isinstance(df, pl.DataFrame) else df)
+        .pipe(
+            lambda df: df.rename(
+                {col: column_mapping[col] for col in column_mapping.keys() if col in df.columns}
+            )
+        )
+    )
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_need_state_reader", "config"},
+    required_resource_keys={"input_need_state_reader"},
 )
 def internal_need_state_data(
     context: dg.AssetExecutionContext,
@@ -76,27 +60,14 @@ def internal_need_state_data(
     Returns:
         DataFrame containing cleaned need state data
     """
-    context.log.info("Reading need state data")
-
-    ns_data_raw = context.resources.input_need_state_reader.read()
-
-    # Convert to Polars if needed
-    if not isinstance(ns_data_raw, pl.DataFrame):
-        ns_data = pl.from_pandas(ns_data_raw)
-    else:
-        ns_data = ns_data_raw
-
-    context.log.info("Cleaning need state data")
-
-    # Execute cleaning using DuckDB SQL
-    db = DuckDB()
-    try:
-        clean_sql = clean_need_state(ns_data)
-        result = db.query(clean_sql)
-    finally:
-        db.close()
-
-    return result
+    # Read data and convert to Polars if needed in a chain
+    return (
+        context.resources.input_need_state_reader.read()
+        .pipe(lambda df: pl.from_pandas(df) if not isinstance(df, pl.DataFrame) else df)
+        .filter(pl.col("PRODUCT_ID").is_not_null())
+        .with_columns(pl.col("NEED_STATE").str.to_uppercase())
+        .unique()
+    )
 
 
 @dg.asset(
@@ -120,37 +91,35 @@ def merged_internal_data(
     Returns:
         DataFrame containing merged data with sales distributed evenly
     """
-    db = DuckDB()
-    try:
-        context.log.info("Merging sales and need state data")
+    # Validate required columns before merging
+    if "PRODUCT_ID" not in internal_need_state_data.columns:
+        raise ValueError("Required column 'PRODUCT_ID' missing from need state data")
+    if "SKU_NBR" not in internal_sales_data.columns:
+        raise ValueError("Required column 'SKU_NBR' missing from sales data")
 
-        # Validate required columns before creating SQL
-        if "PRODUCT_ID" not in internal_need_state_data.columns:
-            raise ValueError("Required column 'PRODUCT_ID' missing from need state data")
-        if "SKU_NBR" not in internal_sales_data.columns:
-            raise ValueError("Required column 'SKU_NBR' missing from sales data")
+    context.log.info("Merging sales and need state data")
+    context.log.info("Redistributing sales based on need states")
 
-        # Create and execute merge operation
-        merge_sql = merge_sales_with_need_state(
-            sales_df=internal_sales_data, need_state_df=internal_need_state_data
+    # Merge data
+    merged_data = internal_sales_data.join(
+        internal_need_state_data, left_on="SKU_NBR", right_on="PRODUCT_ID", how="inner"
+    )
+
+    # Validate required columns for distribution
+    required_cols = ["SKU_NBR", "STORE_NBR", "NEED_STATE", "TOTAL_SALES"]
+    missing_cols = [col for col in required_cols if col not in merged_data.columns]
+    if missing_cols:
+        raise ValueError(f"Required columns missing: {missing_cols}")
+
+    # Chain distribution operations
+    return (
+        merged_data.group_by(["SKU_NBR", "STORE_NBR", "NEED_STATE"])
+        .agg(pl.col("TOTAL_SALES").sum().alias("TOTAL_SALES"))
+        .with_columns(
+            pl.col("TOTAL_SALES")
+            / pl.col("TOTAL_SALES").sum().over(["SKU_NBR", "STORE_NBR"]).alias("SALES_PCT")
         )
-        merged_data = db.query(merge_sql)
-
-        context.log.info("Redistributing sales based on need states")
-
-        # Validate required columns for distribution
-        required_cols = ["SKU_NBR", "STORE_NBR", "NEED_STATE", "TOTAL_SALES"]
-        if not all(col in merged_data.columns for col in required_cols):
-            missing_cols = [col for col in required_cols if col not in merged_data.columns]
-            raise ValueError(f"Required columns missing: {missing_cols}")
-
-        # Create and execute distribution operation
-        distribute_sql = distribute_sales(merged_data)
-        distributed_sales = db.query(distribute_sql)
-
-        return distributed_sales
-    finally:
-        db.close()
+    )
 
 
 @dg.asset(
@@ -174,27 +143,21 @@ def internal_category_data(
     """
     context.log.info("Creating category dictionary")
 
-    # Validate required column
+    # Validate required column before proceeding
     if "CAT_DSC" not in merged_internal_data.columns:
         raise ValueError("Required column 'CAT_DSC' missing")
 
-    db = DuckDB()
-    try:
-        # Get unique categories
-        categories_sql = get_categories(merged_internal_data)
-        categories_result: Any = db.query(categories_sql, output_format="raw")
-        categories = [cat[0] for cat in categories_result.fetchall()]
-
-        # Create dictionary by filtering for each category
-        cat_dict: dict[str, pl.DataFrame] = {}
-        for cat in categories:
-            category_sql = get_category_data(merged_internal_data, cat)
-            cat_df = db.query(category_sql)
-            cat_dict[cat] = cat_df
-
-        return cat_dict
-    finally:
-        db.close()
+    # Get categories and create dictionary in a chain
+    return (
+        merged_internal_data.select(pl.col("CAT_DSC").unique())
+        .to_series()
+        .to_list()
+        .pipe(
+            lambda categories: {
+                cat: merged_internal_data.filter(pl.col("CAT_DSC") == cat) for cat in categories
+            }
+        )
+    )
 
 
 @dg.asset(
@@ -216,13 +179,16 @@ def preprocessed_internal_sales(
     """
     context.log.info("Saving preprocessed sales data")
 
-    output_writer = context.resources.output_sales_writer
+    # Convert data if needed based on writer requirements
+    data_to_write = (
+        merged_internal_data.to_pandas()
+        if hasattr(context.resources.output_sales_writer, "requires_pandas")
+        and context.resources.output_sales_writer.requires_pandas
+        else merged_internal_data
+    )
 
-    # Check if the writer expects Pandas DataFrame
-    if hasattr(output_writer, "requires_pandas") and output_writer.requires_pandas:
-        output_writer.write(data=merged_internal_data.to_pandas())
-    else:
-        output_writer.write(data=merged_internal_data)
+    # Write the data
+    context.resources.output_sales_writer.write(data=data_to_write)
 
 
 @dg.asset(
@@ -244,10 +210,13 @@ def preprocessed_internal_sales_percent(
     """
     context.log.info("Saving preprocessed sales percent data")
 
-    output_writer = context.resources.output_sales_percent_writer
+    # Convert data if needed based on writer requirements
+    data_to_write = (
+        {k: df.to_pandas() for k, df in internal_category_data.items()}
+        if hasattr(context.resources.output_sales_percent_writer, "requires_pandas")
+        and context.resources.output_sales_percent_writer.requires_pandas
+        else internal_category_data
+    )
 
-    # Check if the writer expects Pandas DataFrame
-    if hasattr(output_writer, "requires_pandas") and output_writer.requires_pandas:
-        output_writer.write(data={k: df.to_pandas() for k, df in internal_category_data.items()})
-    else:
-        output_writer.write(data=internal_category_data)
+    # Write the data
+    context.resources.output_sales_percent_writer.write(data=data_to_write)

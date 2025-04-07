@@ -33,21 +33,23 @@ def internal_clustering_model(
     """
     context.log.info("Training internal clustering model")
 
-    # Log environment info
-    context.log.info(f"Using environment: {context.resources.config.get_env()}")
+    # Get config from resources
+    config = context.resources.config
 
-    # Load clustering configuration from environment-specific config
-    config = context.resources.config.load("internal_clustering")
-    clustering_config = config.get("clustering", {})
+    # Access parameters directly from job_params
+    job_params = config.job_params
 
     # Extract clustering parameters from config
-    algorithm = clustering_config.get("algorithm", "kmeans")
-    normalize = clustering_config.get("normalize", True)
-    norm_method = clustering_config.get("norm_method", "robust")  # Changed from clr to robust
-    pca_active = clustering_config.get("pca_active", True)
-    pca_components = clustering_config.get("pca_components", 0.8)
-    ignore_features = clustering_config.get("ignore_features", ["STORE_NBR"])
-    kwargs = clustering_config.get("kwargs", {})
+    algorithm = getattr(job_params, "algorithm", "kmeans")
+    normalize = getattr(job_params, "normalize", True)
+    norm_method = getattr(job_params, "norm_method", "robust")
+    pca_active = getattr(job_params, "pca_active", True)
+    pca_components = getattr(job_params, "pca_components", 0.8)
+    ignore_features = getattr(job_params, "ignore_features", ["STORE_NBR"])
+
+    # Get algorithm-specific parameters (like kmeans parameters)
+    algo_params = getattr(job_params, algorithm, {})
+    kwargs = getattr(algo_params, "__dict__", {})
 
     # Log configuration
     context.log.info(f"Using algorithm: {algorithm}")
@@ -185,7 +187,7 @@ def internal_clusters(
             ],
             "metadata": {
                 "feature_columns": feature_cols,
-                "environment": context.resources.config.get_env(),
+                "environment": context.resources.config.env,
                 "row_count": len(result_df),
             },
             "timestamp": datetime.datetime.now().isoformat(),
@@ -332,10 +334,13 @@ def internal_clustering_output(
         context.log.error("No clustered data found in internal_clusters")
         return None
 
-    # Get output configuration
-    config = context.resources.config.load("internal_clustering")
-    output_config = config.get("output", {})
-    output_format = output_config.get("format", "parquet")
+    # Get output configuration from job_params
+    config = context.resources.config
+    job_params = config.job_params
+
+    # Get output format from evaluation parameters if available
+    evaluation_params = getattr(job_params, "evaluation", {})
+    output_format = getattr(evaluation_params, "format", "parquet")
 
     # Save to DuckDB (handled by the IO manager)
     context.log.info(f"Saving internal clustering results in {output_format} format")

@@ -2,47 +2,87 @@ alerts:
   enabled: true
   threshold: WARNING
 azure_storage:
-  account_name: devstorageaccount
-  connection_string: ${AZURE_STORAGE_CONNECTION_STRING}
-io_manager:
-  database: outputs/clustering_dev.duckdb
-  in_memory: false
-  schema: public
+  account_key: ${AZURE_STORAGE_KEY}
+  account_name: ${AZURE_STORAGE_ACCOUNT}
+io_manager: {}
 logger:
-  level: INFO
+  level: DEBUG
   sink: logs/dagster_dev.log
+# Job configuration parameters
+job_params:
+  # Common parameters
+  algorithm: "kmeans"
+  normalize: true
+  norm_method: "robust"
+  pca_active: true
+  pca_components: 0.8
+  ignore_features: ["STORE_NBR"]
+
+  # KMeans parameters
+  kmeans:
+    n_clusters: 5
+    random_state: 42
+    n_init: 10
+    max_iter: 300
+
+  # Other algorithm parameters if needed
+  dbscan:
+    eps: 0.5
+    min_samples: 5
+
+  # Preprocessing parameters
+  preprocessing:
+    feature_selection:
+      min_variance: 0.01
+      max_correlation: 0.95
+    outlier_detection:
+      method: "IQR"
+      threshold: 1.5
+
+  # Evaluation parameters
+  evaluation:
+    metrics:
+      - "silhouette_score"
+      - "davies_bouldin_score"
+    format: "parquet"
+# Data sources and destinations
 readers:
   external_sales:
-    options:
-      use_threads: true
-    path: data/external/sales.parquet
-    source_type: parquet
+    kind: "SnowflakeReader"
+    config:
+      query: SELECT * FROM DEV_CLUSTERING_DB.RAW.EXTERNAL_SALES
   internal_need_state:
-    options:
-      delimiter: ','
-      header: true
-    path: data/raw/need_state.csv
-    source_type: csv
+    kind: "CSVReader"
+    config:
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/need_state.csv
   internal_sales:
-    options:
-      use_threads: true
-    path: data/raw/sales.parquet
-    source_type: parquet
+    kind: "ParquetReader"
+    config:
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales.parquet
 writers:
-  external_data_output: {}
+  external_data_output:
+    kind: "SnowflakeWriter"
+    config:
+      table: DEV_CLUSTERING_DB.PROCESSED.EXTERNAL_DATA
+      database: DEV_CLUSTERING_DB
+      schema: PROCESSED
   internal_clusters_output:
-    destination_type: parquet
-    options:
-      compression: snappy
-    path: outputs/internal_clusters.parquet
+    kind: "SnowflakeWriter"
+    config:
+      table: DEV_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
+      database: DEV_CLUSTERING_DB
+      schema: PROCESSED
   internal_sales_output:
-    destination_type: parquet
-    options:
-      compression: snappy
-    path: outputs/internal_sales.parquet
+    kind: "BlobWriter"
+    config:
+      blob_name: internal/sales_processed.parquet
   internal_sales_percent_output:
-    destination_type: parquet
-    options:
-      compression: snappy
-    path: outputs/internal_sales_percent.parquet
-  merged_clusters_output: {}
+    kind: "BlobWriter"
+    config:
+      blob_name: internal/sales_percent.parquet
+  merged_clusters_output:
+    kind: "SnowflakeWriter"
+    config:
+      table: DEV_CLUSTERING_DB.PROCESSED.MERGED_CLUSTERS
+      database: DEV_CLUSTERING_DB
+      schema: PROCESSED
