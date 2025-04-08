@@ -51,14 +51,14 @@ readers:
     kind: "SnowflakeReader"
     config:
       query: SELECT * FROM DEV_CLUSTERING_DB.RAW.EXTERNAL_SALES
-  internal_need_state:
+  internal_ns_map:
     kind: "CSVReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/need_state.csv
-  internal_sales:
-    kind: "ParquetReader"
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/ns_map.csv
+  internal_ns_sales:
+    kind: "CSVReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales.parquet
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/ns_sales.csv
 writers:
   external_data_output:
     kind: "SnowflakeWriter"
@@ -73,9 +73,9 @@ writers:
       database: DEV_CLUSTERING_DB
       schema: PROCESSED
   internal_sales_output:
-    kind: "BlobWriter"
+    kind: "PickleWriter"
     config:
-      blob_name: internal/sales_processed.parquet
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales_by_category.pkl
   internal_sales_percent_output:
     kind: "BlobWriter"
     config:

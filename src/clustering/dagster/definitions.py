@@ -11,27 +11,21 @@ from clustering.dagster.assets import (
     external_clustering_output,
     external_clusters,
     external_features_data,
-    internal_category_data,
     internal_cluster_evaluation,
     internal_clustering_model,
     internal_clustering_output,
     internal_clusters,
-    internal_need_state_data,
-    internal_sales_data,
     merged_clusters,
     merged_clusters_output,
-    merged_internal_data,
+    normalized_sales_data,
+    output_sales_table,
     preprocessed_external_data,
-    preprocessed_internal_sales,
-    preprocessed_internal_sales_percent,
+    product_category_mapping,
+    raw_sales_data,
+    sales_by_category,
+    sales_with_categories,
 )
-from clustering.dagster.resources import (
-    alerts_service,
-    clustering_io_manager,
-    data_io,
-    logger_service,
-    simple_config,
-)
+from clustering.dagster.resources import alerts_service, data_io, logger_service, simple_config
 
 
 def load_resource_config(env: str = "dev") -> dict:
@@ -73,7 +67,7 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     # Create all resources in a flat structure
     resources = {
         # Core resources
-        "io_manager": clustering_io_manager,
+        "io_manager": dg.FilesystemIOManager(base_dir="storage"),
         "config": simple_config.configured({"env": env}),
         # Logger
         "logger": logger_service.configured(
@@ -91,11 +85,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
             }
         ),
         # Data readers
-        "input_sales_reader": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("internal_sales", {})
+        "internal_ns_sales": data_io.data_reader.configured(
+            env_config.get("readers", {}).get("internal_ns_sales", {})
         ),
-        "input_need_state_reader": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("internal_need_state", {})
+        "internal_ns_map": data_io.data_reader.configured(
+            env_config.get("readers", {}).get("internal_ns_map", {})
         ),
         "input_external_sales_reader": data_io.data_reader.configured(
             env_config.get("readers", {}).get("external_sales", {})
@@ -131,12 +125,12 @@ def define_internal_preprocessing_job() -> dg.AssetsDefinition:
     return dg.define_asset_job(
         name="internal_preprocessing_job",
         selection=[
-            internal_sales_data,
-            internal_need_state_data,
-            merged_internal_data,
-            internal_category_data,
-            preprocessed_internal_sales,
-            preprocessed_internal_sales_percent,
+            raw_sales_data,
+            product_category_mapping,
+            sales_with_categories,
+            normalized_sales_data,
+            sales_by_category,
+            output_sales_table,
         ],
         tags={"kind": "internal_preprocessing"},
     )
@@ -220,12 +214,12 @@ def define_full_pipeline_job() -> dg.AssetsDefinition:
         name="full_pipeline_job",
         selection=[
             # Internal preprocessing
-            internal_sales_data,
-            internal_need_state_data,
-            merged_internal_data,
-            internal_category_data,
-            preprocessed_internal_sales,
-            preprocessed_internal_sales_percent,
+            raw_sales_data,
+            product_category_mapping,
+            sales_with_categories,
+            normalized_sales_data,
+            sales_by_category,
+            output_sales_table,
             # Internal clustering
             internal_clustering_model,
             internal_clusters,
@@ -271,12 +265,12 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
     return dg.Definitions(
         assets=[
             # Preprocessing assets - Internal
-            internal_sales_data,
-            internal_need_state_data,
-            merged_internal_data,
-            internal_category_data,
-            preprocessed_internal_sales,
-            preprocessed_internal_sales_percent,
+            raw_sales_data,
+            product_category_mapping,
+            sales_with_categories,
+            normalized_sales_data,
+            sales_by_category,
+            output_sales_table,
             # Preprocessing assets - External
             external_features_data,
             preprocessed_external_data,

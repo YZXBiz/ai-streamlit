@@ -20,7 +20,7 @@ class BlobWriter(Writer):
     overwrite: bool = True
     max_concurrency: int = 8
 
-    def write(self, data: pl.DataFrame) -> None:
+    def _write_to_destination(self, data: pl.DataFrame) -> None:
         """Write data to Azure Blob Storage.
 
         Args:

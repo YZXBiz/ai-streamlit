@@ -1,16 +1,4 @@
-PRODUCT_ID,need_state_id,need_state_name,need_state_description
-101,1,Convenience,"Products that save time and effort"
-101,2,Value,"Products that are cost-effective"
-101,3,Premium,"High-quality products at premium prices"
-102,4,Health,"Products focused on health benefits"
-102,5,Natural,"Products with natural ingredients"
-102,6,Organic,"Certified organic products"
-103,7,Traditional,"Classic and traditional products"
-103,8,Innovative,"New and innovative products"
-103,9,Seasonal,"Products for specific seasons or holidays"
-104,10,Family,"Products designed for families"
-104,11,Individual,"Products designed for individual consumption"
-104,12,Bulk,"Products sold in bulk quantities"
-105,13,Essential,"Products considered essential"
-105,14,Luxury,"Products considered luxury items"
-105,15,Specialty,"Specialty or niche products" 
+PRODUCT_ID, CATEGORY, NEED_STATE, CDT, ATTRIBUTE_1, ATTRIBUTE_2, ATTRIBUTE_3, ATTRIBUTE_4, ATTRIBUTE_5, ATTRIBUTE_6, PLANOGRAM_DSC, PLANOGRAM_NBR, NEW_ITEM, TO_BE_DROPPED
+1001, "Adult Care", "Convenience_0", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "ADULT CARE", 1, FALSE, FALSE
+1002, "Adult Care", "Convenience_1", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "BASIC NUTRITION", 1, FALSE, FALSE
+1003, "Adult Care", "Convenience_2", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "ADULT CARE", 1, FALSE, FALSE

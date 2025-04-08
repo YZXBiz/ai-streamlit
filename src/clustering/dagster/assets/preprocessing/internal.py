@@ -2,17 +2,24 @@
 
 import dagster as dg
 import polars as pl
+from dagster_pandera import pandera_schema_to_dagster_type
+
+from clustering.core.schemas import (
+    DistributedDataSchema,
+    MergedDataSchema,
+    NSMappingSchema,
+    SalesSchema,
+)
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_sales_reader"},
+    required_resource_keys={"internal_ns_sales"},
+    dagster_type=pandera_schema_to_dagster_type(SalesSchema),
 )
-def internal_sales_data(
-    context: dg.AssetExecutionContext,
-) -> pl.DataFrame:
+def raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
     """Load raw internal sales data.
 
     Args:
@@ -21,35 +28,20 @@ def internal_sales_data(
     Returns:
         DataFrame containing raw sales data
     """
-    context.log.info("Reading sales data")
+    context.log.info("Reading need state sales data")
 
-    # Define column mapping
-    column_mapping = {
-        "product_id": "SKU_NBR",
-        "store_id": "STORE_NBR",
-        "category_id": "CAT_DSC",
-        "sales_amount": "TOTAL_SALES",
-    }
-
-    # Read data, convert to Polars, and rename columns in a chain
-    return (
-        context.resources.input_sales_reader.read()
-        .pipe(lambda df: pl.from_pandas(df) if not isinstance(df, pl.DataFrame) else df)
-        .pipe(
-            lambda df: df.rename(
-                {col: column_mapping[col] for col in column_mapping.keys() if col in df.columns}
-            )
-        )
-    )
+    # Convert back to polars
+    return context.resources.internal_ns_sales.read()
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_need_state_reader"},
+    required_resource_keys={"internal_ns_map"},
+    dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
 )
-def internal_need_state_data(
+def product_category_mapping(
     context: dg.AssetExecutionContext,
 ) -> pl.DataFrame:
     """Load raw internal need state data.
@@ -58,12 +50,10 @@ def internal_need_state_data(
         context: Asset execution context
 
     Returns:
-        DataFrame containing cleaned need state data
+        DataFrame containing cleaned product category mapping data
     """
-    # Read data and convert to Polars if needed in a chain
     return (
-        context.resources.input_need_state_reader.read()
-        .pipe(lambda df: pl.from_pandas(df) if not isinstance(df, pl.DataFrame) else df)
+        context.resources.internal_ns_map.read()
         .filter(pl.col("PRODUCT_ID").is_not_null())
         .with_columns(pl.col("NEED_STATE").str.to_uppercase())
         .unique()
@@ -72,151 +62,174 @@ def internal_need_state_data(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["internal_sales_data", "internal_need_state_data"],
+    deps=["raw_sales_data", "product_category_mapping"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
+    dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
 )
-def merged_internal_data(
+def sales_with_categories(
     context: dg.AssetExecutionContext,
-    internal_sales_data: pl.DataFrame,
-    internal_need_state_data: pl.DataFrame,
+    raw_sales_data: pl.DataFrame,
+    product_category_mapping: pl.DataFrame,
 ) -> pl.DataFrame:
-    """Merge internal sales and need state data.
+    """Merge sales data with product category mapping.
 
     Args:
         context: Asset execution context
-        internal_sales_data: Sales data
-        internal_need_state_data: Need state data
+        raw_sales_data: Sales data
+        product_category_mapping: Product category mapping data
 
     Returns:
-        DataFrame containing merged data with sales distributed evenly
+        DataFrame containing merged data with categories
     """
-    # Validate required columns before merging
-    if "PRODUCT_ID" not in internal_need_state_data.columns:
-        raise ValueError("Required column 'PRODUCT_ID' missing from need state data")
-    if "SKU_NBR" not in internal_sales_data.columns:
-        raise ValueError("Required column 'SKU_NBR' missing from sales data")
+    context.log.info("Merging sales and category data")
 
-    context.log.info("Merging sales and need state data")
-    context.log.info("Redistributing sales based on need states")
-
-    # Merge data
-    merged_data = internal_sales_data.join(
-        internal_need_state_data, left_on="SKU_NBR", right_on="PRODUCT_ID", how="inner"
-    )
-
-    # Validate required columns for distribution
-    required_cols = ["SKU_NBR", "STORE_NBR", "NEED_STATE", "TOTAL_SALES"]
-    missing_cols = [col for col in required_cols if col not in merged_data.columns]
-    if missing_cols:
-        raise ValueError(f"Required columns missing: {missing_cols}")
-
-    # Chain distribution operations
-    return (
-        merged_data.group_by(["SKU_NBR", "STORE_NBR", "NEED_STATE"])
-        .agg(pl.col("TOTAL_SALES").sum().alias("TOTAL_SALES"))
-        .with_columns(
-            pl.col("TOTAL_SALES")
-            / pl.col("TOTAL_SALES").sum().over(["SKU_NBR", "STORE_NBR"]).alias("SALES_PCT")
-        )
+    return raw_sales_data.join(
+        product_category_mapping,
+        left_on="SKU_NBR",
+        right_on="PRODUCT_ID",
+        how="inner",
+    ).select(
+        "SKU_NBR",
+        "STORE_NBR",
+        "CAT_DSC",
+        "NEED_STATE",
+        "TOTAL_SALES",
     )
 
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["merged_internal_data"],
+    deps=["sales_with_categories"],
+    compute_kind="internal_preprocessing",
+    group_name="preprocessing",
+    dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+)
+def normalized_sales_data(
+    context: dg.AssetExecutionContext,
+    sales_with_categories: pl.DataFrame,
+) -> pl.DataFrame:
+    """Normalize sales data by distributing sales evenly across need states.
+
+    Args:
+        context: Asset execution context
+        sales_with_categories: Sales data with categories
+
+    Returns:
+        DataFrame containing normalized sales data
+    """
+    context.log.info("Distributing sales evenly across need states")
+
+    return (
+        sales_with_categories.pipe(
+            lambda df: df.with_columns(
+                pl.count()
+                .over([c for c in df.columns if c != "NEED_STATE" and c != "TOTAL_SALES"])
+                .alias("group_count")
+            )
+        )
+        .with_columns(
+            (pl.col("TOTAL_SALES") / pl.col("group_count")).alias("TOTAL_SALES"),
+        )
+        .drop("group_count")
+    )
+
+
+@dg.asset(
+    io_manager_key="io_manager",
+    deps=["normalized_sales_data"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
 )
-def internal_category_data(
+def sales_by_category(
     context: dg.AssetExecutionContext,
-    merged_internal_data: pl.DataFrame,
+    normalized_sales_data: pl.DataFrame,
 ) -> dict[str, pl.DataFrame]:
-    """Create category dictionary from merged data.
+    """Create category dictionary from normalized sales data with percentage of sales by need state.
+
+    This asset:
+    1. Groups data by category
+    2. For each category, calculates store-need state sales and store total sales
+    3. Computes percentage of sales by need state for each store
+    4. Pivots the data to have need states as columns
 
     Args:
         context: Asset execution context
-        merged_internal_data: Merged and distributed data
+        normalized_sales_data: Normalized sales data with categories
 
     Returns:
-        Dictionary of category-specific dataframes
+        Dictionary of category-specific dataframes with need state percentage metrics
     """
-    context.log.info("Creating category dictionary")
+    context.log.info("Creating category dictionary with need state percentage metrics")
 
-    # Validate required column before proceeding
-    if "CAT_DSC" not in merged_internal_data.columns:
-        raise ValueError("Required column 'CAT_DSC' missing")
+    # Get unique categories
+    categories = normalized_sales_data.select(pl.col("CAT_DSC").unique()).to_series().to_list()
 
-    # Get categories and create dictionary in a chain
-    return (
-        merged_internal_data.select(pl.col("CAT_DSC").unique())
-        .to_series()
-        .to_list()
-        .pipe(
-            lambda categories: {
-                cat: merged_internal_data.filter(pl.col("CAT_DSC") == cat) for cat in categories
-            }
+    # Create result dictionary
+    result = {}
+
+    # Process each category
+    for cat in categories:
+        # Filter data for this category
+        cat_data = normalized_sales_data.filter(pl.col("CAT_DSC") == cat)
+
+        # Calculate store-need state sales
+        store_ns_sales = cat_data.group_by(["STORE_NBR", "NEED_STATE"]).agg(
+            pl.sum("TOTAL_SALES").alias("STORE_NS_TOTAL_SALES")
         )
-    )
+
+        # Calculate store total sales
+        store_sales = cat_data.group_by("STORE_NBR").agg(
+            pl.sum("TOTAL_SALES").alias("STORE_TOTAL_SALES")
+        )
+
+        # Merge and calculate percentages
+        merged = store_ns_sales.join(store_sales, on="STORE_NBR", how="left").with_columns(
+            (pl.col("STORE_NS_TOTAL_SALES") / pl.col("STORE_TOTAL_SALES") * 100.0).alias(
+                "Pct_of_Sales"
+            )
+        )
+
+        # Get need states for column renaming
+        need_states = merged.select("NEED_STATE").unique().to_series().to_list()
+
+        # Pivot the data
+        pivoted = merged.pivot(
+            index="STORE_NBR", columns="NEED_STATE", values="Pct_of_Sales"
+        ).fill_null(0)
+
+        # Create column rename mapping
+        rename_map = {ns: f"% Sales {ns}" for ns in need_states}
+
+        # Rename columns and round values
+        final_df = pivoted.rename(rename_map)
+
+        # Round all percentage columns
+        round_cols = [f"% Sales {ns}" for ns in need_states]
+        final_df = final_df.with_columns([pl.col(col).round(2) for col in round_cols])
+
+        # Add to result dictionary
+        result[cat] = final_df
+
+    return result
 
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["merged_internal_data"],
+    deps=["sales_by_category"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
     required_resource_keys={"output_sales_writer"},
 )
-def preprocessed_internal_sales(
+def output_sales_table(
     context: dg.AssetExecutionContext,
-    merged_internal_data: pl.DataFrame,
+    sales_by_category: dict[str, pl.DataFrame],
 ) -> None:
-    """Save preprocessed internal sales data.
+    """Save preprocessed sales data to output.
 
     Args:
         context: Asset execution context
-        merged_internal_data: Merged and distributed data
+        sales_by_category: Sales data with categories
     """
     context.log.info("Saving preprocessed sales data")
-
-    # Convert data if needed based on writer requirements
-    data_to_write = (
-        merged_internal_data.to_pandas()
-        if hasattr(context.resources.output_sales_writer, "requires_pandas")
-        and context.resources.output_sales_writer.requires_pandas
-        else merged_internal_data
-    )
-
-    # Write the data
-    context.resources.output_sales_writer.write(data=data_to_write)
-
-
-@dg.asset(
-    io_manager_key="io_manager",
-    deps=["internal_category_data"],
-    compute_kind="internal_preprocessing",
-    group_name="preprocessing",
-    required_resource_keys={"output_sales_percent_writer"},
-)
-def preprocessed_internal_sales_percent(
-    context: dg.AssetExecutionContext,
-    internal_category_data: dict[str, pl.DataFrame],
-) -> None:
-    """Save preprocessed internal sales percentage data.
-
-    Args:
-        context: Asset execution context
-        internal_category_data: Dictionary of category-specific dataframes
-    """
-    context.log.info("Saving preprocessed sales percent data")
-
-    # Convert data if needed based on writer requirements
-    data_to_write = (
-        {k: df.to_pandas() for k, df in internal_category_data.items()}
-        if hasattr(context.resources.output_sales_percent_writer, "requires_pandas")
-        and context.resources.output_sales_percent_writer.requires_pandas
-        else internal_category_data
-    )
-
-    # Write the data
-    context.resources.output_sales_percent_writer.write(data=data_to_write)
+    context.resources.output_sales_writer.write(data=sales_by_category)

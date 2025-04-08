@@ -13,20 +13,20 @@ from clustering.core.models import ClusteringModel
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["preprocessed_internal_sales"],
+    deps=["output_sales_table"],
     compute_kind="internal_clustering",
     group_name="clustering",
     required_resource_keys={"config", "alerts"},
 )
 def internal_clustering_model(
     context: dg.AssetExecutionContext,
-    preprocessed_internal_sales: pl.DataFrame,
+    output_sales_table: pl.DataFrame,
 ) -> ClusteringModel:
     """Train clustering model on internal data.
 
     Args:
         context: Asset execution context
-        preprocessed_internal_sales: Preprocessed internal data
+        output_sales_table: Normalized sales data
 
     Returns:
         Trained clustering model
@@ -68,7 +68,7 @@ def internal_clustering_model(
     )
 
     # Convert polars DataFrame to pandas for ClusteringModel
-    inputs = preprocessed_internal_sales.to_pandas()
+    inputs = output_sales_table.to_pandas()
 
     try:
         # Fit the model

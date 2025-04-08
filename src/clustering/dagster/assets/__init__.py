@@ -22,22 +22,22 @@ from clustering.dagster.assets.preprocessing.external import (
     preprocessed_external_data,
 )
 from clustering.dagster.assets.preprocessing.internal import (
-    internal_category_data,
-    internal_need_state_data,
-    internal_sales_data,
-    merged_internal_data,
-    preprocessed_internal_sales,
-    preprocessed_internal_sales_percent,
+    normalized_sales_data,
+    output_sales_table,
+    product_category_mapping,
+    raw_sales_data,
+    sales_by_category,
+    sales_with_categories,
 )
 
 __all__ = [
     # Preprocessing - internal
-    "internal_sales_data",
-    "internal_need_state_data",
-    "merged_internal_data",
-    "internal_category_data",
-    "preprocessed_internal_sales",
-    "preprocessed_internal_sales_percent",
+    "raw_sales_data",
+    "product_category_mapping",
+    "sales_with_categories",
+    "sales_by_category",
+    "output_sales_table",
+    "normalized_sales_data",
     # Preprocessing - external
     "external_features_data",
     "preprocessed_external_data",

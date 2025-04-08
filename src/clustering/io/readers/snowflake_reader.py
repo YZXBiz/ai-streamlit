@@ -86,8 +86,10 @@ class SnowflakeReader(Reader):
 
         conn.execute("INSERT INTO cache VALUES (?, ?)", (self.query, buffer.getvalue()))
 
-    def read(self) -> pl.DataFrame:
+    def _read_from_source(self) -> pl.DataFrame:
         """Read data from Snowflake.
+
+        This method implements the abstract method from the base Reader class.
 
         Returns:
             DataFrame containing the data
@@ -108,8 +110,5 @@ class SnowflakeReader(Reader):
         # Cache the result
         if self.use_cache:
             self._save_cache(data)
-
-        if self.limit is not None:
-            data = data.head(self.limit)
 
         return data

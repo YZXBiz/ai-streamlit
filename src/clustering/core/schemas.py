@@ -9,7 +9,7 @@ from typing import TypeVar
 
 import numpy as np
 import pandas as pd
-import pandera as pa
+import pandera.polars as pa
 import polars as pl
 
 # %% TYPES
@@ -43,52 +43,85 @@ class Schema(pa.DataFrameModel):
         return validated_data
 
 
-# Input schemas
-class InputsSalesSchema(Schema):
+# %% Internal Preprocessing Schemas
+class SalesSchema(Schema):
     """Schema for sales input data.
 
     Contains columns required for sales data processing.
     """
 
-    SKU_NBR: int = pa.Field(nullable=False, gt=0)
-    STORE_NBR: int = pa.Field(nullable=False, gt=0)
-    CAT_DSC: str = pa.Field(nullable=False)
-    TOTAL_SALES: float = pa.Field(nullable=False, ge=0)
+    SKU_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    STORE_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    CAT_DSC: str = pa.Field(coerce=True, nullable=False)
+    TOTAL_SALES: float = pa.Field(coerce=True, nullable=False, ge=0)
+
+    @pa.dataframe_check
+    def has_rows(cls, df: pd.DataFrame | pl.DataFrame) -> bool:
+        """Check if the DataFrame has at least one row."""
+        return len(df) > 0
 
 
-class InputsNSSchema(Schema):
+class NSMappingSchema(Schema):
     """Schema for need state input data.
 
     Defines the structure for need state categorical data.
     """
 
-    PRODUCT_ID: int = pa.Field(nullable=False, gt=0)
-    CATEGORY: str = pa.Field(nullable=False)
-    NEED_STATE: str = pa.Field(nullable=False)
-    CDT: str = pa.Field(nullable=False)
-    ATTRIBUTE_1: str = pa.Field(nullable=True)
-    ATTRIBUTE_2: str = pa.Field(nullable=True)
-    ATTRIBUTE_3: str = pa.Field(nullable=True)
-    ATTRIBUTE_4: str = pa.Field(nullable=True)
-    ATTRIBUTE_5: str = pa.Field(nullable=True)
-    ATTRIBUTE_6: str = pa.Field(nullable=True)
-    PLANOGRAM_DSC: str = pa.Field(nullable=False)
-    PLANOGRAM_NBR: int = pa.Field(nullable=False, gt=0)
-    NEW_ITEM: bool = pa.Field(nullable=False)
-    TO_BE_DROPPED: bool = pa.Field(nullable=False)
+    PRODUCT_ID: int = pa.Field(coerce=True, nullable=False, gt=0)
+    CATEGORY: str = pa.Field(coerce=True, nullable=False)
+    NEED_STATE: str = pa.Field(coerce=True, nullable=False)
+    CDT: str = pa.Field(coerce=True, nullable=False)
+    ATTRIBUTE_1: str = pa.Field(coerce=True, nullable=True)
+    ATTRIBUTE_2: str = pa.Field(coerce=True, nullable=True)
+    ATTRIBUTE_3: str = pa.Field(coerce=True, nullable=True)
+    ATTRIBUTE_4: str = pa.Field(coerce=True, nullable=True)
+    ATTRIBUTE_5: str = pa.Field(coerce=True, nullable=True)
+    ATTRIBUTE_6: str = pa.Field(coerce=True, nullable=True)
+    PLANOGRAM_DSC: str = pa.Field(coerce=True, nullable=False)
+    PLANOGRAM_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    NEW_ITEM: bool = pa.Field(coerce=True, nullable=False)
+    TO_BE_DROPPED: bool = pa.Field(coerce=True, nullable=False)
+
+    @pa.dataframe_check
+    def has_rows(cls, df: pd.DataFrame | pl.DataFrame) -> bool:
+        """Check if the DataFrame has at least one row."""
+        return len(df) > 0
 
 
-class InputsMergedSchema(Schema):
+class MergedDataSchema(Schema):
     """Schema for merged input data.
 
     Combines fields from sales and needs state data.
     """
 
-    SKU_NBR: int = pa.Field(nullable=False, gt=0)
-    STORE_NBR: int = pa.Field(nullable=False, gt=0)
-    CAT_DSC: str = pa.Field(nullable=False)
-    NEED_STATE: str = pa.Field(nullable=False)
-    TOTAL_SALES: float = pa.Field(nullable=False, ge=0)
+    SKU_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    STORE_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    CAT_DSC: str = pa.Field(coerce=True, nullable=False)
+    NEED_STATE: str = pa.Field(coerce=True, nullable=False)
+    TOTAL_SALES: float = pa.Field(coerce=True, nullable=False, ge=0)
+
+    @pa.dataframe_check
+    def has_rows(cls, df: pd.DataFrame | pl.DataFrame) -> bool:
+        """Check if the DataFrame has at least one row."""
+        return len(df) > 0
+
+
+class DistributedDataSchema(Schema):
+    """Schema for distributed input data.
+
+    Combines fields from sales and need state data with evenly distributed sales.
+    """
+
+    SKU_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    STORE_NBR: int = pa.Field(coerce=True, nullable=False, gt=0)
+    CAT_DSC: str = pa.Field(coerce=True, nullable=False)
+    NEED_STATE: str = pa.Field(coerce=True, nullable=False)
+    TOTAL_SALES: float = pa.Field(coerce=True, nullable=False, ge=0)
+
+    @pa.dataframe_check
+    def has_rows(cls, df: pd.DataFrame | pl.DataFrame) -> bool:
+        """Check if the DataFrame has at least one row."""
+        return len(df) > 0
 
 
 class InputsSchema(Schema):
