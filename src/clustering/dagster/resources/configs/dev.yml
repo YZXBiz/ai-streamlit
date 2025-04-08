@@ -47,10 +47,6 @@ job_params:
     format: "parquet"
 # Data sources and destinations
 readers:
-  external_sales:
-    kind: "SnowflakeReader"
-    config:
-      query: SELECT * FROM DEV_CLUSTERING_DB.RAW.EXTERNAL_SALES
   internal_ns_map:
     kind: "CSVReader"
     config:
@@ -59,27 +55,25 @@ readers:
     kind: "CSVReader"
     config:
       path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/ns_sales.csv
-writers:
-  external_data_output:
-    kind: "SnowflakeWriter"
+  external_placerai:
+    kind: "CSVReader"
     config:
-      table: DEV_CLUSTERING_DB.PROCESSED.EXTERNAL_DATA
-      database: DEV_CLUSTERING_DB
-      schema: PROCESSED
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/external/placerai.csv
+writers:
+  internal_sales_output:
+    kind: "PickleWriter"
+    config:
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales_by_category.pkl
   internal_clusters_output:
     kind: "SnowflakeWriter"
     config:
       table: DEV_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
       database: DEV_CLUSTERING_DB
       schema: PROCESSED
-  internal_sales_output:
+  external_data_output:
     kind: "PickleWriter"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales_by_category.pkl
-  internal_sales_percent_output:
-    kind: "BlobWriter"
-    config:
-      blob_name: internal/sales_percent.parquet
+      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/external/external_data.pkl
   merged_clusters_output:
     kind: "SnowflakeWriter"
     config:

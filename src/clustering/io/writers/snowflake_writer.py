@@ -48,7 +48,7 @@ class SnowflakeWriter(Writer):
         )
         return conn
 
-    def write(self, data: pl.DataFrame) -> None:
+    def _write_to_destination(self, data: pl.DataFrame) -> None:
         """Write data to Snowflake.
 
         Args:

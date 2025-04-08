@@ -161,12 +161,15 @@ def external_cluster_evaluation(
 def external_clustering_output(
     context: dg.AssetExecutionContext,
     external_clusters: pl.DataFrame,
-) -> None:
+) -> pl.DataFrame:
     """Save external clustering results.
 
     Args:
         context: Asset execution context
         external_clusters: External clusters data
+
+    Returns:
+        DataFrame containing the clustered data
     """
     context.log.info("Saving external clustering results")
 
@@ -182,4 +185,5 @@ def external_clustering_output(
     else:
         output_clusters_writer.write(data=external_clusters)
 
-    return None
+    # Return the clustered data as an asset
+    return external_clusters

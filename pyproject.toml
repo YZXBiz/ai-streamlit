@@ -12,20 +12,18 @@ description = "A data clustering pipeline using Dagster"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Developer", email = "developer@example.com" }]
+authors = [{ name = "Jackson Yang", email = "developer@example.com" }]
 dependencies = [
     # Core dependencies
     "dagster>=1.6.0",
     "dagster-duckdb-polars>=0.21.0",
     "polars>=0.20.0",
-    "duckdb>=0.9.0",
+    "duckdb>=1.2.1",                 # Using higher version constraint
     # Data processing
-    "pandas>=2.0.0",
-    "pandas>=2.1.4", # Duplicate, consider removing one
-    "scikit-learn>=1.0.0",
-    "scikit-learn<1.5.0", # Adjusted for compatibility with pycaret==3.3.2
+    "pandas>=2.1.4",              # Using higher version constraint
+    "scikit-learn>=1.0.0,<1.5.0", # Combined constraints for compatibility with pycaret==3.3.2
     "numba>=0.60.0",
-    "numpy>=1.26.0,<2.0.0", # Adjusted for compatibility with pandas==2.1.4
+    "numpy>=1.26.0,<2.0.0",       # Constrained for compatibility with pandas==2.1.4
     "pandera[polars]>=0.21.0",
     "dask>=2025.2.0",
     # Visualization
@@ -34,8 +32,7 @@ dependencies = [
     "kaleido @ https://files.pythonhosted.org/packages/45/8e/4297556be5a07b713bb42dde0f748354de9a6918dee251c0e6bdcda341e7/kaleido-0.2.1-py2.py3-none-macosx_11_0_arm64.whl",
     "yellowbrick>=1.5",
     # Utilities
-    "pydantic>=2.0.0",
-    "pydantic>=2.10.3", # Duplicate, consider removing one
+    "pydantic>=2.10.3",         # Using higher version constraint
     "pydantic-settings>=2.6.1",
     "omegaconf>=2.3.0",
     "rich>=13.0.0",
@@ -56,7 +53,6 @@ dependencies = [
     "azure-storage-blob>=12.25.0",
     "snowflake-connector-python>=3.13.2",
     # Database and query engines
-    "duckdb>=1.2.1", # Duplicate, consider removing one
     "pyarrow<19.0.0",
     "sqlalchemy<2.0",
     # Workflow orchestration
@@ -81,6 +77,27 @@ dev = [
 
     # Package management
     "uv",
+
+    # Documentation (included in dev for convenience)
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-typehints",
+]
+
+# Separate docs dependencies for those who only want documentation tools
+docs = [
+    # Documentation
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-typehints",
+]
+
+[dependency-groups]
+docs = [
+    "sphinx>=8.1.3",
+    "sphinx-autobuild>=2024.10.3",
+    "sphinx-autodoc-typehints>=3.0.1",
+    "sphinx-rtd-theme>=3.0.2",
 ]
 
 [tool.uv.sources]

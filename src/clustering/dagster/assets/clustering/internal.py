@@ -5,7 +5,6 @@ from typing import Any, cast
 
 import dagster as dg
 import polars as pl
-from sklearn import metrics as sk_metrics  # type: ignore
 
 # Import from our PyCaret-based implementation
 from clustering.core.models import ClusteringModel
@@ -319,12 +318,15 @@ def internal_cluster_evaluation(
 def internal_clustering_output(
     context: dg.AssetExecutionContext,
     internal_clusters: dict[str, Any],
-) -> None:
+) -> pl.DataFrame:
     """Save internal clustering results.
 
     Args:
         context: Asset execution context
         internal_clusters: Internal clusters
+
+    Returns:
+        DataFrame containing the clustered data
     """
     context.log.info("Saving internal clustering results")
 
@@ -332,7 +334,7 @@ def internal_clustering_output(
     result_df = internal_clusters.get("clustered_data")
     if result_df is None:
         context.log.error("No clustered data found in internal_clusters")
-        return None
+        raise ValueError("No clustered data found in internal_clusters")
 
     # Get output configuration from job_params
     config = context.resources.config
@@ -346,4 +348,4 @@ def internal_clustering_output(
     context.log.info(f"Saving internal clustering results in {output_format} format")
 
     # Return the clustered data as an asset
-    return None
+    return result_df

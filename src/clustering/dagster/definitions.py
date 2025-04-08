@@ -91,8 +91,8 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "internal_ns_map": data_io.data_reader.configured(
             env_config.get("readers", {}).get("internal_ns_map", {})
         ),
-        "input_external_sales_reader": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("external_sales", {})
+        "input_external_placerai_reader": data_io.data_reader.configured(
+            env_config.get("readers", {}).get("external_placerai", {})
         ),
         # Data writers
         "output_sales_writer": data_io.data_writer.configured(

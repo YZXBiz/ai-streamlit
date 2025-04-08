@@ -3,14 +3,12 @@
 import dagster as dg
 import polars as pl
 
-from clustering.utils.helpers import merge_dataframes
-
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="external_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_external_sales_reader"},
+    required_resource_keys={"input_external_placerai_reader"},
 )
 def external_features_data(
     context: dg.AssetExecutionContext,
@@ -23,35 +21,45 @@ def external_features_data(
     Returns:
         DataFrame containing merged external data
     """
-    context.log.info("Reading external features data")
+    # Step 1: Gather all external data readers
+    context.log.info("Initializing external data readers")
+    external_readers = [
+        context.resources.input_external_placerai_reader,
+        # Add additional readers here as needed
+    ]
 
-    input_external_readers = context.resources.input_external_sales_reader
+    # Step 2: Read data from all sources
+    context.log.info("Reading data from all external sources")
+    dataframes: list[pl.DataFrame] = []
 
-    # Ensure readers are in a list format
-    if not isinstance(input_external_readers, list):
-        input_external_readers = [input_external_readers]
+    for reader in external_readers:
+        context.log.info(f"Reading from: {reader}")
+        df = reader.read()
 
-    # Read and convert all external data to Polars
-    df_list: list[pl.DataFrame] = []
-    for input_data in input_external_readers:
-        context.log.info(f"Reading external feature: {input_data}")
-        data = input_data.read()
+        # Validate we have the key column needed for merging
+        if "STORE_NBR" not in df.columns:
+            context.log.warning(f"Missing STORE_NBR column in data from {reader}. Skipping.")
+            continue
 
-        if not isinstance(data, pl.DataFrame):
-            data = pl.from_pandas(data)
+        dataframes.append(df)
 
-        df_list.append(data)
+    # Step 3: Handle the single or empty dataframe case
+    if not dataframes:
+        context.log.error("No valid external data sources found")
+        raise ValueError("Failed to read any valid external data")
 
-    # Merge all dataframes
-    context.log.info("Merging all external feature dataframes")
-    if len(df_list) == 1:
-        return df_list[0]
+    if len(dataframes) == 1:
+        context.log.info("Only one external data source. No merging needed.")
+        return dataframes[0]
 
-    # Convert to pandas for merging, then back to polars
-    pandas_df_list = [df.to_pandas() for df in df_list]
-    merged_pandas = merge_dataframes(pandas_df_list)
+    # Step 4: Merge multiple dataframes
+    context.log.info(f"Merging [outer] {len(dataframes)} external data sources on STORE_NBR")
+    merged_data = pl.concat(dataframes, how="outer")
 
-    return pl.from_pandas(merged_pandas)
+    context.log.info(
+        f"Merged external data has {merged_data.shape[0]} rows and {merged_data.shape[1]} columns"
+    )
+    return merged_data
 
 
 @dg.asset(
@@ -64,28 +72,13 @@ def external_features_data(
 def preprocessed_external_data(
     context: dg.AssetExecutionContext,
     external_features_data: pl.DataFrame,
-) -> pl.DataFrame:
+) -> None:
     """Process external data and save the results.
 
     Args:
         context: Asset execution context
         external_features_data: External features data
-
-    Returns:
-        Processed external data
     """
-    context.log.info("Processing external data")
-
-    # No additional processing needed in this simple case
-    # Add any processing steps here as needed
-
     context.log.info("Saving preprocessed external data")
     output_data_writer = context.resources.output_external_data_writer
-
-    # Write the data in the appropriate format
-    if hasattr(output_data_writer, "requires_pandas") and output_data_writer.requires_pandas:
-        output_data_writer.write(data=external_features_data.to_pandas())
-    else:
-        output_data_writer.write(data=external_features_data)
-
-    return external_features_data
+    output_data_writer.write(data=external_features_data)

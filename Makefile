@@ -1,4 +1,4 @@
-.PHONY: install update format lint type-check test clean build run-all setup-configs setup-tests run-% help dagster-ui dagster-test dagster-job-% run-dagster-%
+.PHONY: install update format lint type-check test clean build run-all setup-configs setup-tests run-% help dagster-ui dagster-test dagster-job-% run-dagster-% docs docs-server docs-deps
 
 # Default Python interpreter
 PYTHON := uv run
@@ -20,7 +20,6 @@ DAGSTER_ENV := dev
 # Install production dependencies
 install:
 	@echo "Sync all dependencies"
-	uv venv
 	uv sync --all-packages 
 
 # Update all dependencies
@@ -111,6 +110,21 @@ run-dagster-%:
 	@echo "Running Dagster job $* in environment $(DAGSTER_ENV)"
 	uv run -m $(PACKAGE_NAME).dagster.run_dagster $* --env $(DAGSTER_ENV)
 
+# Install documentation dependencies
+docs-deps:
+	@echo "Installing documentation dependencies"
+	uv add --group docs sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-autobuild
+
+# Documentation
+docs: docs-deps
+	@echo "Building documentation"
+	cd docs && $(MAKE) html
+
+# Start documentation server
+docs-server: docs-deps
+	@echo "Starting documentation server at http://localhost:8000"
+	cd docs && uv run -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
+
 # Help
 help:
 	@echo "Available targets:"
@@ -129,4 +143,6 @@ help:
 	@echo "  dagster-ui    - Start Dagster UI (set DAGSTER_ENV for environment)"
 	@echo "  dagster-test  - Run Dagster tests"
 	@echo "  dagster-job-<job> - Run a specific Dagster job using the dagster CLI"
-	@echo "  run-dagster-<job>  - Run a specific Dagster job using our run_dagster.py script" 
+	@echo "  run-dagster-<job>  - Run a specific Dagster job using our run_dagster.py script"
+	@echo "  docs          - Build documentation"
+	@echo "  docs-server   - Start documentation server" 
