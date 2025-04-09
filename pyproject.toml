@@ -62,6 +62,7 @@ dependencies = [
     "poethepoet",
     "dvc[azure]>=3.59.1",
     "dagster-pandera>=0.26.9",
+    "dagster-mlflow",
 ]
 
 [project.optional-dependencies]
@@ -123,6 +124,7 @@ ignore = [
     "D203", # one-blank-line-before-class (conflicts with no-blank-line-before-class)
     "D212", # multi-line-summary-first-line (conflicts with multi-line-summary-second-line)
     "N805", # first argument is self
+    "F405", # star imports are not allowed
 ]
 
 [tool.ruff.lint.isort]

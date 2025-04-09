@@ -1,26 +1,22 @@
 """Dagster assets for the clustering pipeline."""
 
 # Preprocessing assets
-# Clustering assets
-from clustering.dagster.assets.clustering.external import (
-    external_cluster_evaluation,
-    external_clustering_model,
-    external_clustering_output,
-    external_clusters,
-)
-from clustering.dagster.assets.clustering.internal import (
-    internal_cluster_evaluation,
-    internal_clustering_model,
+# Clustering assets - use direct imports
+from clustering.dagster.assets.clustering import (
+    dimensionality_reduced_features,
+    fe_raw_data,
+    feature_metadata,
+    filtered_features,
+    generate_clusters,
+    imputed_features,
     internal_clustering_output,
-    internal_clusters,
+    load_production_model,
+    normalized_data,
+    outlier_removed_features,
+    train_clustering_model,
 )
 
-# Merging assets
-from clustering.dagster.assets.merging import merged_clusters, merged_clusters_output
-from clustering.dagster.assets.preprocessing.external import (
-    external_features_data,
-    preprocessed_external_data,
-)
+# Preprocessing assets
 from clustering.dagster.assets.preprocessing.internal import (
     normalized_sales_data,
     output_sales_table,
@@ -38,20 +34,16 @@ __all__ = [
     "sales_by_category",
     "output_sales_table",
     "normalized_sales_data",
-    # Preprocessing - external
-    "external_features_data",
-    "preprocessed_external_data",
-    # Clustering - internal
-    "internal_clustering_model",
-    "internal_clusters",
-    "internal_cluster_evaluation",
+    # Clustering - ML assets
+    "fe_raw_data",
+    "filtered_features",
+    "imputed_features",
+    "normalized_data",
+    "outlier_removed_features",
+    "dimensionality_reduced_features",
+    "feature_metadata",
+    "train_clustering_model",
+    "load_production_model",
+    "generate_clusters",
     "internal_clustering_output",
-    # Clustering - external
-    "external_clustering_model",
-    "external_clusters",
-    "external_cluster_evaluation",
-    "external_clustering_output",
-    # Merging
-    "merged_clusters",
-    "merged_clusters_output",
 ]

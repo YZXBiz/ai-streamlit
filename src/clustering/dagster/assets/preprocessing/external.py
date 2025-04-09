@@ -72,13 +72,26 @@ def external_features_data(
 def preprocessed_external_data(
     context: dg.AssetExecutionContext,
     external_features_data: pl.DataFrame,
-) -> None:
+) -> pl.DataFrame:
     """Process external data and save the results.
 
     Args:
         context: Asset execution context
         external_features_data: External features data
+
+    Returns:
+        Processed external data
     """
+    context.log.info("Processing external data")
+
+    # Apply any necessary preprocessing steps here
+    # For now, we'll just use the data as is
+    processed_data = external_features_data
+
+    # Save the processed data
     context.log.info("Saving preprocessed external data")
     output_data_writer = context.resources.output_external_data_writer
-    output_data_writer.write(data=external_features_data)
+    output_data_writer.write(data=processed_data)
+
+    # Return the data so it can be used by downstream assets
+    return processed_data

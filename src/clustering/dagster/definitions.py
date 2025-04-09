@@ -1,57 +1,35 @@
 """Dagster definitions module for the clustering pipeline."""
 
 import os
+from types import SimpleNamespace
 
 import dagster as dg
 import yaml
 
+# Import all assets directly
 from clustering.dagster.assets import (
-    external_cluster_evaluation,
-    external_clustering_model,
-    external_clustering_output,
-    external_clusters,
-    external_features_data,
-    internal_cluster_evaluation,
-    internal_clustering_model,
+    dimensionality_reduced_features,
+    fe_raw_data,
+    feature_metadata,
+    filtered_features,
+    generate_clusters,
+    imputed_features,
     internal_clustering_output,
-    internal_clusters,
-    merged_clusters,
-    merged_clusters_output,
+    load_production_model,
+    normalized_data,
     normalized_sales_data,
+    outlier_removed_features,
     output_sales_table,
-    preprocessed_external_data,
     product_category_mapping,
     raw_sales_data,
     sales_by_category,
     sales_with_categories,
+    train_clustering_model,
 )
-from clustering.dagster.resources import alerts_service, data_io, logger_service, simple_config
+from clustering.dagster.resources import alerts_service, data_io, logger_service
 
 
-def load_resource_config(env: str = "dev") -> dict:
-    """Load resource configuration from YAML file.
-
-    Args:
-        env: Environment name (dev, staging, prod)
-
-    Returns:
-        Dictionary with resource configuration
-    """
-    # Get the resource config file path
-    config_file_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
-
-    try:
-        # Load the YAML file
-        with open(config_file_path) as f:
-            config_data = yaml.safe_load(f)
-
-        return config_data
-    except Exception as e:
-        print(f"Error loading resource config for environment '{env}': {e}")
-        return {}
-
-
-# Define resources with a flat structure
+# Define resources with a simple, direct approach
 def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     """Get resource definitions based on environment.
 
@@ -61,187 +39,144 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     Returns:
         Dictionary of resource definitions
     """
-    # Load environment-specific configuration
-    env_config = load_resource_config(env)
+    # Load configuration directly
+    config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
+    with open(config_path) as f:
+        config_data = yaml.safe_load(f)
+
+    # Extract job parameters
+    job_params = config_data.get("job_params", {})
+
+    # Create config object directly
+    params = SimpleNamespace(**job_params)
+    params.env = env  # Add environment name
+
+    # Extract other resource configurations
+    logger_config = config_data.get("logger", {})
+    alerts_config = config_data.get("alerts", {})
+    readers_config = config_data.get("readers", {})
+    writers_config = config_data.get("writers", {})
+
+    # Create the params resource once
+    params_resource = dg.resource(lambda: params)()
 
     # Create all resources in a flat structure
     resources = {
         # Core resources
         "io_manager": dg.FilesystemIOManager(base_dir="storage"),
-        "config": simple_config.configured({"env": env}),
+        # Use the same params resource for both job_params and config
+        # Some assets look for "job_params" while others look for "config"
+        "job_params": params_resource,
+        "config": params_resource,
         # Logger
         "logger": logger_service.configured(
             {
-                "sink": env_config.get("logger", {}).get("sink", f"logs/dagster_{env}.log"),
-                "level": env_config.get("logger", {}).get("level", "INFO"),
+                "sink": logger_config.get("sink", f"logs/dagster_{env}.log"),
+                "level": logger_config.get("level", "INFO"),
             }
         ),
         # Alerts
         "alerts": alerts_service.configured(
             {
-                "enabled": env_config.get("alerts", {}).get("enabled", True),
-                "threshold": env_config.get("alerts", {}).get("threshold", "WARNING"),
-                "slack_webhook": env_config.get("alerts", {}).get("slack_webhook", None),
+                "enabled": alerts_config.get("enabled", True),
+                "threshold": alerts_config.get("threshold", "WARNING"),
+                "slack_webhook": alerts_config.get("slack_webhook", None),
             }
         ),
         # Data readers
         "internal_ns_sales": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("internal_ns_sales", {})
+            readers_config.get("internal_ns_sales", {})
         ),
         "internal_ns_map": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("internal_ns_map", {})
+            readers_config.get("internal_ns_map", {})
         ),
-        "input_external_placerai_reader": data_io.data_reader.configured(
-            env_config.get("readers", {}).get("external_placerai", {})
+        # Feature engineering reader
+        "output_sales_reader": data_io.data_reader.configured(
+            readers_config.get("output_sales", {})
         ),
         # Data writers
         "output_sales_writer": data_io.data_writer.configured(
-            env_config.get("writers", {}).get("internal_sales_output", {})
+            writers_config.get("internal_sales_output", {})
         ),
         "output_sales_percent_writer": data_io.data_writer.configured(
-            env_config.get("writers", {}).get("internal_sales_percent_output", {})
+            writers_config.get("internal_sales_percent_output", {})
         ),
         "output_clusters_writer": data_io.data_writer.configured(
-            env_config.get("writers", {}).get("internal_clusters_output", {})
-        ),
-        "output_external_data_writer": data_io.data_writer.configured(
-            env_config.get("writers", {}).get("external_data_output", {})
-        ),
-        "output_merged_writer": data_io.data_writer.configured(
-            env_config.get("writers", {}).get("merged_clusters_output", {})
+            writers_config.get("internal_clusters_output", {})
         ),
     }
 
     return resources
 
 
-# Define asset jobs
-def define_internal_preprocessing_job() -> dg.AssetsDefinition:
-    """Define the internal preprocessing job.
+# Define all jobs directly in definitions.py
 
-    Returns:
-        Asset job for internal preprocessing
-    """
-    return dg.define_asset_job(
-        name="internal_preprocessing_job",
-        selection=[
-            raw_sales_data,
-            product_category_mapping,
-            sales_with_categories,
-            normalized_sales_data,
-            sales_by_category,
-            output_sales_table,
-        ],
-        tags={"kind": "internal_preprocessing"},
-    )
+# Define internal preprocessing job
+internal_preprocessing_job = dg.define_asset_job(
+    name="internal_preprocessing_job",
+    selection=[
+        raw_sales_data,
+        product_category_mapping,
+        sales_with_categories,
+        normalized_sales_data,
+        sales_by_category,
+        output_sales_table,
+    ],
+    tags={"kind": "internal_preprocessing"},
+)
 
+# Define internal ML job directly
+internal_clustering_job = dg.define_asset_job(
+    name="internal_clustering_job",
+    selection=[
+        # Feature engineering assets
+        fe_raw_data,
+        filtered_features,
+        imputed_features,
+        normalized_data,
+        outlier_removed_features,
+        dimensionality_reduced_features,
+        feature_metadata,
+        # Model training asset
+        train_clustering_model,
+        # Model inference assets
+        load_production_model,
+        generate_clusters,
+        internal_clustering_output,
+    ],
+    tags={"kind": "internal_ml"},
+)
 
-def define_internal_clustering_job() -> dg.AssetsDefinition:
-    """Define the internal clustering job.
-
-    Returns:
-        Asset job for internal clustering
-    """
-    return dg.define_asset_job(
-        name="internal_clustering_job",
-        selection=[
-            internal_clustering_model,
-            internal_clusters,
-            internal_cluster_evaluation,
-            internal_clustering_output,
-        ],
-        tags={"kind": "internal_clustering"},
-    )
-
-
-def define_external_preprocessing_job() -> dg.AssetsDefinition:
-    """Define the external preprocessing job.
-
-    Returns:
-        Asset job for external preprocessing
-    """
-    return dg.define_asset_job(
-        name="external_preprocessing_job",
-        selection=[
-            external_features_data,
-            preprocessed_external_data,
-        ],
-        tags={"kind": "external_preprocessing"},
-    )
-
-
-def define_external_clustering_job() -> dg.AssetsDefinition:
-    """Define the external clustering job.
-
-    Returns:
-        Asset job for external clustering
-    """
-    return dg.define_asset_job(
-        name="external_clustering_job",
-        selection=[
-            external_clustering_model,
-            external_clusters,
-            external_cluster_evaluation,
-            external_clustering_output,
-        ],
-        tags={"kind": "external_clustering"},
-    )
+# Define full pipeline job
+full_pipeline_job = dg.define_asset_job(
+    name="full_pipeline_job",
+    selection=[
+        raw_sales_data,
+        product_category_mapping,
+        sales_with_categories,
+        normalized_sales_data,
+        sales_by_category,
+        output_sales_table,
+        # Feature engineering
+        fe_raw_data,
+        filtered_features,
+        imputed_features,
+        normalized_data,
+        outlier_removed_features,
+        dimensionality_reduced_features,
+        feature_metadata,
+        # Model training
+        train_clustering_model,
+        # Model inference
+        load_production_model,
+        generate_clusters,
+        internal_clustering_output,
+    ],
+    tags={"kind": "full_pipeline"},
+)
 
 
-def define_merging_job() -> dg.AssetsDefinition:
-    """Define the merging job.
-
-    Returns:
-        Asset job for merging internal and external clusters
-    """
-    return dg.define_asset_job(
-        name="merging_job",
-        selection=[
-            merged_clusters,
-            merged_clusters_output,
-        ],
-        tags={"kind": "merging"},
-    )
-
-
-def define_full_pipeline_job() -> dg.AssetsDefinition:
-    """Define the full pipeline job that runs all assets.
-
-    Returns:
-        Asset job for the full pipeline
-    """
-    return dg.define_asset_job(
-        name="full_pipeline_job",
-        selection=[
-            # Internal preprocessing
-            raw_sales_data,
-            product_category_mapping,
-            sales_with_categories,
-            normalized_sales_data,
-            sales_by_category,
-            output_sales_table,
-            # Internal clustering
-            internal_clustering_model,
-            internal_clusters,
-            internal_cluster_evaluation,
-            internal_clustering_output,
-            # External preprocessing
-            external_features_data,
-            preprocessed_external_data,
-            # External clustering
-            external_clustering_model,
-            external_clusters,
-            external_cluster_evaluation,
-            external_clustering_output,
-            # Merging
-            merged_clusters,
-            merged_clusters_output,
-        ],
-        tags={"kind": "full_pipeline"},
-    )
-
-
-# Define the full Dagster definitions
+# Create definitions
 def create_definitions(env: str = "dev") -> dg.Definitions:
     """Create Dagster definitions.
 
@@ -253,48 +188,38 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
     """
     resources = get_resources_by_env(env)
 
-    # Define asset jobs
-    internal_preprocessing_job = define_internal_preprocessing_job()
-    internal_clustering_job = define_internal_clustering_job()
-    external_preprocessing_job = define_external_preprocessing_job()
-    external_clustering_job = define_external_clustering_job()
-    merging_job = define_merging_job()
-    full_pipeline_job = define_full_pipeline_job()
+    # Include all assets in one place
+    assets = [
+        # Preprocessing assets - Internal
+        raw_sales_data,
+        product_category_mapping,
+        sales_with_categories,
+        normalized_sales_data,
+        sales_by_category,
+        output_sales_table,
+        # Feature engineering assets
+        fe_raw_data,
+        filtered_features,
+        imputed_features,
+        normalized_data,
+        outlier_removed_features,
+        dimensionality_reduced_features,
+        feature_metadata,
+        # Model training
+        train_clustering_model,
+        # Model inference
+        load_production_model,
+        generate_clusters,
+        internal_clustering_output,
+    ]
 
-    # Create and return definitions
+    # Create and return definitions with all jobs defined directly
     return dg.Definitions(
-        assets=[
-            # Preprocessing assets - Internal
-            raw_sales_data,
-            product_category_mapping,
-            sales_with_categories,
-            normalized_sales_data,
-            sales_by_category,
-            output_sales_table,
-            # Preprocessing assets - External
-            external_features_data,
-            preprocessed_external_data,
-            # Clustering assets - Internal
-            internal_clustering_model,
-            internal_clusters,
-            internal_cluster_evaluation,
-            internal_clustering_output,
-            # Clustering assets - External
-            external_clustering_model,
-            external_clusters,
-            external_cluster_evaluation,
-            external_clustering_output,
-            # Merging assets
-            merged_clusters,
-            merged_clusters_output,
-        ],
+        assets=assets,
         resources=resources,
         jobs=[
             internal_preprocessing_job,
             internal_clustering_job,
-            external_preprocessing_job,
-            external_clustering_job,
-            merging_job,
             full_pipeline_job,
         ],
     )
