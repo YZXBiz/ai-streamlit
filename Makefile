@@ -1,39 +1,38 @@
-# Clustering project Makefile
+# Clustering Project Makefile
 # ----------------------------------
 # Author: Jackson Yang
 
 # Declare all targets as phony (not files)
 .PHONY: install update format lint type-check test clean build setup-configs setup-tests \
         dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full run-merging \
-        docs docs-server docs-deps help version dev run-job setup
+        docs docs-server docs-deps help version dev run-job setup full-pipeline
 
-# ===== Configuration =====
-# Default Python package manager
-PYTHON := uv run
-
-# Package name
+# ===== CONFIGURATION =====
+# Package info
 PACKAGE_NAME := clustering
+VERSION := 1.0.0
+AUTHOR := Jackson Yang
 
-# Directory structure
+# Directories
 SRC_DIR := src
 TESTS_DIR := tests
 CONFIGS_DIR := configs
-
-# Default Dagster environment
-DAGSTER_ENV := dev
-
-# Author info
-AUTHOR := Jackson Yang
-VERSION := 1.0.0
-
-# Set default environment
-ENV ?= dev
-
-# Define directory paths
 DAGSTER_HOME_DIR := $(shell pwd)/dagster_home
 
-# ===== Dependencies & Setup =====
-# Install production dependencies
+# Environment settings
+DAGSTER_ENV := dev
+ENV ?= dev
+
+# Tools
+PYTHON := uv run
+
+# ===== SETUP TARGETS =====
+# Setup project directory structure
+setup:
+	mkdir -p $(DAGSTER_HOME_DIR)
+	touch $(DAGSTER_HOME_DIR)/dagster.yaml
+
+# Install uv and sync dependencies
 install:
 	@echo "Checking if uv is installed..."
 	@if ! command -v uv >/dev/null 2>&1; then \
@@ -66,7 +65,7 @@ setup-tests:
 	touch $(TESTS_DIR)/integration/__init__.py
 	touch $(TESTS_DIR)/conftest.py
 
-# ===== Development =====
+# ===== DEVELOPMENT =====
 # Format code
 format:
 	@echo "Format code"
@@ -83,10 +82,28 @@ type-check:
 	uv run -m mypy $(SRC_DIR) $(TESTS_DIR)
 	uv run -m pyright $(SRC_DIR) $(TESTS_DIR)
 
+# Start development server
+dev: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m dagster dev
+
 # Run tests
 test:
 	@echo "Run tests"
-	uv run -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
+	uv run --no-deps -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
+
+# Show version and author information
+version:
+	@echo "=========================================="
+	@echo "  $(PACKAGE_NAME) version $(VERSION)"
+	@echo "  Developed by $(AUTHOR)"
+	@echo "  Copyright (c) 2025-2026 $(AUTHOR)"
+	@echo "=========================================="
+
+# ===== BUILD & CLEAN =====
+# Build package	
+build:
+	@echo "Build package"
+	uv build --all-packages
 
 # Clean up build artifacts and cache files
 clean:
@@ -105,20 +122,7 @@ clean:
 	find . -name ".tmp_dagster*" -type d -exec rm -rf {} +
 	rm -rf $(DAGSTER_HOME_DIR)/.tmp_*
 
-# Build package	
-build:
-	@echo "Build package"
-	uv build --all-packages
-
-# Show version and author information
-version:
-	@echo "=========================================="
-	@echo "  $(PACKAGE_NAME) version $(VERSION)"
-	@echo "  Developed by $(AUTHOR)"
-	@echo "  Copyright (c) 2025-2026 $(AUTHOR)"
-	@echo "=========================================="
-
-# ===== Dagster Commands =====
+# ===== DAGSTER COMMANDS =====
 # Start Dagster UI
 dagster-ui: setup
 	@echo "Starting Dagster UI with $(DAGSTER_ENV) environment"
@@ -154,7 +158,15 @@ run-merging: setup
 	@echo "Running merging job"
 	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
 
-# ===== Documentation =====
+# Run a specific Dagster job
+run-job: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run $(JOB) --env $(ENV)
+
+# Run the full pipeline
+full-pipeline: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run full_pipeline_job --env $(ENV)
+
+# ===== DOCUMENTATION =====
 # Install documentation dependencies
 docs-deps:
 	@echo "Installing documentation dependencies"
@@ -170,7 +182,7 @@ docs-server: docs-deps
 	@echo "Starting documentation server at http://localhost:8000"
 	cd docs && uv run -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
 
-# ===== Help =====
+# ===== HELP =====
 help:
 	@echo "===== Clustering Project Makefile Help ====="
 	@echo "Developed by $(AUTHOR)"
@@ -183,22 +195,27 @@ help:
 	@echo "  setup-tests   - Create test directories and files"
 	@echo ""
 	@echo "Development Targets:"
+	@echo "  dev           - Start Dagster development server"
 	@echo "  format        - Format code with ruff"
 	@echo "  lint          - Lint code with ruff"
 	@echo "  type-check    - Type check with mypy and pyright"
 	@echo "  test          - Run tests with pytest"
-	@echo "  clean         - Clean build artifacts and cache files"
-	@echo "  build         - Build package"
 	@echo "  version       - Display version and author information"
+	@echo ""
+	@echo "Build & Clean Targets:"
+	@echo "  build         - Build package"
+	@echo "  clean         - Clean build artifacts and cache files"
 	@echo ""
 	@echo "Dagster Targets:"
 	@echo "  dagster-ui    - Start Dagster UI (set DAGSTER_ENV for environment)"
 	@echo "  dagster-test  - Run Dagster tests"
-	@echo "  dagster-job-<job> - Run a specific Dagster job using the dagster CLI"
-	@echo "  run-internal-<type> - Run internal job (preprocessing or clustering)"
-	@echo "  run-external-<type> - Run external job (preprocessing or clustering)"
+	@echo "  dagster-job-<job>    - Run a specific Dagster job using the dagster CLI"
+	@echo "  run-internal-<type>  - Run internal job (preprocessing or clustering)"
+	@echo "  run-external-<type>  - Run external job (preprocessing or clustering)"
 	@echo "  run-full      - Run the full pipeline job"
 	@echo "  run-merging   - Run the merging job for combining internal and external clusters"
+	@echo "  run-job       - Run a specific job (usage: make run-job JOB=job_name)"
+	@echo "  full-pipeline - Run the full pipeline job"
 	@echo ""
 	@echo "Documentation Targets:"
 	@echo "  docs          - Build documentation"
@@ -209,22 +226,4 @@ help:
 	@echo "  make run-external-clustering     # Run external clustering job"
 	@echo "  make run-merging                 # Run cluster merging job"
 	@echo ""
-	@echo "Copyright (c) 2023-2024 $(AUTHOR)"
-
-# Target to start Dagster development server
-dev: setup
-	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m dagster dev
-
-# Target to run a specific Dagster job
-# Usage: make run-job JOB=internal_preprocessing_job
-run-job: setup
-	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run $(JOB) --env $(ENV)
-
-# Target to run the full pipeline
-full-pipeline: setup
-	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run full_pipeline_job --env $(ENV)
-
-# Target to setup the project
-setup:
-	mkdir -p $(DAGSTER_HOME_DIR)
-	touch $(DAGSTER_HOME_DIR)/dagster.yaml 
+	@echo "Copyright (c) 2023-2024 $(AUTHOR)" 

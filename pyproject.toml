@@ -29,7 +29,6 @@ dependencies = [
     # Visualization
     "matplotlib<3.8.0",
     "plotly>=5.24.1",
-    "kaleido",
     "yellowbrick>=1.5",
     # Utilities
     "pydantic>=2.10.3",         # Using higher version constraint
@@ -45,8 +44,8 @@ dependencies = [
     "openpyxl>=3.1.5",
     "fastexcel>=0.13.0",
     # Machine learning frameworks
-    "kaleido",
     "pycaret",
+    "kaleido",
     # Cloud and storage
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
@@ -99,9 +98,9 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
 ]
 
-# [tool.uv.sources]
+[tool.uv.sources]
 # Platform-specific kaleido sources
-# kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
+kaleido = { url = "https://github.com/plotly/Kaleido/releases/download/v0.2.1/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
 # pycaret = { git = "https://github.com/Jackson-Yang_cvsh/modified-pycaret.git" }
 
 [tool.ruff]
