@@ -126,6 +126,7 @@ ignore = [
     "D212", # multi-line-summary-first-line (conflicts with multi-line-summary-second-line)
     "N805", # first argument is self
     "F405", # star imports are not allowed
+    "N806", # Upper case letters are not allowed in function names
 ]
 
 [tool.ruff.lint.isort]

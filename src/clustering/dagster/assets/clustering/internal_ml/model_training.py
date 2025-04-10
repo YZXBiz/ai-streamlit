@@ -69,11 +69,31 @@ def optimal_cluster_counts(
     for category, df in dimensionality_reduced_features.items():
         context.log.info(f"Determining optimal cluster count for category: {category}")
 
+        sample_count = len(df)
+
         # Check if dataset has enough samples for clustering
-        if len(df) < min_clusters:
+        if sample_count < min_clusters:
             context.log.warning(
-                f"Category '{category}' has only {len(df)} samples, "
+                f"Category '{category}' has only {sample_count} samples, "
                 f"which is less than min_clusters={min_clusters}. "
+                f"Setting optimal clusters to 1."
+            )
+            optimal_clusters[category] = 1
+            continue
+
+        # Adjust max_clusters to not exceed sample count
+        adjusted_max_clusters = min(max_clusters, sample_count - 1)
+        if adjusted_max_clusters < max_clusters:
+            context.log.warning(
+                f"Category '{category}' has only {sample_count} samples. "
+                f"Reducing max_clusters from {max_clusters} to {adjusted_max_clusters}."
+            )
+
+        # If adjusted_max_clusters is less than min_clusters, we can't cluster properly
+        if adjusted_max_clusters < min_clusters:
+            context.log.warning(
+                f"Category '{category}' has too few samples ({sample_count}) "
+                f"to evaluate clusters in range [{min_clusters}, {max_clusters}]. "
                 f"Setting optimal clusters to 1."
             )
             optimal_clusters[category] = 1
@@ -91,11 +111,13 @@ def optimal_cluster_counts(
         )
 
         # Evaluate different cluster counts
-        context.log.info(f"Evaluating {min_clusters} to {max_clusters} clusters for {category}")
+        context.log.info(
+            f"Evaluating {min_clusters} to {adjusted_max_clusters} clusters for {category}"
+        )
         cluster_metrics = {}
 
         # Track metric values for each cluster count
-        for k in range(min_clusters, max_clusters + 1):
+        for k in range(min_clusters, adjusted_max_clusters + 1):
             # Create a model with k clusters
             _ = exp.create_model(Defaults.ALGORITHM, num_clusters=k, verbose=False)
 
@@ -112,13 +134,13 @@ def optimal_cluster_counts(
             context.log.info(f"  {category} with {k} clusters: {metrics_str}")
 
         # Determine optimal clusters based on silhouette score (higher is better)
-        if "silhouette" in metrics:
+        if "silhouette" in metrics and cluster_metrics:
             best_k = max(
                 cluster_metrics.keys(), key=lambda k: cluster_metrics[k].get("silhouette", 0)
             )
             context.log.info(f"Optimal clusters for {category} based on silhouette: {best_k}")
         # Fallback to Calinski-Harabasz (higher is better)
-        elif "calinski_harabasz" in metrics:
+        elif "calinski_harabasz" in metrics and cluster_metrics:
             best_k = max(
                 cluster_metrics.keys(), key=lambda k: cluster_metrics[k].get("calinski_harabasz", 0)
             )
@@ -126,15 +148,15 @@ def optimal_cluster_counts(
                 f"Optimal clusters for {category} based on calinski_harabasz: {best_k}"
             )
         # Fallback to Davies-Bouldin (lower is better)
-        elif "davies_bouldin" in metrics:
+        elif "davies_bouldin" in metrics and cluster_metrics:
             best_k = min(
                 cluster_metrics.keys(),
                 key=lambda k: cluster_metrics[k].get("davies_bouldin", float("inf")),
             )
             context.log.info(f"Optimal clusters for {category} based on davies_bouldin: {best_k}")
         else:
-            # Default if no metrics match
-            best_k = (min_clusters + max_clusters) // 2
+            # Default if no metrics match or no clusters were evaluated
+            best_k = min(min_clusters, sample_count - 1) if sample_count > 1 else 1
             context.log.warning(
                 f"Could not determine optimal clusters for {category}, using default: {best_k}"
             )
@@ -281,19 +303,17 @@ def save_clustering_models(
     if models:
         context.log.info("Saving trained models to output location")
         context.resources.model_output.write(models)
-        return True
     else:
         context.log.warning(
             "No models were trained (all categories were skipped or had insufficient data). "
             "Skipping model output write."
         )
-        return False
 
 
 @dg.asset(
     name="cluster_assignments",
     description="Assigns clusters to data points using trained models",
-    group_name="cluster_prediction",
+    group_name="cluster_assignment",
     compute_kind="prediction",
     deps=["dimensionality_reduced_features", "trained_clustering_models"],
     required_resource_keys={"config"},
@@ -371,7 +391,7 @@ def assign_clusters(
 @dg.asset(
     name="persisted_cluster_assignments",
     description="Saves cluster assignments to storage",
-    group_name="cluster_prediction",
+    group_name="cluster_assignment",
     compute_kind="io",
     deps=["cluster_assignments"],
     required_resource_keys={"cluster_assignments"},
@@ -393,10 +413,8 @@ def save_cluster_assignments(
     if cluster_assignments:
         context.log.info("Saving cluster assignments to output location")
         context.resources.cluster_assignments.write(cluster_assignments)
-        return True
     else:
         context.log.warning("No cluster assignments to save")
-        return False
 
 
 @dg.asset(
@@ -485,6 +503,7 @@ def generate_cluster_visualizations(
     """Generate visualizations for cluster analysis.
 
     Creates various plots to help analyze and understand the clustering results.
+    Uses Dagster's built-in plotting capabilities to display plots in the UI.
 
     Args:
         context: Dagster asset execution context
@@ -494,6 +513,14 @@ def generate_cluster_visualizations(
     Returns:
         Dictionary mapping categories to lists of generated visualization types
     """
+    import base64
+    import io
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from sklearn.decomposition import PCA
+    from sklearn.manifold import TSNE
+
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
     plot_types = ["elbow", "silhouette", "distance", "distribution"]
 
@@ -540,22 +567,145 @@ def generate_cluster_visualizations(
                 verbose=False,
             )
 
-            # Generate plots
+            # Generate PyCaret plots
             for plot_type in plot_types:
                 try:
                     context.log.info(f"Generating {plot_type} plot for {category}")
 
                     # Generate the plot
-                    _ = exp.plot_model(loaded_model, plot=plot_type, verbose=False)
+                    _ = exp.plot_model(loaded_model, plot=plot_type, verbose=False, save=True)
 
                     # Record that we generated this plot
                     category_visualizations.append(plot_type)
 
-                    # In a real implementation, we would save the plot to a file or database
-                    # We could also use Dagster's built-in plotting capabilities
-
                 except Exception as e:
                     context.log.error(f"Error generating {plot_type} plot for {category}: {str(e)}")
+
+            # Create and attach additional visualizations using Dagster's plotting capabilities
+            try:
+                # Get feature data
+                X = pandas_df.drop(columns=["Cluster"] if "Cluster" in pandas_df.columns else [])
+
+                # Get cluster labels
+                if "Cluster" in pandas_df.columns:
+                    labels = pandas_df["Cluster"].values
+                else:
+                    # If cluster column doesn't exist, create dummy labels
+                    labels = np.zeros(len(X))
+
+                # Create 2D projection with PCA
+                if X.shape[1] > 2:
+                    pca = PCA(n_components=2)
+                    X_2d = pca.fit_transform(X)
+
+                    # Create scatter plot of clusters
+                    plt.figure(figsize=(10, 8))
+                    scatter = plt.scatter(
+                        X_2d[:, 0], X_2d[:, 1], c=labels, cmap="viridis", alpha=0.7
+                    )
+                    plt.colorbar(scatter, label="Cluster")
+                    plt.title(f"PCA Cluster Visualization - {category}")
+                    plt.xlabel("Principal Component 1")
+                    plt.ylabel("Principal Component 2")
+
+                    # Convert plot to base64 for Dagster metadata
+                    buffer = io.BytesIO()
+                    plt.savefig(buffer, format="png")
+                    buffer.seek(0)
+                    image_data = base64.b64encode(buffer.read()).decode("utf-8")
+                    plt.close()
+
+                    # Add to Dagster metadata as markdown with embedded image
+                    context.add_output_metadata(
+                        {
+                            "plot_pca": {
+                                "plot_type": "markdown",
+                                "data": (
+                                    f"![PCA Cluster Visualization]"
+                                    f"(data:image/png;base64,{image_data})"
+                                ),
+                            }
+                        }
+                    )
+                    category_visualizations.append("pca_scatter")
+
+                    # Create t-SNE visualization for more complex data
+                    if len(X) > 50:  # Only do t-SNE for larger datasets
+                        tsne = TSNE(n_components=2, perplexity=min(30, len(X) - 1), n_iter=1000)
+                        X_tsne = tsne.fit_transform(X)
+
+                        plt.figure(figsize=(10, 8))
+                        scatter = plt.scatter(
+                            X_tsne[:, 0], X_tsne[:, 1], c=labels, cmap="viridis", alpha=0.7
+                        )
+                        plt.colorbar(scatter, label="Cluster")
+                        plt.title(f"t-SNE Cluster Visualization - {category}")
+
+                        # Convert plot to base64 for Dagster metadata
+                        buffer = io.BytesIO()
+                        plt.savefig(buffer, format="png")
+                        buffer.seek(0)
+                        image_data = base64.b64encode(buffer.read()).decode("utf-8")
+                        plt.close()
+
+                        # Add to Dagster metadata as markdown with embedded image
+                        context.add_output_metadata(
+                            {
+                                "plot_tsne": {
+                                    "plot_type": "markdown",
+                                    "data": (
+                                        f"![t-SNE Cluster Visualization]"
+                                        f"(data:image/png;base64,{image_data})"
+                                    ),
+                                }
+                            }
+                        )
+                        category_visualizations.append("tsne_scatter")
+
+                # Create cluster distribution bar chart
+                if "Cluster" in pandas_df.columns:
+                    cluster_counts = pandas_df["Cluster"].value_counts().sort_index()
+
+                    plt.figure(figsize=(10, 6))
+                    bars = plt.bar(cluster_counts.index.astype(str), cluster_counts.values)
+
+                    # Add count labels on top of bars
+                    for bar in bars:
+                        height = bar.get_height()
+                        plt.text(
+                            bar.get_x() + bar.get_width() / 2.0,
+                            height + 0.1,
+                            f"{int(height)}",
+                            ha="center",
+                            va="bottom",
+                        )
+
+                    plt.title(f"Cluster Distribution - {category}")
+                    plt.xlabel("Cluster")
+                    plt.ylabel("Count")
+
+                    # Convert plot to base64 for Dagster metadata
+                    buffer = io.BytesIO()
+                    plt.savefig(buffer, format="png")
+                    buffer.seek(0)
+                    image_data = base64.b64encode(buffer.read()).decode("utf-8")
+                    plt.close()
+
+                    # Add to Dagster metadata using plot_data format
+                    context.add_output_metadata(
+                        {
+                            "cluster_distribution": {
+                                "plot_type": "markdown",
+                                "data": (
+                                    f"![Cluster Distribution](data:image/png;base64,{image_data})"
+                                ),
+                            }
+                        }
+                    )
+                    category_visualizations.append("distribution_bar")
+
+            except Exception as e:
+                context.log.error(f"Error generating Dagster plots for {category}: {str(e)}")
 
         # Store the results for this category
         visualization_results[category] = category_visualizations
