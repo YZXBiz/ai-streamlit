@@ -1,22 +1,32 @@
-.PHONY: install update format lint type-check test clean build run-all setup-configs setup-tests run-% help dagster-ui dagster-test dagster-job-% run-dagster-% docs docs-server docs-deps
+# Clustering project Makefile
+# ----------------------------------
+# Author: Jackson Yang
 
-# Default Python interpreter
+# Declare all targets as phony (not files)
+.PHONY: install update format lint type-check test clean build setup-configs setup-tests \
+        dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full \
+        docs docs-server docs-deps help version
+
+# ===== Configuration =====
+# Default Python package manager
 PYTHON := uv run
 
 # Package name
 PACKAGE_NAME := clustering
 
-# Default directories
+# Directory structure
 SRC_DIR := src
 TESTS_DIR := tests
 CONFIGS_DIR := configs
 
-# Default environment
-ENV_FILE := .env
-
 # Default Dagster environment
 DAGSTER_ENV := dev
 
+# Author info
+AUTHOR := Jackson Yang
+VERSION := 1.0.0
+
+# ===== Dependencies & Setup =====
 # Install production dependencies
 install:
 	@echo "Checking if uv is installed..."
@@ -26,7 +36,6 @@ install:
 	else \
 		echo "uv is already installed."; \
 	fi
-
 	@echo "Sync all dependencies"
 	uv sync --all-packages
 
@@ -35,6 +44,23 @@ update:
 	@echo "Update all dependencies"
 	uv lock --upgrade && uv sync --all-packages
 
+# Create configs directory if it doesn't exist
+setup-configs:
+	@echo "Create configs directory"
+	mkdir -p $(CONFIGS_DIR)
+
+# Setup test environment
+setup-tests:
+	@echo "Create test directories"
+	mkdir -p $(TESTS_DIR)/unit
+	mkdir -p $(TESTS_DIR)/integration
+	@echo "Create test files"
+	touch $(TESTS_DIR)/__init__.py
+	touch $(TESTS_DIR)/unit/__init__.py
+	touch $(TESTS_DIR)/integration/__init__.py
+	touch $(TESTS_DIR)/conftest.py
+
+# ===== Development =====
 # Format code
 format:
 	@echo "Format code"
@@ -77,27 +103,15 @@ build:
 	@echo "Build package"
 	uv build --all-packages
 
-# Create configs directory if it doesn't exist
-setup-configs:
-	@echo "Create configs directory"
-	mkdir -p $(CONFIGS_DIR)
+# Show version and author information
+version:
+	@echo "=========================================="
+	@echo "  $(PACKAGE_NAME) version $(VERSION)"
+	@echo "  Developed by $(AUTHOR)"
+	@echo "  Copyright (c) 2025-2026 $(AUTHOR)"
+	@echo "=========================================="
 
-# Setup test environment
-setup-tests:
-	@echo "Create test directories"
-	mkdir -p $(TESTS_DIR)/unit
-	mkdir -p $(TESTS_DIR)/integration
-	@echo "Create test files"
-	touch $(TESTS_DIR)/__init__.py
-	touch $(TESTS_DIR)/unit/__init__.py
-	touch $(TESTS_DIR)/integration/__init__.py
-	touch $(TESTS_DIR)/conftest.py
-
-# Run a specific job
-run-%:
-	@echo "Run job"
-	uv run -m $(PACKAGE_NAME) $(CONFIGS_DIR)/$*.yml
-
+# ===== Dagster Commands =====
 # Start Dagster UI
 dagster-ui:
 	@echo "Starting Dagster UI with $(DAGSTER_ENV) environment"
@@ -111,19 +125,30 @@ dagster-test:
 # Run a specific Dagster job with the dagster CLI
 dagster-job-%:
 	@echo "Running Dagster job $*"
-	uv run -m dagster job execute -f $(PACKAGE_NAME).dagster.definitions:defs $*
+	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
 
-# Run a specific Dagster job with our run_dagster.py script
-run-dagster-%:
-	@echo "Running Dagster job $* in environment $(DAGSTER_ENV)"
-	uv run -m $(PACKAGE_NAME).dagster.run_dagster $* --env $(DAGSTER_ENV)
+# Run internal jobs (preprocessing or clustering)
+run-internal-%:
+	@echo "Running internal $* job"
+	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
 
+# Run external jobs (preprocessing or clustering) 
+run-external-%:
+	@echo "Running external $* job"
+	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
+
+# Run full pipeline job
+run-full:
+	@echo "Running full pipeline job"
+	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
+
+# ===== Documentation =====
 # Install documentation dependencies
 docs-deps:
 	@echo "Installing documentation dependencies"
 	uv add --group docs sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-autobuild
 
-# Documentation
+# Build documentation
 docs: docs-deps
 	@echo "Building documentation"
 	cd docs && $(MAKE) html
@@ -133,24 +158,41 @@ docs-server: docs-deps
 	@echo "Starting documentation server at http://localhost:8000"
 	cd docs && uv run -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
 
-# Help
+# ===== Help =====
 help:
-	@echo "Available targets:"
+	@echo "===== Clustering Project Makefile Help ====="
+	@echo "Developed by $(AUTHOR)"
+	@echo "Version $(VERSION)"
+	@echo ""
+	@echo "Setup Targets:"
 	@echo "  install       - Install production dependencies"
-	@echo "  dev-install   - Install development dependencies"
+	@echo "  update        - Update all dependencies"
+	@echo "  setup-configs - Create configs directory"
+	@echo "  setup-tests   - Create test directories and files"
+	@echo ""
+	@echo "Development Targets:"
 	@echo "  format        - Format code with ruff"
 	@echo "  lint          - Lint code with ruff"
 	@echo "  type-check    - Type check with mypy and pyright"
 	@echo "  test          - Run tests with pytest"
 	@echo "  clean         - Clean build artifacts and cache files"
 	@echo "  build         - Build package"
-	@echo "  run-all       - Run all clustering pipeline"
-	@echo "  run-<job>     - Run a specific job using legacy method (e.g., make run-internal_clustering)"
-	@echo "  setup-configs - Create configs directory"
-	@echo "  setup-tests   - Create test directories and files"
+	@echo "  version       - Display version and author information"
+	@echo ""
+	@echo "Dagster Targets:"
 	@echo "  dagster-ui    - Start Dagster UI (set DAGSTER_ENV for environment)"
 	@echo "  dagster-test  - Run Dagster tests"
 	@echo "  dagster-job-<job> - Run a specific Dagster job using the dagster CLI"
-	@echo "  run-dagster-<job>  - Run a specific Dagster job using our run_dagster.py script"
+	@echo "  run-internal-<type> - Run internal job (preprocessing or clustering)"
+	@echo "  run-external-<type> - Run external job (preprocessing or clustering)"
+	@echo "  run-full      - Run the full pipeline job"
+	@echo ""
+	@echo "Documentation Targets:"
 	@echo "  docs          - Build documentation"
-	@echo "  docs-server   - Start documentation server" 
+	@echo "  docs-server   - Start documentation server"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make run-internal-preprocessing  # Run internal preprocessing job"
+	@echo "  make run-external-clustering     # Run external clustering job"
+	@echo ""
+	@echo "Copyright (c) 2023-2024 $(AUTHOR)" 
