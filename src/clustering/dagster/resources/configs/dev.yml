@@ -63,12 +63,20 @@ readers:
     kind: "PickleReader"
     config:
       path: /workspaces/testing-dagster/data/internal/sales_by_category.pkl
+  external_data_source:
+    kind: "PickleReader"
+    config:
+      path: /workspaces/testing-dagster/data/external/processed_external_data.pkl
 
 writers:
   internal_sales_output:
     kind: "PickleWriter"
     config:
       path: /workspaces/testing-dagster/data/internal/sales_by_category.pkl
+  internal_sales_percent_output:
+    kind: "PickleWriter"
+    config:
+      path: /workspaces/testing-dagster/data/internal/sales_by_category_percent.pkl
   internal_clusters_output:
     kind: "SnowflakeWriter"
     config:
@@ -97,3 +105,11 @@ writers:
     kind: "PickleWriter"
     config:
       path: /workspaces/testing-dagster/data/internal/cluster_assignments.pkl
+  external_model_output:
+    kind: "PickleWriter"
+    config:
+      path: /workspaces/testing-dagster/data/external/clustering_models.pkl
+  external_cluster_assignments:
+    kind: "PickleWriter"
+    config:
+      path: /workspaces/testing-dagster/data/external/cluster_assignments.pkl

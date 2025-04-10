@@ -11758,3 +11758,23 @@ ValueError: Number of labels is 2. Valid values are 2 to n_samples - 1 (inclusiv
 2025-04-10 06:15:43,435:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
   warnings.warn(
 
+2025-04-10 06:46:27,673:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:46:27,673:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:46:27,673:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:46:27,674:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:46:29,283:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:46:29,286:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:46:29,289:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:46:29,291:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+

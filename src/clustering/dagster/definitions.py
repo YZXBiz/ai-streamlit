@@ -29,6 +29,11 @@ from clustering.dagster.assets import (
     save_clustering_models,
     train_clustering_models,
 )
+
+# Import external ML assets
+from clustering.dagster.assets.clustering.external_ml import (
+    external_ml_assets,
+)
 from clustering.dagster.resources import alerts_service, data_io, logger_service
 
 
@@ -97,6 +102,10 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "output_sales_reader": data_io.data_reader.configured(
             readers_config.get("output_sales", {})
         ),
+        # External data reader
+        "external_data_reader": data_io.data_reader.configured(
+            readers_config.get("external_placerai", {})
+        ),
         # Data writers
         "output_sales_writer": data_io.data_writer.configured(
             writers_config.get("internal_sales_output", {})
@@ -112,6 +121,14 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Cluster assignments writer
         "cluster_assignments": data_io.data_writer.configured(
             writers_config.get("cluster_assignments", {})
+        ),
+        # External model output writer
+        "external_model_output": data_io.data_writer.configured(
+            writers_config.get("external_model_output", {})
+        ),
+        # External cluster assignments writer
+        "external_cluster_assignments": data_io.data_writer.configured(
+            writers_config.get("external_cluster_assignments", {})
         ),
     }
 
@@ -160,6 +177,13 @@ internal_clustering_job = dg.define_asset_job(
     tags={"kind": "internal_ml"},
 )
 
+# Define external ML job
+external_clustering_job = dg.define_asset_job(
+    name="external_clustering_job",
+    selection=external_ml_assets,
+    tags={"kind": "external_ml"},
+)
+
 # Define full pipeline job
 full_pipeline_job = dg.define_asset_job(
     name="full_pipeline_job",
@@ -190,6 +214,38 @@ full_pipeline_job = dg.define_asset_job(
         generate_cluster_visualizations,
     ],
     tags={"kind": "full_pipeline"},
+)
+
+# Define complete pipeline job with both internal and external
+complete_pipeline_job = dg.define_asset_job(
+    name="complete_pipeline_job",
+    selection=[
+        # Internal preprocessing
+        raw_sales_data,
+        product_category_mapping,
+        sales_with_categories,
+        normalized_sales_data,
+        sales_by_category,
+        output_sales_table,
+        # Internal ML
+        fe_raw_data,
+        filtered_features,
+        imputed_features,
+        normalized_data,
+        outlier_removed_features,
+        dimensionality_reduced_features,
+        feature_metadata,
+        optimal_cluster_counts,
+        train_clustering_models,
+        save_clustering_models,
+        assign_clusters,
+        save_cluster_assignments,
+        calculate_cluster_metrics,
+        generate_cluster_visualizations,
+        # External ML
+        *external_ml_assets,
+    ],
+    tags={"kind": "complete_pipeline"},
 )
 
 
@@ -232,6 +288,8 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
         # Model evaluation
         calculate_cluster_metrics,
         generate_cluster_visualizations,
+        # External ML assets
+        *external_ml_assets,
     ]
 
     # Create and return definitions with all jobs defined directly
@@ -241,7 +299,9 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
         jobs=[
             internal_preprocessing_job,
             internal_clustering_job,
+            external_clustering_job,
             full_pipeline_job,
+            complete_pipeline_job,
         ],
     )
 
