@@ -8,23 +8,26 @@ import yaml
 
 # Import all assets directly
 from clustering.dagster.assets import (
+    cluster_assignments,
+    cluster_metrics,
+    cluster_visualizations,
     dimensionality_reduced_features,
     fe_raw_data,
     feature_metadata,
     filtered_features,
-    generate_clusters,
     imputed_features,
-    internal_clustering_output,
-    load_production_model,
     normalized_data,
     normalized_sales_data,
+    optimal_cluster_counts,
     outlier_removed_features,
     output_sales_table,
+    persisted_cluster_assignments,
     product_category_mapping,
     raw_sales_data,
     sales_by_category,
     sales_with_categories,
-    train_clustering_model,
+    saved_clustering_models,
+    trained_clustering_models,
 )
 from clustering.dagster.resources import alerts_service, data_io, logger_service
 
@@ -104,6 +107,12 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "output_clusters_writer": data_io.data_writer.configured(
             writers_config.get("internal_clusters_output", {})
         ),
+        # Model output writer
+        "model_output": data_io.data_writer.configured(writers_config.get("model_output", {})),
+        # Cluster assignments writer
+        "cluster_assignments": data_io.data_writer.configured(
+            writers_config.get("cluster_assignments", {})
+        ),
     }
 
     return resources
@@ -137,12 +146,16 @@ internal_clustering_job = dg.define_asset_job(
         outlier_removed_features,
         dimensionality_reduced_features,
         feature_metadata,
-        # Model training asset
-        train_clustering_model,
-        # Model inference assets
-        load_production_model,
-        generate_clusters,
-        internal_clustering_output,
+        # Model training assets
+        optimal_cluster_counts,
+        trained_clustering_models,
+        saved_clustering_models,
+        # Cluster prediction
+        cluster_assignments,
+        persisted_cluster_assignments,
+        # Evaluation assets
+        cluster_metrics,
+        cluster_visualizations,
     ],
     tags={"kind": "internal_ml"},
 )
@@ -166,11 +179,15 @@ full_pipeline_job = dg.define_asset_job(
         dimensionality_reduced_features,
         feature_metadata,
         # Model training
-        train_clustering_model,
-        # Model inference
-        load_production_model,
-        generate_clusters,
-        internal_clustering_output,
+        optimal_cluster_counts,
+        trained_clustering_models,
+        saved_clustering_models,
+        # Cluster prediction
+        cluster_assignments,
+        persisted_cluster_assignments,
+        # Model evaluation
+        cluster_metrics,
+        cluster_visualizations,
     ],
     tags={"kind": "full_pipeline"},
 )
@@ -206,11 +223,15 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
         dimensionality_reduced_features,
         feature_metadata,
         # Model training
-        train_clustering_model,
-        # Model inference
-        load_production_model,
-        generate_clusters,
-        internal_clustering_output,
+        optimal_cluster_counts,
+        trained_clustering_models,
+        saved_clustering_models,
+        # Cluster prediction
+        cluster_assignments,
+        persisted_cluster_assignments,
+        # Model evaluation
+        cluster_metrics,
+        cluster_visualizations,
     ]
 
     # Create and return definitions with all jobs defined directly

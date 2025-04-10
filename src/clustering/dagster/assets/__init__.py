@@ -3,6 +3,10 @@
 # Preprocessing assets
 # Clustering assets - use direct imports
 from clustering.dagster.assets.clustering import (
+    assign_clusters,
+    cluster_assignments,
+    cluster_metrics,
+    cluster_visualizations,
     dimensionality_reduced_features,
     fe_raw_data,
     feature_metadata,
@@ -12,8 +16,11 @@ from clustering.dagster.assets.clustering import (
     internal_clustering_output,
     load_production_model,
     normalized_data,
+    optimal_cluster_counts,
     outlier_removed_features,
-    train_clustering_model,
+    persisted_cluster_assignments,
+    saved_clustering_models,
+    trained_clustering_models,
 )
 
 # Preprocessing assets
@@ -42,7 +49,13 @@ __all__ = [
     "outlier_removed_features",
     "dimensionality_reduced_features",
     "feature_metadata",
-    "train_clustering_model",
+    "optimal_cluster_counts",
+    "trained_clustering_models",
+    "saved_clustering_models",
+    "cluster_assignments",
+    "persisted_cluster_assignments", 
+    "cluster_metrics",
+    "cluster_visualizations",
     "load_production_model",
     "generate_clusters",
     "internal_clustering_output",

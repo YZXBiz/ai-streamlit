@@ -2,3 +2,20 @@ PRODUCT_ID,CATEGORY,NEED_STATE,CDT,ATTRIBUTE_1,ATTRIBUTE_2,ATTRIBUTE_3,ATTRIBUTE
 1001,Adult Care,Convenience_0,Convenience_1,Pads,Regular,Smooth,null,null,null,ADULT CARE,1,FALSE,FALSE
 1002,Adult Care,Convenience_1,Convenience_1,Pads,Regular,Smooth,null,null,null,BASIC NUTRITION,1,FALSE,FALSE
 1003,Adult Care,Convenience_2,Convenience_1,Pads,Regular,Smooth,null,null,null,ADULT CARE,1,FALSE,FALSE
+1004,Baby Care,Health_0,Health_1,Diapers,Size 1,Sensitive,Hypoallergenic,null,null,BABY CARE,2,FALSE,FALSE
+1005,Baby Care,Health_0,Health_1,Diapers,Size 2,Sensitive,Hypoallergenic,null,null,BABY CARE,2,FALSE,FALSE
+1006,Baby Care,Health_1,Health_1,Wipes,Regular,Fragrance-free,null,null,null,BABY CARE,2,TRUE,FALSE
+1007,Nutrition,Health_2,Health_2,Protein,Powder,Vanilla,Organic,GMO-free,null,NUTRITION,3,FALSE,FALSE
+1008,Nutrition,Health_2,Health_2,Protein,Powder,Chocolate,Organic,GMO-free,null,NUTRITION,3,FALSE,FALSE
+1009,Nutrition,Health_3,Health_2,Vitamins,Daily,Capsule,null,null,null,NUTRITION,3,FALSE,FALSE
+1010,Beauty,Wellness_0,Wellness_1,Skincare,Moisturizer,Anti-aging,SPF30,null,null,BEAUTY,4,TRUE,FALSE
+1011,Beauty,Wellness_0,Wellness_1,Skincare,Cleanser,Oil-free,null,null,null,BEAUTY,4,FALSE,FALSE
+1012,Beauty,Wellness_1,Wellness_1,Haircare,Shampoo,Hydrating,null,null,null,BEAUTY,4,FALSE,FALSE
+1013,Personal Care,Wellness_2,Wellness_2,Oral,Toothpaste,Whitening,Mint,null,null,PERSONAL CARE,5,FALSE,FALSE
+1014,Personal Care,Wellness_2,Wellness_2,Oral,Toothbrush,Electric,null,null,null,PERSONAL CARE,5,TRUE,FALSE
+1015,Personal Care,Wellness_3,Wellness_2,Body,Shower Gel,Moisturizing,null,null,null,PERSONAL CARE,5,FALSE,FALSE
+1016,Medication,Health_4,Health_3,Pain Relief,Tablets,Fast-acting,null,null,null,MEDICATION,6,FALSE,FALSE
+1017,Medication,Health_4,Health_3,Pain Relief,Gel,Topical,null,null,null,MEDICATION,6,FALSE,FALSE
+1018,Medication,Health_5,Health_3,Allergy,Tablets,24-hour,null,null,null,MEDICATION,6,FALSE,FALSE
+1019,Home Care,Convenience_3,Convenience_2,Cleaning,Multi-surface,Disinfectant,null,null,null,HOME CARE,7,FALSE,FALSE
+1020,Home Care,Convenience_3,Convenience_2,Cleaning,Bathroom,Antibacterial,null,null,null,HOME CARE,7,FALSE,TRUE
