@@ -47,7 +47,6 @@ dependencies = [
     # Machine learning frameworks
     "kaleido",
     "pycaret",
-    "mlflow>=2.16.0",
     # Cloud and storage
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
@@ -62,7 +61,6 @@ dependencies = [
     "poethepoet",
     "dvc[azure]>=3.59.1",
     "dagster-pandera>=0.26.9",
-    "dagster-mlflow",
 ]
 
 [project.optional-dependencies]

@@ -1,6 +1,6 @@
 # Store Clustering
 
-An advanced Python package for retail store clustering analysis using Dagster for workflow orchestration and MLflow for experiment tracking.
+An advanced Python package for retail store clustering analysis using Dagster for workflow orchestration.
 
 ![Store Clustering](https://img.shields.io/badge/Store-Clustering-blue)
 ![Dagster](https://img.shields.io/badge/Dagster-v1.10.4-orange)
@@ -11,7 +11,6 @@ An advanced Python package for retail store clustering analysis using Dagster fo
 - **Dual Clustering Pipeline**: Internal (store performance) and external (market data) clustering with automatic merging
 - **Dagster Asset-based Architecture**: Modular, reproducible asset-based data pipeline with comprehensive versioning
 - **Advanced Feature Engineering**: Automated feature selection, normalization, imputation, and outlier removal
-- **MLflow Integration**: Track all experiments, models, and metrics with reproducible results
 - **Configurable Workflows**: YAML-based configuration with environment-specific settings
 - **Intelligent Cluster Optimization**: Automatic small cluster reassignment to nearest large clusters
 
@@ -176,20 +175,6 @@ job_params:
   min_clusters: 2
   max_clusters: 10
 ```
-
-## 🧪 MLflow Integration
-
-The project includes MLflow for experiment tracking. Start the MLflow server with:
-
-```bash
-# Using Docker Compose
-docker-compose up -d mlflow
-
-# Or directly
-uv run -m mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri ./mlruns
-```
-
-Then access the MLflow UI at http://localhost:5000.
 
 ## 📂 Project Structure
 
