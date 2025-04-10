@@ -119,3 +119,7 @@ writers:
       table: DEV_CLUSTERING_DB.PROCESSED.MERGED_CLUSTERS
       database: DEV_CLUSTERING_DB
       schema: PROCESSED
+  merged_cluster_assignments:
+    kind: "PickleWriter"
+    config:
+      path: /workspaces/testing-dagster/data/merging/merged_cluster_assignments.pkl

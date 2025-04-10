@@ -51,6 +51,7 @@ from clustering.dagster.assets import (
     merged_clusters,
     optimized_merged_clusters,
     preprocessed_external_data,
+    save_merged_cluster_assignments,
 )
 from clustering.dagster.resources import alerts_service, data_io, logger_service
 
@@ -186,6 +187,7 @@ full_pipeline_job = dg.define_asset_job(
         merged_cluster_assignments,
         optimized_merged_clusters,
         cluster_reassignment,
+        save_merged_cluster_assignments,
     ],
     tags={"kind": "complete_pipeline"},
 )
@@ -199,6 +201,7 @@ merging_job = dg.define_asset_job(
         merged_cluster_assignments,
         optimized_merged_clusters,
         cluster_reassignment,
+        save_merged_cluster_assignments,
     ],
     tags={"kind": "merging"},
 )
@@ -306,6 +309,10 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "external_cluster_assignments": data_io.data_writer.configured(
             writers_config.get("external_cluster_assignments", {})
         ),
+        # Merged cluster assignments writer
+        "merged_cluster_assignments": data_io.data_writer.configured(
+            writers_config.get("merged_cluster_assignments", {})
+        ),
     }
 
     return resources
@@ -376,6 +383,7 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
         merged_cluster_assignments,
         optimized_merged_clusters,
         cluster_reassignment,
+        save_merged_cluster_assignments,
     ]
 
     # Create and return definitions with all jobs
