@@ -13,17 +13,11 @@ from clustering.dagster.assets.clustering.internal_ml.feature_engineering import
 from clustering.dagster.assets.clustering.internal_ml.model_training import (
     assign_clusters,
     calculate_cluster_metrics,
-    cluster_assignments,
-    cluster_metrics,
-    cluster_visualizations,
     generate_cluster_visualizations,
     optimal_cluster_counts,
-    persisted_cluster_assignments,
     save_cluster_assignments,
     save_clustering_models,
-    saved_clustering_models,
     train_clustering_models,
-    trained_clustering_models,
 )
 
 # Export all public assets
@@ -38,12 +32,12 @@ __all__ = [
     "feature_metadata",
     # Model training
     "optimal_cluster_counts",
-    "trained_clustering_models",
-    "saved_clustering_models",
+    "train_clustering_models",
+    "save_clustering_models",
     # Cluster assignment
-    "cluster_assignments",
-    "persisted_cluster_assignments",
+    "assign_clusters",
+    "save_cluster_assignments",
     # Evaluation
-    "cluster_metrics",
-    "cluster_visualizations",
+    "calculate_cluster_metrics",
+    "generate_cluster_visualizations",
 ]

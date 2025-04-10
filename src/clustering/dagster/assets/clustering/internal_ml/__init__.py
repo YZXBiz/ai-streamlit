@@ -17,19 +17,14 @@ from .feature_engineering import (
 
 # Export the model training and prediction assets
 from .model_training import (
-    cluster_assignments,
-    cluster_metrics,
-    cluster_visualizations,
+    assign_clusters,
+    calculate_cluster_metrics,
+    generate_cluster_visualizations,
     optimal_cluster_counts,
-    persisted_cluster_assignments,
+    save_cluster_assignments,
     save_clustering_models,
-    saved_clustering_models,
     train_clustering_models,
-    trained_clustering_models,
 )
-
-# Retain model usage assets separately
-from .model_usage import generate_clusters, internal_clustering_output, load_production_model
 
 __all__ = [
     # Feature engineering
@@ -42,16 +37,12 @@ __all__ = [
     "feature_metadata",
     # Model training
     "optimal_cluster_counts",
-    "trained_clustering_models",
-    "saved_clustering_models",
+    "train_clustering_models",
+    "save_clustering_models",
     # Cluster prediction
-    "cluster_assignments",
-    "persisted_cluster_assignments",
+    "assign_clusters",
+    "save_cluster_assignments",
     # Model evaluation
-    "cluster_metrics",
-    "cluster_visualizations",
-    # Model usage
-    "load_production_model",
-    "generate_clusters",
-    "internal_clustering_output",
+    "calculate_cluster_metrics",
+    "generate_cluster_visualizations",
 ]
