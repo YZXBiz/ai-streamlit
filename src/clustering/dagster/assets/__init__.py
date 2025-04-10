@@ -42,6 +42,7 @@ from clustering.dagster.assets.merging.merge import (
     merged_cluster_assignments,
     merged_clusters,
     optimized_merged_clusters,
+    save_merged_cluster_assignments,
 )
 
 # Import preprocessing external assets if needed
@@ -112,4 +113,5 @@ __all__ = [
     "merged_cluster_assignments",
     "optimized_merged_clusters",
     "cluster_reassignment",
+    "save_merged_cluster_assignments",
 ]

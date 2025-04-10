@@ -53,7 +53,7 @@ from clustering.dagster.assets import (
     preprocessed_external_data,
     save_merged_cluster_assignments,
 )
-from clustering.dagster.resources import alerts_service, data_io, logger_service
+from clustering.dagster.resources import data_io, logger_service
 
 # Define essential jobs
 # 1. Internal preprocessing job
@@ -231,7 +231,6 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
 
     # Extract other resource configurations
     logger_config = config_data.get("logger", {})
-    alerts_config = config_data.get("alerts", {})
     readers_config = config_data.get("readers", {})
     writers_config = config_data.get("writers", {})
 
@@ -251,14 +250,6 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
             {
                 "sink": logger_config.get("sink", f"logs/dagster_{env}.log"),
                 "level": logger_config.get("level", "INFO"),
-            }
-        ),
-        # Alerts
-        "alerts": alerts_service.configured(
-            {
-                "enabled": alerts_config.get("enabled", True),
-                "threshold": alerts_config.get("threshold", "WARNING"),
-                "slack_webhook": alerts_config.get("slack_webhook", None),
             }
         ),
         # Data readers
