@@ -29,7 +29,7 @@ dependencies = [
     # Visualization
     "matplotlib<3.8.0",
     "plotly>=5.24.1",
-    "kaleido @ https://files.pythonhosted.org/packages/45/8e/4297556be5a07b713bb42dde0f748354de9a6918dee251c0e6bdcda341e7/kaleido-0.2.1-py2.py3-none-macosx_11_0_arm64.whl",
+    "kaleido",
     "yellowbrick>=1.5",
     # Utilities
     "pydantic>=2.10.3",         # Using higher version constraint
@@ -45,9 +45,9 @@ dependencies = [
     "openpyxl>=3.1.5",
     "fastexcel>=0.13.0",
     # Machine learning frameworks
+    "kaleido",
     "pycaret",
     "mlflow>=2.16.0",
-    "clustpy[full]>=0.0.2",
     # Cloud and storage
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
@@ -101,8 +101,9 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
 ]
 
-[tool.uv.sources]
-kaleido = { url = "https://files.pythonhosted.org/packages/45/8e/4297556be5a07b713bb42dde0f748354de9a6918dee251c0e6bdcda341e7/kaleido-0.2.1-py2.py3-none-macosx_11_0_arm64.whl" }
+# [tool.uv.sources]
+# Platform-specific kaleido sources
+# kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
 # pycaret = { git = "https://github.com/Jackson-Yang_cvsh/modified-pycaret.git" }
 
 [tool.ruff]

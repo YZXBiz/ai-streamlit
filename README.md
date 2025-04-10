@@ -57,6 +57,21 @@ This project provides tools for clustering retail stores based on various metric
    make setup-configs
    ```
 
+### VS Code/Cursor Extensions
+
+This project includes recommended VS Code/Cursor extensions to improve the development experience:
+
+#### For VS Code users:
+- When you open the project, you'll see a notification to install recommended extensions
+- Click "Install All" to install them automatically
+
+#### For Cursor users:
+1. Open the Extensions tab (or press Ctrl+Shift+X / Cmd+Shift+X)
+2. Type `@recommended` in the search bar
+3. Click "Install All" to install all recommended extensions
+
+The recommended extensions include Python, Dagster, linting, and formatting tools that help maintain code quality and consistency.
+
 ## Project Structure
 
 ```

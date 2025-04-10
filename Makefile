@@ -19,8 +19,16 @@ DAGSTER_ENV := dev
 
 # Install production dependencies
 install:
+	@echo "Checking if uv is installed..."
+	@if ! command -v uv >/dev/null 2>&1; then \
+		echo "Installing uv..."; \
+		curl -Ls https://astral.sh/uv/install.sh | bash; \
+	else \
+		echo "uv is already installed."; \
+	fi
+
 	@echo "Sync all dependencies"
-	uv sync --all-packages 
+	uv sync --all-packages
 
 # Update all dependencies
 update:
