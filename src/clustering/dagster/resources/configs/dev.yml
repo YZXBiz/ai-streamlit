@@ -47,25 +47,25 @@ readers:
   internal_ns_map:
     kind: "CSVReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/ns_map.csv
+      path: /workspaces/testing-dagster/data/internal/ns_map.csv
   internal_ns_sales:
     kind: "CSVReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/ns_sales.csv
+      path: /workspaces/testing-dagster/data/internal/ns_sales.csv
   external_placerai:
     kind: "CSVReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/external/placerai.csv
+      path: /workspaces/testing-dagster/data/external/placerai.csv
   output_sales:
     kind: "PickleReader"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales_by_category.pkl
+      path: /workspaces/testing-dagster/data/internal/sales_by_category.pkl
 
 writers:
   internal_sales_output:
     kind: "PickleWriter"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/sales_by_category.pkl
+      path: /workspaces/testing-dagster/data/internal/sales_by_category.pkl
   internal_clusters_output:
     kind: "SnowflakeWriter"
     config:
@@ -75,7 +75,7 @@ writers:
   external_data_output:
     kind: "PickleWriter"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/external/external_data.pkl
+      path: /workspaces/testing-dagster/data/external/external_data.pkl
   merged_clusters_output:
     kind: "SnowflakeWriter"
     config:
@@ -85,4 +85,4 @@ writers:
   feature_engineering_output:
     kind: "PickleWriter"
     config:
-      path: /Users/jason/Files/Practice/cvs-repo-dagster/data/internal/engineered_features.pkl
+      path: /workspaces/testing-dagster/data/internal/engineered_features.pkl
