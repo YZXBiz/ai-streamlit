@@ -1,135 +1,143 @@
-# Clustering Package Structure
+# Clustering Pipeline
 
-This document describes the organization of the clustering package.
+A modular, scalable clustering pipeline built with Dagster for processing and analyzing internal and external datasets.
 
-## Package Structure
+## Overview
+
+This package implements a comprehensive clustering pipeline that:
+
+- Processes both internal sales data and external datasets
+- Performs feature engineering with configurable preprocessing steps
+- Trains clustering models with optimal cluster count detection
+- Assigns data points to clusters and generates visualizations
+- Merges results from different clustering approaches
+
+## Project Structure
 
 ```
 clustering/
-├── __init__.py                  # Package initialization
-├── __main__.py                  # Entry point (calls CLI)
-│
-├── cli/                         # Command-line interface
-│   ├── __init__.py
-│   └── commands.py              # CLI commands and utilities
-│
-├── core/                        # Core domain models
-│   ├── __init__.py
-│   ├── models.py                # Data models and business logic
-│   └── schemas.py               # Pydantic schemas and validation
-│
-├── dagster/                     # Dagster integration
-│   ├── __init__.py
-│   ├── app.py                   # Web UI application
-│   ├── assets/                  # Dagster assets
-│   ├── definitions.py           # Dagster definitions
-│   ├── resources/               # Dagster resources
-│   ├── jobs/                    # Dagster job definitions
-│   └── schedules/               # Dagster schedules
-│
-├── infra/                       # Infrastructure layer
-│   ├── __init__.py
-│   ├── config.py                # Configuration handling
-│   ├── logging.py               # Logging services
-│   └── monitoring/              # Monitoring services
-│       ├── __init__.py
-│       └── alerts.py            # Alerting functionality
-│
-├── io/                          # Input/Output services
-│   ├── __init__.py
-│   ├── datasets.py              # Dataset handling
-│   ├── readers/                 # Data readers
-│   │   └── __init__.py
-│   └── writers/                 # Data writers
-│       └── __init__.py
-│
-└── utils/                       # Utility functions
-    └── __init__.py
+├── core/                  # Domain models and schemas
+├── dagster/               # Dagster pipeline components
+│   ├── assets/            # All asset definitions
+│   ├── resources/         # Resource definitions
+│   └── definitions.py     # Main pipeline definitions
+├── io/                    # I/O handling components
+├── utils/                 # Utility functions
+└── cli/                   # Command-line interface
 ```
 
-## Components
+## Dagster Pipeline
 
-### CLI
+The pipeline is organized into several key jobs:
 
-The `cli` module provides command-line interfaces for running jobs and starting the Dagster web UI.
+1. **Internal Preprocessing**: Transforms raw internal sales data
+2. **External Preprocessing**: Prepares external feature data
+3. **Internal ML**: Runs clustering on internal data
+4. **External ML**: Runs clustering on external data
+5. **Merging**: Combines the internal and external clustering results
+6. **Full Pipeline**: End-to-end execution of all steps
 
-Usage:
+## Usage
+
+### Running with CLI
 
 ```bash
-# Run a job
+# Start the Dagster UI
+python -m clustering ui
+
+# Run a specific job
 python -m clustering run internal_preprocessing_job --env dev
 
-# Start the Dagster web UI
-python -m clustering ui --port 3000
+# Run the full pipeline
+python -m clustering run full_pipeline_job --env prod
 ```
 
-### Core
+### Using Dagster UI
 
-The `core` module contains domain models, schemas, and business logic.
+Access the Dagster UI at http://localhost:3000 to:
+- Monitor and manage jobs
+- View asset materializations
+- Inspect job execution graphs
+- Launch ad-hoc runs
 
-### Infrastructure
+## Configuration
 
-The `infra` module contains infrastructure services like logging, monitoring, and configuration management.
+Configuration is environment-based and loaded from YAML files:
 
-### IO
+```
+dagster/resources/configs/
+├── dev.yml
+├── staging.yml
+└── prod.yml
+```
 
-The `io` module contains input/output services for reading and writing data.
+Each file configures:
+- Job parameters
+- Logging configuration
+- Data reader/writer settings
 
-### Dagster
+## Assets
 
-The `dagster` module contains Dagster-specific code for defining and running jobs.
+The pipeline is built around these main asset categories:
 
-## Execution
+### Preprocessing Assets
+- Raw data loading
+- Category mapping
+- Normalization
 
-To run the application:
+### Feature Engineering Assets
+- Filtering
+- Imputation
+- Normalization
+- Dimensionality reduction
+
+### Model Training Assets
+- Optimal cluster count detection
+- Model training
+- Model persistence
+
+### Analysis Assets
+- Cluster assignment
+- Metric calculation
+- Visualization generation
+
+### Merging Assets
+- Combined cluster mapping
+- Small cluster reassignment
+- Final cluster persistence
+
+## Development
+
+### Prerequisites
+
+- Python 3.10+
+- Dependencies in requirements.txt
+
+### Installation
 
 ```bash
-# Using the Makefile
-make run-internal_preprocessing
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
 
-# Or directly with Python
-python -m clustering run internal_preprocessing_job
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+pip install -e .
 ```
 
-To start the Dagster web UI:
+### Testing
 
 ```bash
-python -m clustering ui
+# Run all tests
+pytest
+
+# Run specific test category
+pytest tests/unit
 ```
 
-## Sensors
+## License
 
-The clustering pipeline includes sensors that can automatically trigger pipeline jobs when certain conditions are met:
-
-### Data Sensors
-
-- `internal_data_sensor`: Monitors for new data files in the internal raw data directory
-- `external_data_sensor`: Monitors for new data files in the external raw data directory
-
-### Dependency Sensors
-
-- `internal_clustering_complete_sensor`: Triggers the merging job when internal clustering completes
-
-### Managing Sensors
-
-You can start, stop, and monitor sensors using the CLI:
-
-```bash
-# List all sensors and their status
-python -m clustering sensor list
-
-# Start all sensors
-python -m clustering sensor start
-
-# Start a specific sensor
-python -m clustering sensor start internal_data
-
-# Stop all sensors
-python -m clustering sensor stop
-
-# Stop a specific sensor
-python -m clustering sensor stop external_data
-
-# Preview what a sensor would do (without triggering any runs)
-python -m clustering sensor preview internal_clustering_complete
-```
+[License information]
