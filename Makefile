@@ -5,7 +5,7 @@
 # Declare all targets as phony (not files)
 .PHONY: install update format lint type-check test clean build setup-configs setup-tests \
         dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full run-merging \
-        docs docs-server docs-deps help version
+        docs docs-server docs-deps help version dev run-job setup
 
 # ===== Configuration =====
 # Default Python package manager
@@ -25,6 +25,12 @@ DAGSTER_ENV := dev
 # Author info
 AUTHOR := Jackson Yang
 VERSION := 1.0.0
+
+# Set default environment
+ENV ?= dev
+
+# Define directory paths
+DAGSTER_HOME_DIR := $(shell pwd)/dagster_home
 
 # ===== Dependencies & Setup =====
 # Install production dependencies
@@ -97,6 +103,7 @@ clean:
 	find . -type d -name "*.pyc" -delete
 	find . -name "*.log" -type f -delete
 	find . -name ".tmp_dagster*" -type d -exec rm -rf {} +
+	rm -rf $(DAGSTER_HOME_DIR)/.tmp_*
 
 # Build package	
 build:
@@ -113,39 +120,39 @@ version:
 
 # ===== Dagster Commands =====
 # Start Dagster UI
-dagster-ui:
+dagster-ui: setup
 	@echo "Starting Dagster UI with $(DAGSTER_ENV) environment"
-	uv run -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
 
 # Run Dagster tests
-dagster-test:
+dagster-test: setup
 	@echo "Running Dagster tests"
-	uv run -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
 
 # Run a specific Dagster job with the dagster CLI
-dagster-job-%:
+dagster-job-%: setup
 	@echo "Running Dagster job $*"
-	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
 
 # Run internal jobs (preprocessing or clustering)
-run-internal-%:
+run-internal-%: setup
 	@echo "Running internal $* job"
-	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
 
 # Run external jobs (preprocessing or clustering) 
-run-external-%:
+run-external-%: setup
 	@echo "Running external $* job"
-	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
 
 # Run full pipeline job
-run-full:
+run-full: setup
 	@echo "Running full pipeline job"
-	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
 
 # Run merging job
-run-merging:
+run-merging: setup
 	@echo "Running merging job"
-	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
 
 # ===== Documentation =====
 # Install documentation dependencies
@@ -202,4 +209,22 @@ help:
 	@echo "  make run-external-clustering     # Run external clustering job"
 	@echo "  make run-merging                 # Run cluster merging job"
 	@echo ""
-	@echo "Copyright (c) 2023-2024 $(AUTHOR)" 
+	@echo "Copyright (c) 2023-2024 $(AUTHOR)"
+
+# Target to start Dagster development server
+dev: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m dagster dev
+
+# Target to run a specific Dagster job
+# Usage: make run-job JOB=internal_preprocessing_job
+run-job: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run $(JOB) --env $(ENV)
+
+# Target to run the full pipeline
+full-pipeline: setup
+	DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run full_pipeline_job --env $(ENV)
+
+# Target to setup the project
+setup:
+	mkdir -p $(DAGSTER_HOME_DIR)
+	touch $(DAGSTER_HOME_DIR)/dagster.yaml 
