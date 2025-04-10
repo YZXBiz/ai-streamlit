@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import dagster as dg
 from dagster._core.instance import DagsterInstance
@@ -22,6 +23,17 @@ except ImportError:
             "Warning: python-dotenv not installed. Environment variables from .env files will not be loaded."
         )
         return False
+
+import click
+import subprocess
+import yaml
+
+# Import dagster sensors for CLI commands
+from clustering.dagster.sensors import (
+    external_data_sensor,
+    internal_clustering_complete_sensor,
+    internal_data_sensor,
+)
 
 
 def load_env_file(env: str = "dev") -> bool:
@@ -114,8 +126,105 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
     return tags
 
 
-def main() -> None:
-    """Main entry point for the CLI."""
+@click.group()
+def main():
+    """Store Clustering Pipeline CLI."""
+    pass
+
+
+@main.group()
+def sensor():
+    """Manage clustering pipeline sensors."""
+    pass
+
+
+@sensor.command()
+@click.argument("sensor_name", required=False)
+def start(sensor_name: Optional[str]):
+    """Start a sensor by name or all sensors if no name is provided."""
+    instance = DagsterInstance.get()
+    
+    # Map of sensor names to sensor definitions
+    sensors = {
+        "internal_data": internal_data_sensor,
+        "external_data": external_data_sensor,
+        "internal_clustering_complete": internal_clustering_complete_sensor,
+    }
+    
+    if sensor_name:
+        if sensor_name not in sensors:
+            click.echo(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(sensors.keys())}")
+            sys.exit(1)
+        
+        # Start specific sensor
+        click.echo(f"Starting sensor: {sensor_name}")
+        # Use dagster CLI for consistency
+        subprocess.run(["dagster", "sensor", "start", sensor_name])
+    else:
+        # Start all sensors
+        click.echo("Starting all sensors...")
+        for name in sensors:
+            click.echo(f"Starting sensor: {name}")
+            subprocess.run(["dagster", "sensor", "start", name])
+
+
+@sensor.command()
+@click.argument("sensor_name", required=False)
+def stop(sensor_name: Optional[str]):
+    """Stop a sensor by name or all sensors if no name is provided."""
+    instance = DagsterInstance.get()
+    
+    # Map of sensor names to sensor definitions
+    sensors = {
+        "internal_data": internal_data_sensor,
+        "external_data": external_data_sensor,
+        "internal_clustering_complete": internal_clustering_complete_sensor,
+    }
+    
+    if sensor_name:
+        if sensor_name not in sensors:
+            click.echo(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(sensors.keys())}")
+            sys.exit(1)
+        
+        # Stop specific sensor
+        click.echo(f"Stopping sensor: {sensor_name}")
+        subprocess.run(["dagster", "sensor", "stop", sensor_name])
+    else:
+        # Stop all sensors
+        click.echo("Stopping all sensors...")
+        for name in sensors:
+            click.echo(f"Stopping sensor: {name}")
+            subprocess.run(["dagster", "sensor", "stop", name])
+
+
+@sensor.command(name="list")
+def list_sensors():
+    """List all sensors and their status."""
+    click.echo("Listing sensors...")
+    subprocess.run(["dagster", "sensor", "list"])
+
+
+@sensor.command()
+@click.argument("sensor_name")
+def preview(sensor_name: str):
+    """Preview a sensor execution."""
+    # Map of sensor names to sensor definitions
+    sensors = {
+        "internal_data": internal_data_sensor,
+        "external_data": external_data_sensor,
+        "internal_clustering_complete": internal_clustering_complete_sensor,
+    }
+    
+    if sensor_name not in sensors:
+        click.echo(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(sensors.keys())}")
+        sys.exit(1)
+    
+    click.echo(f"Previewing sensor: {sensor_name}")
+    subprocess.run(["dagster", "sensor", "preview", sensor_name])
+
+
+def parse_args(args: list[str]) -> argparse.Namespace:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run Dagster jobs for the clustering pipeline")
 
     # Create subparsers for different commands
@@ -181,8 +290,11 @@ def main() -> None:
     )
 
     # Parse arguments
-    args = parser.parse_args()
+    return parser.parse_args(args)
 
+
+def execute_command(args: argparse.Namespace) -> None:
+    """Execute the requested command."""
     # Set environment variable for environment
     if hasattr(args, "env"):
         os.environ["DAGSTER_ENV"] = args.env

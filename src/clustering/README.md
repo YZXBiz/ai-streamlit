@@ -96,3 +96,40 @@ To start the Dagster web UI:
 ```bash
 python -m clustering ui
 ```
+
+## Sensors
+
+The clustering pipeline includes sensors that can automatically trigger pipeline jobs when certain conditions are met:
+
+### Data Sensors
+
+- `internal_data_sensor`: Monitors for new data files in the internal raw data directory
+- `external_data_sensor`: Monitors for new data files in the external raw data directory
+
+### Dependency Sensors
+
+- `internal_clustering_complete_sensor`: Triggers the merging job when internal clustering completes
+
+### Managing Sensors
+
+You can start, stop, and monitor sensors using the CLI:
+
+```bash
+# List all sensors and their status
+python -m clustering sensor list
+
+# Start all sensors
+python -m clustering sensor start
+
+# Start a specific sensor
+python -m clustering sensor start internal_data
+
+# Stop all sensors
+python -m clustering sensor stop
+
+# Stop a specific sensor
+python -m clustering sensor stop external_data
+
+# Preview what a sensor would do (without triggering any runs)
+python -m clustering sensor preview internal_clustering_complete
+```
