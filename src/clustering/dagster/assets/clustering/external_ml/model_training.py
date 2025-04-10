@@ -31,7 +31,7 @@ class Defaults:
 @dg.asset(
     name="external_optimal_cluster_counts",
     description="Determines optimal number of clusters for each external data category",
-    group_name="model_training",
+    group_name="external_model_training",
     compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features"],
     required_resource_keys={"config"},
@@ -178,7 +178,7 @@ def external_optimal_cluster_counts(
 @dg.asset(
     name="external_train_clustering_models",
     description="Trains clustering models using optimal number of clusters for external data",
-    group_name="model_training",
+    group_name="external_model_training",
     compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features", "external_optimal_cluster_counts"],
     required_resource_keys={"config"},
@@ -280,7 +280,7 @@ def external_train_clustering_models(
 @dg.asset(
     name="external_save_clustering_models",
     description="Persists trained external data clustering models to storage",
-    group_name="model_training",
+    group_name="external_model_training",
     compute_kind="external_io",
     deps=["external_train_clustering_models"],
     required_resource_keys={"config", "external_model_output"},

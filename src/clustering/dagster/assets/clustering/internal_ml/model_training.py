@@ -31,7 +31,7 @@ class Defaults:
 @dg.asset(
     name="internal_optimal_cluster_counts",
     description="Determines optimal number of clusters for each category",
-    group_name="model_training",
+    group_name="internal_model_training",
     compute_kind="training",
     deps=["internal_dimensionality_reduced_features"],
     required_resource_keys={"config"},
@@ -177,7 +177,7 @@ def internal_optimal_cluster_counts(
 @dg.asset(
     name="internal_train_clustering_models",
     description="Trains clustering models using optimal number of clusters",
-    group_name="model_training",
+    group_name="internal_model_training",
     compute_kind="training",
     deps=["internal_dimensionality_reduced_features", "internal_optimal_cluster_counts"],
     required_resource_keys={"config"},
@@ -279,7 +279,7 @@ def internal_train_clustering_models(
 @dg.asset(
     name="internal_save_clustering_models",
     description="Persists trained clustering models to storage",
-    group_name="model_training",
+    group_name="internal_model_training",
     compute_kind="io",
     deps=["internal_train_clustering_models"],
     required_resource_keys={"config", "model_output"},
