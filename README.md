@@ -1,19 +1,48 @@
 # Store Clustering
 
-A Python package for internal and external store clustering analysis.
+An advanced Python package for retail store clustering analysis using Dagster for workflow orchestration and MLflow for experiment tracking.
 
-## Overview
+![Store Clustering](https://img.shields.io/badge/Store-Clustering-blue)
+![Dagster](https://img.shields.io/badge/Dagster-v1.10.4-orange)
+![Python](https://img.shields.io/badge/Python-v3.11+-green)
 
-This project provides tools for clustering retail stores based on various metrics and characteristics. It includes:
+## 🌟 Highlights
 
-- Internal clustering based on store performance metrics
-- External clustering based on competitive and market data
-- Tools for merging internal and external clustering results
-- Preprocessing pipelines for data preparation
-- Dagster orchestration for workflow management
-- MLflow for experiment tracking and model management
+- **Dual Clustering Pipeline**: Internal (store performance) and external (market data) clustering with automatic merging
+- **Dagster Asset-based Architecture**: Modular, reproducible asset-based data pipeline with comprehensive versioning
+- **Advanced Feature Engineering**: Automated feature selection, normalization, imputation, and outlier removal
+- **MLflow Integration**: Track all experiments, models, and metrics with reproducible results
+- **Configurable Workflows**: YAML-based configuration with environment-specific settings
+- **Intelligent Cluster Optimization**: Automatic small cluster reassignment to nearest large clusters
 
-## Installation
+## 📋 Overview
+
+This project provides a comprehensive solution for clustering retail stores based on multiple data sources. The pipeline processes both internal performance metrics and external market data to create refined clusters, then intelligently merges them for a holistic view of store characteristics.
+
+The project uses Dagster's asset-based paradigm for workflow orchestration, allowing for:
+- Granular asset versioning and dependency tracking
+- Intelligent materialization based on code and data version changes
+- Automated data quality checks and monitoring
+- Intuitive visualizations of the pipeline and results
+
+### 🔄 Data Versioning
+
+The project supports robust data versioning through Dagster's built-in versioning system:
+
+- **Asset Versioning**: Each asset has a `code_version` that tracks when code logic changes
+- **Data Versioning**: Inputs and outputs are automatically tracked with data versions
+- **Caching**: Unnecessary recomputations are avoided when code or data hasn't changed
+- **DVC Integration**: For versioning large data files outside of code repositories
+
+### 🏗️ Architecture
+
+The pipeline is structured into three main stages:
+
+1. **Internal Clustering**: Processes internal store metrics through preprocessing, feature engineering, model training, and cluster assignment
+2. **External Clustering**: Similar workflow for external market and competitive data
+3. **Merging**: Combines internal and external clusters, with optimization to reassign small clusters
+
+## 🛠️ Installation
 
 ### Prerequisites
 
@@ -57,22 +86,112 @@ This project provides tools for clustering retail stores based on various metric
    make setup-configs
    ```
 
-### VS Code/Cursor Extensions
+## 📊 Usage
 
-This project includes recommended VS Code/Cursor extensions to improve the development experience:
+### Running the Pipeline
 
-#### For VS Code users:
-- When you open the project, you'll see a notification to install recommended extensions
-- Click "Install All" to install them automatically
+#### Using Make Commands
 
-#### For Cursor users:
-1. Open the Extensions tab (or press Ctrl+Shift+X / Cmd+Shift+X)
-2. Type `@recommended` in the search bar
-3. Click "Install All" to install all recommended extensions
+```bash
+# Start the Dagster UI
+make dagster-ui
 
-The recommended extensions include Python, Dagster, linting, and formatting tools that help maintain code quality and consistency.
+# Run full pipeline (all assets)
+make run-full
 
-## Project Structure
+# Run specific stages
+make run-internal-preprocessing
+make run-internal-ml
+make run-external-preprocessing
+make run-external-ml
+make run-merging
+```
+
+#### Using Dagster Directly
+
+```bash
+# Start the Dagster UI
+uv run -m clustering.dagster.app --env dev
+
+# Run a specific Dagster job
+uv run -m dagster job execute -m clustering.dagster.definitions -j internal_preprocessing_job
+```
+
+### Development Workflow
+
+```bash
+# Format, lint and type-check code
+make format lint type-check
+
+# Run tests
+make test
+
+# Clean up artifacts
+make clean
+```
+
+## 🧩 Data Flow
+
+The pipeline processes data through several stages:
+
+1. **Data Preprocessing**
+   - Internal sales data normalization
+   - External data preparation
+
+2. **Feature Engineering**
+   - Feature filtering and selection
+   - Missing value imputation
+   - Normalization and scaling
+   - Outlier detection and removal
+   - Dimensionality reduction
+
+3. **Model Training**
+   - Optimal cluster count determination
+   - KMeans or other clustering algorithms
+   - Model persistence and versioning
+
+4. **Cluster Assignment**
+   - Store assignment to optimal clusters
+   - Assignment persistence
+
+5. **Merging**
+   - Combining internal and external clusters
+   - Small cluster reassignment to nearest large clusters
+   - Final cluster output
+
+## 🔧 Configuration
+
+Create YAML configuration files in the `configs/` directory for environment-specific settings:
+
+```yaml
+# Example configuration
+job_params:
+  # Feature engineering parameters
+  normalize: true
+  norm_method: "robust"
+  imputation_type: "simple"
+  
+  # Model training parameters
+  algorithm: "kmeans"
+  min_clusters: 2
+  max_clusters: 10
+```
+
+## 🧪 MLflow Integration
+
+The project includes MLflow for experiment tracking. Start the MLflow server with:
+
+```bash
+# Using Docker Compose
+docker-compose up -d mlflow
+
+# Or directly
+uv run -m mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri ./mlruns
+```
+
+Then access the MLflow UI at http://localhost:5000.
+
+## 📂 Project Structure
 
 ```
 store-clustering/
@@ -87,138 +206,41 @@ store-clustering/
 │       ├── cli/          # Command-line interface tools
 │       └── dagster/      # Dagster workflow definitions
 │           ├── assets/   # Dagster assets
-│           ├── resources/# Dagster resources
-│           ├── sensors/  # Dagster sensors for triggering workflows
-│           ├── schedules/# Dagster schedules
-│           └── partitions/# Dagster partitions
+│           │   ├── preprocessing/  # Preprocessing assets
+│           │   ├── clustering/     # Clustering assets
+│           │   └── merging/        # Merging assets
+│           ├── resources/  # Dagster resources
+│           ├── sensors/    # Dagster sensors
+│           └── schedules/  # Dagster schedules
 ├── tests/                # Test suite
-│   ├── integration/      # Integration tests
-│   └── unit/             # Unit tests
-├── outputs/              # Job outputs
+├── data/                 # Data directory
+│   ├── internal/         # Internal data
+│   ├── external/         # External data
+│   └── merging/          # Merged results
 ├── .env.example          # Example environment variables
-├── .gitignore            # Git ignore file
 ├── Makefile              # Development and build commands
-├── pyproject.toml        # Project metadata and dependencies
-├── Dockerfile            # Docker container definition
-└── docker-compose.yml    # Docker Compose configuration
+└── pyproject.toml        # Project metadata and dependencies
 ```
 
-## Usage
+## 👥 Contributing
 
-### Running Jobs
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Install development dependencies (`uv pip install -e ".[dev]"`)
+4. Make your changes and ensure tests pass (`make test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-#### Using Make Commands
-
-```bash
-# Run a specific job (legacy method)
-make run-internal_preprocessing
-make run-internal_clustering
-make run-external_preprocessing
-make run-external_clustering
-
-# Run all jobs
-make run-all
-```
-
-#### Using Dagster
-
-```bash
-# Start the Dagster UI
-make dagster-ui
-
-# Run a specific Dagster job
-make run-dagster-internal_preprocessing
-make run-dagster-internal_clustering
-
-# Alternative: Run using the Dagster CLI
-make dagster-job-internal_preprocessing
-```
-
-#### Running Directly with uv
-
-```bash
-# Run a specific job
-uv run -m clustering configs/internal_preprocessing.yml
-
-# Run a Dagster job
-uv run -m clustering.dagster.run_dagster internal_preprocessing --env dev
-```
-
-#### Using Docker
-
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# Run a specific job
-docker-compose run clustering configs/internal_preprocessing.yml
-```
-
-### Development
-
-```bash
-# Format code
-make format
-# Or directly:
-uv run -m ruff format src tests
-
-# Run linting
-make lint
-# Or directly:
-uv run -m ruff check src tests --fix
-
-# Run type checking
-make type-check
-# Or directly:
-uv run -m mypy src tests
-
-# Run tests
-make test
-# Or directly:
-uv run -m pytest tests --cov=src
-
-# Clean up artifacts
-make clean
-```
-
-## MLflow Integration
-
-The project includes MLflow for experiment tracking and model management. When running the application, MLflow server can be started with:
-
-```bash
-# Using Docker Compose
-docker-compose up -d mlflow
-
-# Or directly
-uv run -m mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri ./mlruns
-```
-
-Then access the MLflow UI at http://localhost:5000.
-
-## Configuration
-
-Create YAML configuration files in the `configs/` directory for each job:
-
-- `internal_preprocessing.yml`
-- `internal_clustering.yml`
-- `external_preprocessing.yml`
-- `external_clustering.yml`
-
-## Contributing
-
-1. Ensure you have setup the development environment
-2. Create a new branch for your feature
-3. Add tests for your changes
-4. Run tests to ensure they pass
-5. Submit a pull request
-
-## Contact
+## 📞 Contact
 
 For questions or support regarding this project, please contact:
 
 **Jackson Yang**  
 Email: Jackson.Yang@cvshealth.com
 
-## License
+## 📝 License
 
-[Specify license information]
+[MIT License](LICENSE)
+
+Copyright (c) 2024 CVS Health
