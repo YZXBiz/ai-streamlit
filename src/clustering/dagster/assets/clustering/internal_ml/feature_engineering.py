@@ -42,8 +42,8 @@ class Defaults:
 @dg.asset(
     name="internal_fe_raw_data",
     description="Loads raw sales data from pickle file",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_output_sales_table"],
     required_resource_keys={"output_sales_reader"},
 )
@@ -53,7 +53,7 @@ def internal_fe_raw_data(
     """Load raw sales data from a file using the configured reader resource.
 
     This asset depends on internal_output_sales_table to ensure the preprocessing
-    pipeline completes before clustering starts.
+    pipeline completes before feature engineering starts.
 
     Args:
         context: Asset execution context with access to resources and logging
@@ -68,8 +68,8 @@ def internal_fe_raw_data(
 @dg.asset(
     name="internal_filtered_features",
     description="Filters out ignored features from raw data",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_fe_raw_data"],
     required_resource_keys={"config"},
 )
@@ -148,8 +148,8 @@ def internal_filtered_features(
 @dg.asset(
     name="internal_imputed_features",
     description="Imputes missing values in features using PyCaret",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_filtered_features"],
     required_resource_keys={"config"},
 )
@@ -229,8 +229,8 @@ def internal_imputed_features(
 @dg.asset(
     name="internal_normalized_data",
     description="Applies feature scaling/normalization using PyCaret",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_imputed_features"],
     required_resource_keys={"config"},
 )
@@ -295,8 +295,8 @@ def internal_normalized_data(
 @dg.asset(
     name="internal_outlier_removed_features",
     description="Detects and removes outliers",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_normalized_data"],
     required_resource_keys={"config"},
 )
@@ -380,8 +380,8 @@ def internal_outlier_removed_features(
 @dg.asset(
     name="internal_dimensionality_reduced_features",
     description="Reduces feature dimensions using PCA",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_outlier_removed_features"],
     required_resource_keys={"config"},
 )
@@ -459,8 +459,8 @@ def internal_dimensionality_reduced_features(
 @dg.asset(
     name="internal_feature_metadata",
     description="Feature engineering metadata asset",
-    group_name="clustering",
-    compute_kind="internal_clustering_feature_engineering",
+    group_name="feature_engineering",
+    compute_kind="internal_feature_engineering",
     deps=["internal_dimensionality_reduced_features"],
     required_resource_keys={"config"},
 )

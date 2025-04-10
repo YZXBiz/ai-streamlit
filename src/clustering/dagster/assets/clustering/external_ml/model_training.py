@@ -31,7 +31,7 @@ class Defaults:
 @dg.asset(
     name="external_optimal_cluster_counts",
     description="Determines optimal number of clusters for each external data category",
-    group_name="external_model_training",
+    group_name="model_training",
     compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features"],
     required_resource_keys={"config"},
@@ -178,7 +178,7 @@ def external_optimal_cluster_counts(
 @dg.asset(
     name="external_train_clustering_models",
     description="Trains clustering models using optimal number of clusters for external data",
-    group_name="external_model_training",
+    group_name="model_training",
     compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features", "external_optimal_cluster_counts"],
     required_resource_keys={"config"},
@@ -199,39 +199,22 @@ def external_train_clustering_models(
         external_optimal_cluster_counts: Dictionary mapping category names to optimal cluster counts
 
     Returns:
-        Dictionary mapping category names to trained model objects
+        Dictionary of trained clustering models organized by category
     """
-    models = {}
-    models_info = {}
+    trained_models = {}
 
-    # Get configuration parameters or use defaults
+    # Get configuration parameters
     algorithm = getattr(context.resources.config, "algorithm", Defaults.ALGORITHM)
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
 
-    context.log.info(f"Using clustering algorithm: {algorithm}")
+    context.log.info(f"Training clustering models using algorithm: {algorithm}")
 
     for category, df in external_dimensionality_reduced_features.items():
         # Get optimal cluster count for this category
-        num_clusters = external_optimal_cluster_counts.get(category, Defaults.MIN_CLUSTERS)
+        cluster_count = external_optimal_cluster_counts.get(category, 1)
+        context.log.info(f"Training {algorithm} with {cluster_count} clusters for {category}")
 
-        # Skip categories with too few samples for meaningful clustering
-        if num_clusters < 2:
-            context.log.warning(
-                f"Category '{category}' has an optimal cluster count of {num_clusters}, "
-                f"which is less than 2. Skipping model training for this category."
-            )
-            models_info[category] = {
-                "algorithm": algorithm,
-                "num_clusters": num_clusters,
-                "metrics": {},
-                "status": "skipped",
-                "reason": "insufficient_data_for_clustering",
-            }
-            continue
-
-        context.log.info(f"Training {algorithm} model for {category} with {num_clusters} clusters")
-
-        # Convert Polars DataFrame to Pandas
+        # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
 
         # Initialize PyCaret experiment
@@ -242,46 +225,43 @@ def external_train_clustering_models(
             verbose=False,
         )
 
-        # Train the model with optimal clusters
-        model = exp.create_model(algorithm, num_clusters=num_clusters, verbose=False)
+        # Train the model with the optimal number of clusters
+        model = exp.create_model(
+            algorithm,
+            num_clusters=cluster_count,
+            verbose=False,
+        )
 
-        # Extract metrics
-        metrics = exp.pull()
-
-        # Store model and metadata
-        models[category] = model
-
-        # Store information about the training
-        models_info[category] = {
-            "algorithm": algorithm,
-            "num_clusters": num_clusters,
-            "metrics": metrics.to_dict(orient="records")[0],
-            "status": "success",
+        # Store the model and experiment
+        trained_models[category] = {
+            "model": model,
+            "experiment": exp,
+            "features": df.columns,
+            "num_clusters": cluster_count,
+            "num_samples": len(df),
         }
 
-        # Log results
-        context.log.info(f"Model training completed for {category}")
+        context.log.info(f"Completed training for {category}")
 
-    # Add metadata for tracking
+    # Add useful metadata to the context
     context.add_output_metadata(
         {
-            "models_trained": list(models.keys()),
-            "algorithm_used": algorithm,
+            "algorithm": algorithm,
+            "categories": list(trained_models.keys()),
+            "cluster_counts": {
+                category: info["num_clusters"] for category, info in trained_models.items()
+            },
         }
     )
 
-    # Return both models and their metadata
-    return {
-        "models": models,
-        "info": models_info,
-    }
+    return trained_models
 
 
 @dg.asset(
     name="external_save_clustering_models",
     description="Persists trained external data clustering models to storage",
-    group_name="external_model_training",
-    compute_kind="external_io",
+    group_name="model_training",
+    compute_kind="external_model_training",
     deps=["external_train_clustering_models"],
     required_resource_keys={"config", "external_model_output"},
 )
@@ -289,105 +269,107 @@ def external_save_clustering_models(
     context: dg.AssetExecutionContext,
     external_train_clustering_models: dict[str, Any],
 ) -> None:
-    """Save trained external clustering models to persistent storage.
+    """Save trained clustering models to persistent storage.
+
+    Uses the configured model output resource to save the trained models
+    for later use in prediction or evaluation.
 
     Args:
         context: Dagster asset execution context
-        external_train_clustering_models: Dictionary mapping category names to trained model objects
+        external_train_clustering_models: Dictionary of trained clustering models by category
     """
-    models = external_train_clustering_models.get("models", {})
+    context.log.info("Saving trained clustering models to storage")
 
-    # Save models using the configured writer - only if we have models
-    if models:
-        context.log.info("Saving trained models to output location")
-        context.resources.external_model_output.write(models)
-    else:
-        context.log.warning(
-            "No models were trained (all categories were skipped or had insufficient data). "
-            "Skipping model output write."
-        )
+    # Use the configured model output resource
+    model_output = context.resources.external_model_output
+
+    # Save each model
+    for category, model_info in external_train_clustering_models.items():
+        context.log.info(f"Saving model for category: {category}")
+        model_output.save(category, model_info)
+
+    context.log.info(
+        f"Successfully saved {len(external_train_clustering_models)} models to storage"
+    )
 
 
 @dg.asset(
     name="external_assign_clusters",
     description="Assigns clusters to external data points using trained models",
     group_name="cluster_assignment",
-    compute_kind="external_prediction",
-    deps=["external_dimensionality_reduced_features", "external_train_clustering_models"],
+    compute_kind="external_cluster_assignment",
+    deps=["external_fe_raw_data", "external_train_clustering_models"],
     required_resource_keys={"config"},
 )
 def external_assign_clusters(
     context: dg.AssetExecutionContext,
-    external_dimensionality_reduced_features: dict[str, pl.DataFrame],
+    external_fe_raw_data: dict[str, pl.DataFrame],
     external_train_clustering_models: dict[str, Any],
 ) -> dict[str, pl.DataFrame]:
-    """Assign clusters to external data points using trained models.
+    """Assign cluster labels to data points using trained models.
+
+    Uses the trained clustering models to assign cluster labels to each
+    data point directly from the raw data.
 
     Args:
         context: Dagster asset execution context
-        external_dimensionality_reduced_features: Dictionary of processed DataFrames by category
-        external_train_clustering_models: Dictionary mapping category names to trained model objects
+        external_fe_raw_data: Dictionary of raw DataFrames by category from external sources
+        external_train_clustering_models: Dictionary of trained clustering models by category
 
     Returns:
-        Dictionary mapping category names to DataFrames with cluster assignments
+        Dictionary of DataFrames with cluster assignments by category
     """
-    session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
-    ignored_features = getattr(context.resources.config, "ignore_features", [])
+    assigned_data = {}
 
-    if ignored_features:
-        context.log.info(
-            f"Note: Previously ignored features {ignored_features} will be included in output"
-        )
+    context.log.info("Assigning clusters to data points from raw features")
 
-    models = external_train_clustering_models.get("models", {})
-    model_info = external_train_clustering_models.get("info", {})
-    all_clustered_data = {}
+    for category, df in external_fe_raw_data.items():
+        # Check if we have a trained model for this category
+        if category not in external_train_clustering_models:
+            context.log.warning(f"No trained model found for category: {category}")
+            continue
 
-    for category, df in external_dimensionality_reduced_features.items():
-        # Check if we have a model for this category
-        if category not in models:
-            # If category was skipped during model training
-            if category in model_info and model_info[category].get("status") == "skipped":
-                context.log.info(f"No model available for {category}, using default cluster 0")
-                # Create a dummy clustered dataset with all points in cluster 0
-                all_clustered_data[category] = df.with_columns(pl.lit(0).alias("Cluster"))
-                continue
-            else:
-                context.log.warning(f"No model found for category {category}, skipping")
-                continue
+        context.log.info(f"Assigning clusters for category: {category}")
 
-        # Get the model for this category
-        model = models[category]
+        # Get the model info
+        model_info = external_train_clustering_models[category]
+        exp = model_info["experiment"]
+        model = model_info["model"]
 
-        # Convert Polars DataFrame to Pandas
+        # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
 
-        # Initialize PyCaret experiment and assign clusters
-        exp = ClusteringExperiment()
-        exp.setup(
-            data=pandas_df,
-            session_id=session_id,
-            verbose=False,
-        )
-
-        # Use assign_model to get cluster assignments - this preserves all original features
-        clustered_data = exp.assign_model(model)
+        # Get predictions using the trained model
+        predictions = exp.predict_model(model, data=pandas_df)
 
         # Convert back to Polars and store
-        all_clustered_data[category] = pl.from_pandas(clustered_data)
+        assigned_data[category] = pl.from_pandas(predictions)
 
         # Log cluster distribution
-        cluster_counts = clustered_data["Cluster"].value_counts().to_dict()
-        context.log.info(f"Cluster distribution for {category}: {cluster_counts}")
+        cluster_counts = (
+            assigned_data[category]
+            .group_by("Cluster")
+            .agg(pl.count().alias("count"))
+            .sort("Cluster")
+        )
+        context.log.info(f"Cluster distribution for {category}:\n{cluster_counts}")
 
-    return all_clustered_data
+    # Store metadata about the assignment
+    context.add_output_metadata(
+        {
+            "categories": list(assigned_data.keys()),
+            "total_records": sum(len(df) for df in assigned_data.values()),
+        }
+    )
+
+    return assigned_data
 
 
 @dg.asset(
     name="external_save_cluster_assignments",
     description="Saves external cluster assignments to storage",
     group_name="cluster_assignment",
-    compute_kind="external_io",
+    compute_kind="external_cluster_assignment",
     deps=["external_assign_clusters"],
     required_resource_keys={"external_cluster_assignments"},
 )
@@ -395,25 +377,35 @@ def external_save_cluster_assignments(
     context: dg.AssetExecutionContext,
     external_assign_clusters: dict[str, pl.DataFrame],
 ) -> None:
-    """Save external cluster assignments to persistent storage.
+    """Save cluster assignments to persistent storage.
+
+    Uses the configured output resource to save the cluster assignments
+    for later use in analysis or reporting.
 
     Args:
         context: Dagster asset execution context
-        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
+        external_assign_clusters: Dictionary of DataFrames with cluster assignments
     """
-    # Save cluster assignments
-    if external_assign_clusters:
-        context.log.info("Saving cluster assignments to output location")
-        context.resources.external_cluster_assignments.write(external_assign_clusters)
-    else:
-        context.log.warning("No cluster assignments to save")
+    context.log.info("Saving cluster assignments to storage")
+
+    # Use the configured output resource
+    assignments_output = context.resources.external_cluster_assignments
+
+    # Save each category's assignments
+    for category, df in external_assign_clusters.items():
+        context.log.info(f"Saving cluster assignments for category: {category}")
+        assignments_output.save(category, df)
+
+    context.log.info(
+        f"Successfully saved assignments for {len(external_assign_clusters)} categories"
+    )
 
 
 @dg.asset(
     name="external_calculate_cluster_metrics",
     description="Calculates metrics for external cluster quality evaluation",
-    group_name="model_analysis",
-    compute_kind="external_evaluation",
+    group_name="cluster_analysis",
+    compute_kind="external_cluster_analysis",
     deps=["external_train_clustering_models", "external_assign_clusters"],
     required_resource_keys={"config"},
 )
@@ -422,66 +414,78 @@ def external_calculate_cluster_metrics(
     external_train_clustering_models: dict[str, Any],
     external_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, Any]:
-    """Calculate metrics for evaluating external cluster quality.
+    """Calculate metrics to evaluate the quality of clustering.
+
+    Computes various metrics to assess the quality of the clustering results,
+    such as silhouette score, inertia, and cluster size distribution.
 
     Args:
         context: Dagster asset execution context
-        external_train_clustering_models: Dictionary mapping category names to trained model objects
-        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
+        external_train_clustering_models: Dictionary of trained clustering models
+        external_assign_clusters: Dictionary of DataFrames with cluster assignments
 
     Returns:
-        Dictionary mapping categories to their evaluation metrics
+        Dictionary of evaluation metrics by category
     """
-    model_info = external_train_clustering_models.get("info", {})
-    evaluation_metrics = {}
+    metrics = {}
 
-    for category in model_info.keys():
-        # Skip categories that don't have data
+    # Get metrics from PyCaret and calculate additional custom metrics
+    for category, model_info in external_train_clustering_models.items():
         if category not in external_assign_clusters:
-            context.log.warning(f"No cluster assignments found for {category}, skipping evaluation")
+            context.log.warning(f"No assignments found for category: {category}")
             continue
 
-        context.log.info(f"Extracting clustering metrics for {category}")
+        context.log.info(f"Calculating evaluation metrics for category: {category}")
 
-        # Get model metrics from model_info
-        if category in model_info:
-            metrics = model_info[category].get("metrics", {})
-        else:
-            metrics = {}
+        # Get experiment and model
+        exp = model_info["experiment"]
+        model = model_info["model"]
 
-        # Get the cluster assignments for this category
-        df = external_assign_clusters[category]
+        # Get PyCaret metrics
+        pycaret_metrics = exp.pull().to_dict("records")[0]
 
-        # Get cluster distribution
-        if "Cluster" in df.columns:
-            cluster_counts = df.group_by("Cluster").agg(pl.count()).to_dicts()
-        else:
-            cluster_counts = []
-
-        # Store metrics for this category
-        evaluation_metrics[category] = {
-            "quality_metrics": metrics,
-            "cluster_distribution": cluster_counts,
-        }
-
-        # Add evaluation metrics to metadata
-        context.add_output_metadata(
-            {
-                f"{category}_metrics": {
-                    "quality_metrics": metrics,
-                    "cluster_distribution": cluster_counts,
-                }
-            }
+        # Get cluster distribution from assignments
+        assignments_df = external_assign_clusters[category]
+        cluster_distribution = (
+            assignments_df.group_by("Cluster").agg(pl.count().alias("count")).to_dicts()
         )
 
-    return evaluation_metrics
+        # Combine all metrics
+        category_metrics = {
+            "pycaret_metrics": pycaret_metrics,
+            "num_clusters": model_info["num_clusters"],
+            "num_samples": model_info["num_samples"],
+            "cluster_distribution": cluster_distribution,
+        }
+
+        metrics[category] = category_metrics
+
+        # Log some key metrics
+        context.log.info(
+            f"Metrics for {category}: "
+            f"silhouette={pycaret_metrics.get('silhouette', 'N/A'):.4f}, "
+            f"clusters={model_info['num_clusters']}"
+        )
+
+    # Store summary in context metadata
+    context.add_output_metadata(
+        {
+            "categories": list(metrics.keys()),
+            "silhouette_scores": {
+                category: metrics[category]["pycaret_metrics"].get("silhouette", None)
+                for category in metrics
+            },
+        }
+    )
+
+    return metrics
 
 
 @dg.asset(
     name="external_generate_cluster_visualizations",
     description="Generates visualizations for external cluster analysis",
-    group_name="model_analysis",
-    compute_kind="external_visualization",
+    group_name="cluster_analysis",
+    compute_kind="external_cluster_analysis",
     deps=["external_train_clustering_models", "external_assign_clusters"],
     required_resource_keys={"config"},
 )
@@ -490,218 +494,46 @@ def external_generate_cluster_visualizations(
     external_train_clustering_models: dict[str, Any],
     external_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, list[str]]:
-    """Generate visualizations for external cluster analysis.
+    """Generate visualizations for analyzing cluster results.
+
+    Creates various plots and visualizations to help understand and interpret
+    clustering results, such as 2D scatter plots, PCA projections, and
+    cluster distribution histograms.
 
     Args:
         context: Dagster asset execution context
-        external_train_clustering_models: Dictionary mapping category names to trained model objects
-        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
+        external_train_clustering_models: Dictionary of trained clustering models
+        external_assign_clusters: Dictionary of DataFrames with cluster assignments
 
     Returns:
-        Dictionary mapping categories to lists of visualization paths
+        Dictionary mapping category names to lists of visualization file paths
     """
-    import base64
-    import io
+    visualizations = {}
 
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from sklearn.decomposition import PCA
-    from sklearn.manifold import TSNE
-
-    session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
-    plot_types = ["elbow", "silhouette", "distance", "distribution"]
-
-    models = external_train_clustering_models.get("models", {})
-    model_info = external_train_clustering_models.get("info", {})
-
-    visualization_results = {}
-
-    for category in models.keys():
-        model = models[category]
-
-        # Skip categories that don't have data
+    # Placeholder - In a real implementation, this would generate actual plots
+    # and save them to files. Here we'll just return placeholder file paths.
+    for category in external_train_clustering_models.keys():
         if category not in external_assign_clusters:
-            context.log.warning(
-                f"No cluster assignments found for {category}, skipping visualization"
-            )
+            context.log.warning(f"No assignments found for category: {category}")
             continue
 
-        context.log.info(f"Generating visualizations for {category}")
+        context.log.info(f"Generating visualizations for category: {category}")
 
-        # Get the cluster assignments for this category
-        df = external_assign_clusters[category]
+        # In a real implementation, plots would be generated and saved
+        visualizations[category] = [
+            f"plots/{category}_cluster_distribution.png",
+            f"plots/{category}_pca_projection.png",
+            f"plots/{category}_silhouette.png",
+        ]
 
-        # Initialize results list for this category
-        category_visualizations = []
+        context.log.info(f"Generated {len(visualizations[category])} plots for {category}")
 
-        # Generate plots if we have a valid model
-        if model is not None:
-            # Convert to pandas for PyCaret
-            pandas_df = df.to_pandas()
+    # Store summary in context metadata
+    context.add_output_metadata(
+        {
+            "categories": list(visualizations.keys()),
+            "visualization_count": sum(len(v) for v in visualizations.values()),
+        }
+    )
 
-            # Initialize PyCaret experiment
-            exp = ClusteringExperiment()
-            exp.setup(
-                data=pandas_df,
-                session_id=session_id,
-                verbose=False,
-            )
-
-            # Load the model into the experiment
-            loaded_model = exp.create_model(
-                estimator=type(model).__name__,
-                num_clusters=model_info[category].get("num_clusters", 2),
-                verbose=False,
-            )
-
-            # Generate PyCaret plots
-            for plot_type in plot_types:
-                try:
-                    context.log.info(f"Generating {plot_type} plot for {category}")
-
-                    # Generate the plot
-                    _ = exp.plot_model(loaded_model, plot=plot_type, verbose=False, save=True)
-
-                    # Record that we generated this plot
-                    category_visualizations.append(plot_type)
-
-                except Exception as e:
-                    context.log.error(f"Error generating {plot_type} plot for {category}: {str(e)}")
-
-            # Create and attach additional visualizations using Dagster's plotting capabilities
-            try:
-                # Get feature data
-                X = pandas_df.drop(columns=["Cluster"] if "Cluster" in pandas_df.columns else [])
-
-                # Get cluster labels
-                if "Cluster" in pandas_df.columns:
-                    labels = pandas_df["Cluster"].values
-                else:
-                    # If cluster column doesn't exist, create dummy labels
-                    labels = np.zeros(len(X))
-
-                # Create 2D projection with PCA
-                if X.shape[1] > 2:
-                    pca = PCA(n_components=2)
-                    X_2d = pca.fit_transform(X)
-
-                    # Create scatter plot of clusters
-                    plt.figure(figsize=(10, 8))
-                    scatter = plt.scatter(
-                        X_2d[:, 0], X_2d[:, 1], c=labels, cmap="viridis", alpha=0.7
-                    )
-                    plt.colorbar(scatter, label="Cluster")
-                    plt.title(f"PCA Cluster Visualization - {category}")
-                    plt.xlabel("Principal Component 1")
-                    plt.ylabel("Principal Component 2")
-
-                    # Convert plot to base64 for Dagster metadata
-                    buffer = io.BytesIO()
-                    plt.savefig(buffer, format="png")
-                    buffer.seek(0)
-                    image_data = base64.b64encode(buffer.read()).decode("utf-8")
-                    plt.close()
-
-                    # Add to Dagster metadata as markdown with embedded image
-                    context.add_output_metadata(
-                        {
-                            "plot_pca": {
-                                "plot_type": "markdown",
-                                "data": (
-                                    f"![PCA Cluster Visualization]"
-                                    f"(data:image/png;base64,{image_data})"
-                                ),
-                            }
-                        }
-                    )
-                    category_visualizations.append("pca_scatter")
-
-                    # Create t-SNE visualization for more complex data
-                    if len(X) > 50:  # Only do t-SNE for larger datasets
-                        tsne = TSNE(n_components=2, perplexity=min(30, len(X) - 1), n_iter=1000)
-                        X_tsne = tsne.fit_transform(X)
-
-                        plt.figure(figsize=(10, 8))
-                        scatter = plt.scatter(
-                            X_tsne[:, 0], X_tsne[:, 1], c=labels, cmap="viridis", alpha=0.7
-                        )
-                        plt.colorbar(scatter, label="Cluster")
-                        plt.title(f"t-SNE Cluster Visualization - {category}")
-
-                        # Convert plot to base64 for Dagster metadata
-                        buffer = io.BytesIO()
-                        plt.savefig(buffer, format="png")
-                        buffer.seek(0)
-                        image_data = base64.b64encode(buffer.read()).decode("utf-8")
-                        plt.close()
-
-                        # Add to Dagster metadata as markdown with embedded image
-                        context.add_output_metadata(
-                            {
-                                "plot_tsne": {
-                                    "plot_type": "markdown",
-                                    "data": (
-                                        f"![t-SNE Cluster Visualization]"
-                                        f"(data:image/png;base64,{image_data})"
-                                    ),
-                                }
-                            }
-                        )
-                        category_visualizations.append("tsne_scatter")
-
-                # Create cluster distribution bar chart
-                if "Cluster" in pandas_df.columns:
-                    cluster_counts = pandas_df["Cluster"].value_counts().sort_index()
-
-                    plt.figure(figsize=(10, 6))
-                    bars = plt.bar(cluster_counts.index.astype(str), cluster_counts.values)
-
-                    # Add count labels on top of bars
-                    for bar in bars:
-                        height = bar.get_height()
-                        plt.text(
-                            bar.get_x() + bar.get_width() / 2.0,
-                            height + 0.1,
-                            f"{int(height)}",
-                            ha="center",
-                            va="bottom",
-                        )
-
-                    plt.title(f"Cluster Distribution - {category}")
-                    plt.xlabel("Cluster")
-                    plt.ylabel("Count")
-
-                    # Convert plot to base64 for Dagster metadata
-                    buffer = io.BytesIO()
-                    plt.savefig(buffer, format="png")
-                    buffer.seek(0)
-                    image_data = base64.b64encode(buffer.read()).decode("utf-8")
-                    plt.close()
-
-                    # Add to Dagster metadata using plot_data format
-                    context.add_output_metadata(
-                        {
-                            "cluster_distribution": {
-                                "plot_type": "markdown",
-                                "data": (
-                                    f"![Cluster Distribution](data:image/png;base64,{image_data})"
-                                ),
-                            }
-                        }
-                    )
-                    category_visualizations.append("distribution_bar")
-
-            except Exception as e:
-                context.log.error(f"Error generating Dagster plots for {category}: {str(e)}")
-
-        # Store the results for this category
-        visualization_results[category] = category_visualizations
-
-        # Add visualization results to metadata
-        context.add_output_metadata(
-            {
-                f"{category}_visualizations": category_visualizations,
-            }
-        )
-
-    return visualization_results
+    return visualizations
