@@ -4,7 +4,7 @@
 
 # Declare all targets as phony (not files)
 .PHONY: install update format lint type-check test clean build setup-configs setup-tests \
-        dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full \
+        dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full run-merging \
         docs docs-server docs-deps help version
 
 # ===== Configuration =====
@@ -142,6 +142,11 @@ run-full:
 	@echo "Running full pipeline job"
 	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
 
+# Run merging job
+run-merging:
+	@echo "Running merging job"
+	uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
+
 # ===== Documentation =====
 # Install documentation dependencies
 docs-deps:
@@ -186,6 +191,7 @@ help:
 	@echo "  run-internal-<type> - Run internal job (preprocessing or clustering)"
 	@echo "  run-external-<type> - Run external job (preprocessing or clustering)"
 	@echo "  run-full      - Run the full pipeline job"
+	@echo "  run-merging   - Run the merging job for combining internal and external clusters"
 	@echo ""
 	@echo "Documentation Targets:"
 	@echo "  docs          - Build documentation"
@@ -194,5 +200,6 @@ help:
 	@echo "Examples:"
 	@echo "  make run-internal-preprocessing  # Run internal preprocessing job"
 	@echo "  make run-external-clustering     # Run external clustering job"
+	@echo "  make run-merging                 # Run cluster merging job"
 	@echo ""
 	@echo "Copyright (c) 2023-2024 $(AUTHOR)" 
