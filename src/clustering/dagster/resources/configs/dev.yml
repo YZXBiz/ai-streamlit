@@ -47,6 +47,7 @@ job_params:
 
 # Data sources and destinations
 readers:
+  # Internal data sources
   internal_ns_map:
     kind: "CSVReader"
     config:
@@ -55,20 +56,23 @@ readers:
     kind: "CSVReader"
     config:
       path: /workspaces/testing-dagster/data/internal/ns_sales.csv
-  external_placerai:
-    kind: "CSVReader"
-    config:
-      path: /workspaces/testing-dagster/data/external/placerai.csv
   output_sales:
     kind: "PickleReader"
     config:
       path: /workspaces/testing-dagster/data/internal/sales_by_category.pkl
+  
+  # External data sources
+  external_placerai:
+    kind: "CSVReader"
+    config:
+      path: /workspaces/testing-dagster/data/external/placerai.csv
   external_data_source:
     kind: "PickleReader"
     config:
       path: /workspaces/testing-dagster/data/external/processed_external_data.pkl
 
 writers:
+  # Internal data writers
   internal_sales_output:
     kind: "PickleWriter"
     config:
@@ -83,16 +87,6 @@ writers:
       table: DEV_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
       database: DEV_CLUSTERING_DB
       schema: PROCESSED
-  external_data_output:
-    kind: "PickleWriter"
-    config:
-      path: /workspaces/testing-dagster/data/external/external_data.pkl
-  merged_clusters_output:
-    kind: "SnowflakeWriter"
-    config:
-      table: DEV_CLUSTERING_DB.PROCESSED.MERGED_CLUSTERS
-      database: DEV_CLUSTERING_DB
-      schema: PROCESSED
   feature_engineering_output:
     kind: "PickleWriter"
     config:
@@ -105,6 +99,12 @@ writers:
     kind: "PickleWriter"
     config:
       path: /workspaces/testing-dagster/data/internal/cluster_assignments.pkl
+  
+  # External data writers
+  external_data_output:
+    kind: "PickleWriter"
+    config:
+      path: /workspaces/testing-dagster/data/external/processed_external_data.pkl
   external_model_output:
     kind: "PickleWriter"
     config:
@@ -113,3 +113,9 @@ writers:
     kind: "PickleWriter"
     config:
       path: /workspaces/testing-dagster/data/external/cluster_assignments.pkl
+  merged_clusters_output:
+    kind: "SnowflakeWriter"
+    config:
+      table: DEV_CLUSTERING_DB.PROCESSED.MERGED_CLUSTERS
+      database: DEV_CLUSTERING_DB
+      schema: PROCESSED

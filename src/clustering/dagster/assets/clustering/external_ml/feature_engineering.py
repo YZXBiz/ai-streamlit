@@ -42,17 +42,17 @@ class Defaults:
 @dg.asset(
     name="external_fe_raw_data",
     description="Loads raw external data for clustering",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
-    deps=["external_data_source"],  # Changed from output_sales_table to external_data_source
-    required_resource_keys={"external_data_reader"},  # Changed from output_sales_reader
+    deps=["preprocessed_external_data"],
+    required_resource_keys={"external_data_reader"},
 )
-def fe_raw_data(
+def external_fe_raw_data(
     context: dg.AssetExecutionContext,
 ) -> dict[str, pl.DataFrame]:
     """Load raw external data using the configured reader resource.
 
-    This asset depends on external_data_source to ensure the preprocessing
+    This asset depends on preprocessed_external_data to ensure the preprocessing
     pipeline completes before clustering starts.
 
     Args:
@@ -68,12 +68,12 @@ def fe_raw_data(
 @dg.asset(
     name="external_filtered_features",
     description="Filters out ignored features from raw external data",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_fe_raw_data"],
     required_resource_keys={"config"},
 )
-def filtered_features(
+def external_filtered_features(
     context: dg.AssetExecutionContext,
     external_fe_raw_data: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
@@ -148,12 +148,12 @@ def filtered_features(
 @dg.asset(
     name="external_imputed_features",
     description="Imputes missing values in external features using PyCaret",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_filtered_features"],
     required_resource_keys={"config"},
 )
-def imputed_features(
+def external_imputed_features(
     context: dg.AssetExecutionContext,
     external_filtered_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
@@ -229,12 +229,12 @@ def imputed_features(
 @dg.asset(
     name="external_normalized_data",
     description="Applies feature scaling/normalization to external data using PyCaret",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_imputed_features"],
     required_resource_keys={"config"},
 )
-def normalized_data(
+def external_normalized_data(
     context: dg.AssetExecutionContext,
     external_imputed_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
@@ -301,12 +301,12 @@ def normalized_data(
 @dg.asset(
     name="external_outlier_removed_features",
     description="Detects and removes outliers from external data",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_normalized_data"],
     required_resource_keys={"config"},
 )
-def outlier_removed_features(
+def external_outlier_removed_features(
     context: dg.AssetExecutionContext,
     external_normalized_data: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
@@ -411,12 +411,12 @@ def outlier_removed_features(
 @dg.asset(
     name="external_dimensionality_reduced_features",
     description="Reduces external feature dimensions using PCA",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_outlier_removed_features"],
     required_resource_keys={"config"},
 )
-def dimensionality_reduced_features(
+def external_dimensionality_reduced_features(
     context: dg.AssetExecutionContext,
     external_outlier_removed_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
@@ -522,12 +522,12 @@ def dimensionality_reduced_features(
 @dg.asset(
     name="external_feature_metadata",
     description="External feature engineering metadata asset",
-    group_name="external_clustering",
+    group_name="clustering",
     compute_kind="external_clustering_feature_engineering",
     deps=["external_dimensionality_reduced_features"],
     required_resource_keys={"config"},
 )
-def feature_metadata(
+def external_feature_metadata(
     context: dg.AssetExecutionContext,
     external_dimensionality_reduced_features: dict[str, pl.DataFrame],
 ) -> dict[str, dict[str, Any]]:

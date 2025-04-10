@@ -31,12 +31,12 @@ class Defaults:
 @dg.asset(
     name="external_optimal_cluster_counts",
     description="Determines optimal number of clusters for each external data category",
-    group_name="external_model_training",
-    compute_kind="training",
+    group_name="model_training",
+    compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features"],
     required_resource_keys={"config"},
 )
-def optimal_cluster_counts(
+def external_optimal_cluster_counts(
     context: dg.AssetExecutionContext,
     external_dimensionality_reduced_features: dict[str, pl.DataFrame],
 ) -> dict[str, int]:
@@ -176,14 +176,14 @@ def optimal_cluster_counts(
 
 
 @dg.asset(
-    name="external_trained_clustering_models",
+    name="external_train_clustering_models",
     description="Trains clustering models using optimal number of clusters for external data",
-    group_name="external_model_training",
-    compute_kind="training",
+    group_name="model_training",
+    compute_kind="external_model_training",
     deps=["external_dimensionality_reduced_features", "external_optimal_cluster_counts"],
     required_resource_keys={"config"},
 )
-def train_clustering_models(
+def external_train_clustering_models(
     context: dg.AssetExecutionContext,
     external_dimensionality_reduced_features: dict[str, pl.DataFrame],
     external_optimal_cluster_counts: dict[str, int],
@@ -199,7 +199,7 @@ def train_clustering_models(
         external_optimal_cluster_counts: Dictionary mapping category names to optimal cluster counts
 
     Returns:
-        Dictionary containing trained models and metadata
+        Dictionary mapping category names to trained model objects
     """
     models = {}
     models_info = {}
@@ -278,64 +278,58 @@ def train_clustering_models(
 
 
 @dg.asset(
-    name="external_saved_clustering_models",
+    name="external_save_clustering_models",
     description="Persists trained external data clustering models to storage",
-    group_name="external_model_training",
-    compute_kind="io",
-    deps=["external_trained_clustering_models"],
+    group_name="model_training",
+    compute_kind="external_io",
+    deps=["external_train_clustering_models"],
     required_resource_keys={"config", "external_model_output"},
 )
-def save_clustering_models(
+def external_save_clustering_models(
     context: dg.AssetExecutionContext,
-    external_trained_clustering_models: dict[str, Any],
+    external_train_clustering_models: dict[str, Any],
 ) -> None:
-    """Save trained external clustering models to the configured output location.
+    """Save trained external clustering models to persistent storage.
 
     Args:
         context: Dagster asset execution context
-        external_trained_clustering_models: Dictionary containing trained models and metadata
-
-    Returns:
-        None
+        external_train_clustering_models: Dictionary mapping category names to trained model objects
     """
-    models = external_trained_clustering_models.get("models", {})
+    models = external_train_clustering_models.get("models", {})
 
     # Save models using the configured writer - only if we have models
     if models:
-        context.log.info("Saving trained external models to output location")
+        context.log.info("Saving trained models to output location")
         context.resources.external_model_output.write(models)
     else:
         context.log.warning(
-            "No external models were trained (all categories were skipped or had insufficient data). "
+            "No models were trained (all categories were skipped or had insufficient data). "
             "Skipping model output write."
         )
 
 
 @dg.asset(
-    name="external_cluster_assignments",
+    name="external_assign_clusters",
     description="Assigns clusters to external data points using trained models",
-    group_name="external_cluster_assignment",
-    compute_kind="prediction",
-    deps=["external_dimensionality_reduced_features", "external_trained_clustering_models"],
+    group_name="cluster_assignment",
+    compute_kind="external_prediction",
+    deps=["external_dimensionality_reduced_features", "external_train_clustering_models"],
     required_resource_keys={"config"},
 )
-def assign_clusters(
+def external_assign_clusters(
     context: dg.AssetExecutionContext,
     external_dimensionality_reduced_features: dict[str, pl.DataFrame],
-    external_trained_clustering_models: dict[str, Any],
+    external_train_clustering_models: dict[str, Any],
 ) -> dict[str, pl.DataFrame]:
     """Assign clusters to external data points using trained models.
-
-    Uses PyCaret's assign_model function to add cluster labels to the original data,
-    preserving all features including those that might have been ignored during training.
 
     Args:
         context: Dagster asset execution context
         external_dimensionality_reduced_features: Dictionary of processed DataFrames by category
-        external_trained_clustering_models: Dictionary containing trained models and metadata
+        external_train_clustering_models: Dictionary mapping category names to trained model objects
 
     Returns:
-        Dictionary of DataFrames with cluster assignments added
+        Dictionary mapping category names to DataFrames with cluster assignments
     """
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
     ignored_features = getattr(context.resources.config, "ignore_features", [])
@@ -345,8 +339,8 @@ def assign_clusters(
             f"Note: Previously ignored features {ignored_features} will be included in output"
         )
 
-    models = external_trained_clustering_models.get("models", {})
-    model_info = external_trained_clustering_models.get("info", {})
+    models = external_train_clustering_models.get("models", {})
+    model_info = external_train_clustering_models.get("info", {})
     all_clustered_data = {}
 
     for category, df in external_dimensionality_reduced_features.items():
@@ -390,65 +384,60 @@ def assign_clusters(
 
 
 @dg.asset(
-    name="external_persisted_cluster_assignments",
+    name="external_save_cluster_assignments",
     description="Saves external cluster assignments to storage",
-    group_name="external_cluster_assignment",
-    compute_kind="io",
-    deps=["external_cluster_assignments"],
+    group_name="cluster_assignment",
+    compute_kind="external_io",
+    deps=["external_assign_clusters"],
     required_resource_keys={"external_cluster_assignments"},
 )
-def save_cluster_assignments(
+def external_save_cluster_assignments(
     context: dg.AssetExecutionContext,
-    external_cluster_assignments: dict[str, pl.DataFrame],
+    external_assign_clusters: dict[str, pl.DataFrame],
 ) -> None:
-    """Save external cluster assignments to the configured output location.
+    """Save external cluster assignments to persistent storage.
 
     Args:
         context: Dagster asset execution context
-        external_cluster_assignments: Dictionary of DataFrames with cluster assignments
-
-    Returns:
-        None
+        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
     """
     # Save cluster assignments
-    if external_cluster_assignments:
-        context.log.info("Saving external cluster assignments to output location")
-        context.resources.external_cluster_assignments.write(external_cluster_assignments)
+    if external_assign_clusters:
+        context.log.info("Saving cluster assignments to output location")
+        context.resources.external_cluster_assignments.write(external_assign_clusters)
     else:
-        context.log.warning("No external cluster assignments to save")
+        context.log.warning("No cluster assignments to save")
 
 
 @dg.asset(
-    name="external_cluster_metrics",
+    name="external_calculate_cluster_metrics",
     description="Calculates metrics for external cluster quality evaluation",
-    group_name="external_model_analysis",
-    compute_kind="evaluation",
-    deps=["external_trained_clustering_models", "external_cluster_assignments"],
+    group_name="model_analysis",
+    compute_kind="external_evaluation",
+    deps=["external_train_clustering_models", "external_assign_clusters"],
     required_resource_keys={"config"},
 )
-def calculate_cluster_metrics(
+def external_calculate_cluster_metrics(
     context: dg.AssetExecutionContext,
-    external_trained_clustering_models: dict[str, Any],
-    external_cluster_assignments: dict[str, pl.DataFrame],
+    external_train_clustering_models: dict[str, Any],
+    external_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, Any]:
-    """Calculate metrics to evaluate external clustering quality.
-
-    Extracts and organizes clustering quality metrics for each category.
+    """Calculate metrics for evaluating external cluster quality.
 
     Args:
         context: Dagster asset execution context
-        external_trained_clustering_models: Dictionary containing trained models and metadata
-        external_cluster_assignments: Dictionary of DataFrames with cluster assignments
+        external_train_clustering_models: Dictionary mapping category names to trained model objects
+        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
 
     Returns:
-        Dictionary of evaluation metrics by category
+        Dictionary mapping categories to their evaluation metrics
     """
-    model_info = external_trained_clustering_models.get("info", {})
+    model_info = external_train_clustering_models.get("info", {})
     evaluation_metrics = {}
 
     for category in model_info.keys():
         # Skip categories that don't have data
-        if category not in external_cluster_assignments:
+        if category not in external_assign_clusters:
             context.log.warning(f"No cluster assignments found for {category}, skipping evaluation")
             continue
 
@@ -461,7 +450,7 @@ def calculate_cluster_metrics(
             metrics = {}
 
         # Get the cluster assignments for this category
-        df = external_cluster_assignments[category]
+        df = external_assign_clusters[category]
 
         # Get cluster distribution
         if "Cluster" in df.columns:
@@ -489,30 +478,27 @@ def calculate_cluster_metrics(
 
 
 @dg.asset(
-    name="external_cluster_visualizations",
+    name="external_generate_cluster_visualizations",
     description="Generates visualizations for external cluster analysis",
-    group_name="external_model_analysis",
-    compute_kind="visualization",
-    deps=["external_trained_clustering_models", "external_cluster_assignments"],
+    group_name="model_analysis",
+    compute_kind="external_visualization",
+    deps=["external_train_clustering_models", "external_assign_clusters"],
     required_resource_keys={"config"},
 )
-def generate_cluster_visualizations(
+def external_generate_cluster_visualizations(
     context: dg.AssetExecutionContext,
-    external_trained_clustering_models: dict[str, Any],
-    external_cluster_assignments: dict[str, pl.DataFrame],
+    external_train_clustering_models: dict[str, Any],
+    external_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, list[str]]:
     """Generate visualizations for external cluster analysis.
 
-    Creates various plots to help analyze and understand the clustering results.
-    Uses Dagster's built-in plotting capabilities to display plots in the UI.
-
     Args:
         context: Dagster asset execution context
-        external_trained_clustering_models: Dictionary containing trained models and metadata
-        external_cluster_assignments: Dictionary of DataFrames with cluster assignments
+        external_train_clustering_models: Dictionary mapping category names to trained model objects
+        external_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
 
     Returns:
-        Dictionary mapping categories to lists of generated visualization types
+        Dictionary mapping categories to lists of visualization paths
     """
     import base64
     import io
@@ -525,8 +511,8 @@ def generate_cluster_visualizations(
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
     plot_types = ["elbow", "silhouette", "distance", "distribution"]
 
-    models = external_trained_clustering_models.get("models", {})
-    model_info = external_trained_clustering_models.get("info", {})
+    models = external_train_clustering_models.get("models", {})
+    model_info = external_train_clustering_models.get("info", {})
 
     visualization_results = {}
 
@@ -534,7 +520,7 @@ def generate_cluster_visualizations(
         model = models[category]
 
         # Skip categories that don't have data
-        if category not in external_cluster_assignments:
+        if category not in external_assign_clusters:
             context.log.warning(
                 f"No cluster assignments found for {category}, skipping visualization"
             )
@@ -543,7 +529,7 @@ def generate_cluster_visualizations(
         context.log.info(f"Generating visualizations for {category}")
 
         # Get the cluster assignments for this category
-        df = external_cluster_assignments[category]
+        df = external_assign_clusters[category]
 
         # Initialize results list for this category
         category_visualizations = []

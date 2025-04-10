@@ -29,16 +29,16 @@ class Defaults:
 
 
 @dg.asset(
-    name="optimal_cluster_counts",
+    name="internal_optimal_cluster_counts",
     description="Determines optimal number of clusters for each category",
     group_name="model_training",
     compute_kind="training",
-    deps=["dimensionality_reduced_features"],
+    deps=["internal_dimensionality_reduced_features"],
     required_resource_keys={"config"},
 )
-def optimal_cluster_counts(
+def internal_optimal_cluster_counts(
     context: dg.AssetExecutionContext,
-    dimensionality_reduced_features: dict[str, pl.DataFrame],
+    internal_dimensionality_reduced_features: dict[str, pl.DataFrame],
 ) -> dict[str, int]:
     """Determine the optimal number of clusters for each category.
 
@@ -48,7 +48,7 @@ def optimal_cluster_counts(
 
     Args:
         context: Dagster asset execution context
-        dimensionality_reduced_features: Dictionary of processed DataFrames by category
+        internal_dimensionality_reduced_features: Dictionary of processed DataFrames by category
 
     Returns:
         Dictionary mapping category names to their optimal cluster counts
@@ -66,7 +66,7 @@ def optimal_cluster_counts(
         f"with metrics: {metrics}"
     )
 
-    for category, df in dimensionality_reduced_features.items():
+    for category, df in internal_dimensionality_reduced_features.items():
         context.log.info(f"Determining optimal cluster count for category: {category}")
 
         sample_count = len(df)
@@ -175,17 +175,17 @@ def optimal_cluster_counts(
 
 
 @dg.asset(
-    name="trained_clustering_models",
+    name="internal_train_clustering_models",
     description="Trains clustering models using optimal number of clusters",
     group_name="model_training",
     compute_kind="training",
-    deps=["dimensionality_reduced_features", "optimal_cluster_counts"],
+    deps=["internal_dimensionality_reduced_features", "internal_optimal_cluster_counts"],
     required_resource_keys={"config"},
 )
-def train_clustering_models(
+def internal_train_clustering_models(
     context: dg.AssetExecutionContext,
-    dimensionality_reduced_features: dict[str, pl.DataFrame],
-    optimal_cluster_counts: dict[str, int],
+    internal_dimensionality_reduced_features: dict[str, pl.DataFrame],
+    internal_optimal_cluster_counts: dict[str, int],
 ) -> dict[str, Any]:
     """Train clustering models using engineered features.
 
@@ -194,11 +194,11 @@ def train_clustering_models(
 
     Args:
         context: Dagster asset execution context
-        dimensionality_reduced_features: Dictionary of processed DataFrames by category
-        optimal_cluster_counts: Dictionary mapping category names to optimal cluster counts
+        internal_dimensionality_reduced_features: Dictionary of processed DataFrames by category
+        internal_optimal_cluster_counts: Dictionary mapping category names to optimal cluster counts
 
     Returns:
-        Dictionary containing trained models and metadata
+        Dictionary mapping category names to trained model objects
     """
     models = {}
     models_info = {}
@@ -209,9 +209,9 @@ def train_clustering_models(
 
     context.log.info(f"Using clustering algorithm: {algorithm}")
 
-    for category, df in dimensionality_reduced_features.items():
+    for category, df in internal_dimensionality_reduced_features.items():
         # Get optimal cluster count for this category
-        num_clusters = optimal_cluster_counts.get(category, Defaults.MIN_CLUSTERS)
+        num_clusters = internal_optimal_cluster_counts.get(category, Defaults.MIN_CLUSTERS)
 
         # Skip categories with too few samples for meaningful clustering
         if num_clusters < 2:
@@ -277,27 +277,24 @@ def train_clustering_models(
 
 
 @dg.asset(
-    name="saved_clustering_models",
+    name="internal_save_clustering_models",
     description="Persists trained clustering models to storage",
     group_name="model_training",
     compute_kind="io",
-    deps=["trained_clustering_models"],
+    deps=["internal_train_clustering_models"],
     required_resource_keys={"config", "model_output"},
 )
-def save_clustering_models(
+def internal_save_clustering_models(
     context: dg.AssetExecutionContext,
-    trained_clustering_models: dict[str, Any],
+    internal_train_clustering_models: dict[str, Any],
 ) -> None:
-    """Save trained clustering models to the configured output location.
+    """Save trained clustering models to persistent storage.
 
     Args:
         context: Dagster asset execution context
-        trained_clustering_models: Dictionary containing trained models and metadata
-
-    Returns:
-        None
+        internal_train_clustering_models: Dictionary mapping category names to trained model objects
     """
-    models = trained_clustering_models.get("models", {})
+    models = internal_train_clustering_models.get("models", {})
 
     # Save models using the configured writer - only if we have models
     if models:
@@ -311,17 +308,17 @@ def save_clustering_models(
 
 
 @dg.asset(
-    name="cluster_assignments",
+    name="internal_assign_clusters",
     description="Assigns clusters to data points using trained models",
     group_name="cluster_assignment",
     compute_kind="prediction",
-    deps=["dimensionality_reduced_features", "trained_clustering_models"],
+    deps=["internal_dimensionality_reduced_features", "internal_train_clustering_models"],
     required_resource_keys={"config"},
 )
-def assign_clusters(
+def internal_assign_clusters(
     context: dg.AssetExecutionContext,
-    dimensionality_reduced_features: dict[str, pl.DataFrame],
-    trained_clustering_models: dict[str, Any],
+    internal_dimensionality_reduced_features: dict[str, pl.DataFrame],
+    internal_train_clustering_models: dict[str, Any],
 ) -> dict[str, pl.DataFrame]:
     """Assign clusters to data points using trained models.
 
@@ -330,11 +327,11 @@ def assign_clusters(
 
     Args:
         context: Dagster asset execution context
-        dimensionality_reduced_features: Dictionary of processed DataFrames by category
-        trained_clustering_models: Dictionary containing trained models and metadata
+        internal_dimensionality_reduced_features: Dictionary of processed DataFrames by category
+        internal_train_clustering_models: Dictionary mapping category names to trained model objects
 
     Returns:
-        Dictionary of DataFrames with cluster assignments added
+        Dictionary mapping category names to DataFrames with cluster assignments
     """
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
     ignored_features = getattr(context.resources.config, "ignore_features", [])
@@ -344,11 +341,11 @@ def assign_clusters(
             f"Note: Previously ignored features {ignored_features} will be included in output"
         )
 
-    models = trained_clustering_models.get("models", {})
-    model_info = trained_clustering_models.get("info", {})
+    models = internal_train_clustering_models.get("models", {})
+    model_info = internal_train_clustering_models.get("info", {})
     all_clustered_data = {}
 
-    for category, df in dimensionality_reduced_features.items():
+    for category, df in internal_dimensionality_reduced_features.items():
         # Check if we have a model for this category
         if category not in models:
             # If category was skipped during model training
@@ -389,65 +386,60 @@ def assign_clusters(
 
 
 @dg.asset(
-    name="persisted_cluster_assignments",
+    name="internal_save_cluster_assignments",
     description="Saves cluster assignments to storage",
     group_name="cluster_assignment",
     compute_kind="io",
-    deps=["cluster_assignments"],
+    deps=["internal_assign_clusters"],
     required_resource_keys={"cluster_assignments"},
 )
-def save_cluster_assignments(
+def internal_save_cluster_assignments(
     context: dg.AssetExecutionContext,
-    cluster_assignments: dict[str, pl.DataFrame],
+    internal_assign_clusters: dict[str, pl.DataFrame],
 ) -> None:
-    """Save cluster assignments to the configured output location.
+    """Save cluster assignments to persistent storage.
 
     Args:
         context: Dagster asset execution context
-        cluster_assignments: Dictionary of DataFrames with cluster assignments
-
-    Returns:
-        None
+        internal_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
     """
     # Save cluster assignments
-    if cluster_assignments:
+    if internal_assign_clusters:
         context.log.info("Saving cluster assignments to output location")
-        context.resources.cluster_assignments.write(cluster_assignments)
+        context.resources.cluster_assignments.write(internal_assign_clusters)
     else:
         context.log.warning("No cluster assignments to save")
 
 
 @dg.asset(
-    name="cluster_metrics",
+    name="internal_calculate_cluster_metrics",
     description="Calculates metrics for cluster quality evaluation",
     group_name="model_analysis",
     compute_kind="evaluation",
-    deps=["trained_clustering_models", "cluster_assignments"],
+    deps=["internal_train_clustering_models", "internal_assign_clusters"],
     required_resource_keys={"config"},
 )
-def calculate_cluster_metrics(
+def internal_calculate_cluster_metrics(
     context: dg.AssetExecutionContext,
-    trained_clustering_models: dict[str, Any],
-    cluster_assignments: dict[str, pl.DataFrame],
+    internal_train_clustering_models: dict[str, Any],
+    internal_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, Any]:
-    """Calculate metrics to evaluate clustering quality.
-
-    Extracts and organizes clustering quality metrics for each category.
+    """Calculate metrics for evaluating cluster quality.
 
     Args:
         context: Dagster asset execution context
-        trained_clustering_models: Dictionary containing trained models and metadata
-        cluster_assignments: Dictionary of DataFrames with cluster assignments
+        internal_train_clustering_models: Dictionary mapping category names to trained model objects
+        internal_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
 
     Returns:
-        Dictionary of evaluation metrics by category
+        Dictionary mapping categories to their evaluation metrics
     """
-    model_info = trained_clustering_models.get("info", {})
+    model_info = internal_train_clustering_models.get("info", {})
     evaluation_metrics = {}
 
     for category in model_info.keys():
         # Skip categories that don't have data
-        if category not in cluster_assignments:
+        if category not in internal_assign_clusters:
             context.log.warning(f"No cluster assignments found for {category}, skipping evaluation")
             continue
 
@@ -460,7 +452,7 @@ def calculate_cluster_metrics(
             metrics = {}
 
         # Get the cluster assignments for this category
-        df = cluster_assignments[category]
+        df = internal_assign_clusters[category]
 
         # Get cluster distribution
         if "Cluster" in df.columns:
@@ -488,30 +480,27 @@ def calculate_cluster_metrics(
 
 
 @dg.asset(
-    name="cluster_visualizations",
+    name="internal_generate_cluster_visualizations",
     description="Generates visualizations for cluster analysis",
     group_name="model_analysis",
     compute_kind="visualization",
-    deps=["trained_clustering_models", "cluster_assignments"],
+    deps=["internal_train_clustering_models", "internal_assign_clusters"],
     required_resource_keys={"config"},
 )
-def generate_cluster_visualizations(
+def internal_generate_cluster_visualizations(
     context: dg.AssetExecutionContext,
-    trained_clustering_models: dict[str, Any],
-    cluster_assignments: dict[str, pl.DataFrame],
+    internal_train_clustering_models: dict[str, Any],
+    internal_assign_clusters: dict[str, pl.DataFrame],
 ) -> dict[str, list[str]]:
     """Generate visualizations for cluster analysis.
 
-    Creates various plots to help analyze and understand the clustering results.
-    Uses Dagster's built-in plotting capabilities to display plots in the UI.
-
     Args:
         context: Dagster asset execution context
-        trained_clustering_models: Dictionary containing trained models and metadata
-        cluster_assignments: Dictionary of DataFrames with cluster assignments
+        internal_train_clustering_models: Dictionary mapping category names to trained model objects
+        internal_assign_clusters: Dictionary mapping category names to DataFrames with cluster assignments
 
     Returns:
-        Dictionary mapping categories to lists of generated visualization types
+        Dictionary mapping categories to lists of visualization paths
     """
     import base64
     import io
@@ -524,8 +513,8 @@ def generate_cluster_visualizations(
     session_id = getattr(context.resources.config, "session_id", Defaults.SESSION_ID)
     plot_types = ["elbow", "silhouette", "distance", "distribution"]
 
-    models = trained_clustering_models.get("models", {})
-    model_info = trained_clustering_models.get("info", {})
+    models = internal_train_clustering_models.get("models", {})
+    model_info = internal_train_clustering_models.get("info", {})
 
     visualization_results = {}
 
@@ -533,7 +522,7 @@ def generate_cluster_visualizations(
         model = models[category]
 
         # Skip categories that don't have data
-        if category not in cluster_assignments:
+        if category not in internal_assign_clusters:
             context.log.warning(
                 f"No cluster assignments found for {category}, skipping visualization"
             )
@@ -542,7 +531,7 @@ def generate_cluster_visualizations(
         context.log.info(f"Generating visualizations for {category}")
 
         # Get the cluster assignments for this category
-        df = cluster_assignments[category]
+        df = internal_assign_clusters[category]
 
         # Initialize results list for this category
         category_visualizations = []

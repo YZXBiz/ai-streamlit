@@ -19,7 +19,7 @@ from clustering.core.schemas import (
     required_resource_keys={"internal_ns_sales"},
     dagster_type=pandera_schema_to_dagster_type(SalesSchema),
 )
-def raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
+def internal_raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
     """Load raw internal sales data.
 
     Args:
@@ -41,7 +41,7 @@ def raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
     required_resource_keys={"internal_ns_map"},
     dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
 )
-def product_category_mapping(
+def internal_product_category_mapping(
     context: dg.AssetExecutionContext,
 ) -> pl.DataFrame:
     """Load raw internal need state data.
@@ -62,30 +62,30 @@ def product_category_mapping(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["raw_sales_data", "product_category_mapping"],
+    deps=["internal_raw_sales_data", "internal_product_category_mapping"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
     dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
 )
-def sales_with_categories(
+def internal_sales_with_categories(
     context: dg.AssetExecutionContext,
-    raw_sales_data: pl.DataFrame,
-    product_category_mapping: pl.DataFrame,
+    internal_raw_sales_data: pl.DataFrame,
+    internal_product_category_mapping: pl.DataFrame,
 ) -> pl.DataFrame:
     """Merge sales data with product category mapping.
 
     Args:
         context: Asset execution context
-        raw_sales_data: Sales data
-        product_category_mapping: Product category mapping data
+        internal_raw_sales_data: Sales data
+        internal_product_category_mapping: Product category mapping data
 
     Returns:
         DataFrame containing merged data with categories
     """
     context.log.info("Merging sales and category data")
 
-    return raw_sales_data.join(
-        product_category_mapping,
+    return internal_raw_sales_data.join(
+        internal_product_category_mapping,
         left_on="SKU_NBR",
         right_on="PRODUCT_ID",
         how="inner",
@@ -100,20 +100,20 @@ def sales_with_categories(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["sales_with_categories"],
+    deps=["internal_sales_with_categories"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
     dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
 )
-def normalized_sales_data(
+def internal_normalized_sales_data(
     context: dg.AssetExecutionContext,
-    sales_with_categories: pl.DataFrame,
+    internal_sales_with_categories: pl.DataFrame,
 ) -> pl.DataFrame:
     """Normalize sales data by distributing sales evenly across need states.
 
     Args:
         context: Asset execution context
-        sales_with_categories: Sales data with categories
+        internal_sales_with_categories: Sales data with categories
 
     Returns:
         DataFrame containing normalized sales data
@@ -121,7 +121,7 @@ def normalized_sales_data(
     context.log.info("Distributing sales evenly across need states")
 
     return (
-        sales_with_categories.pipe(
+        internal_sales_with_categories.pipe(
             lambda df: df.with_columns(
                 pl.count()
                 .over([c for c in df.columns if c != "NEED_STATE" and c != "TOTAL_SALES"])
@@ -137,13 +137,13 @@ def normalized_sales_data(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["normalized_sales_data"],
+    deps=["internal_normalized_sales_data"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
 )
-def sales_by_category(
+def internal_sales_by_category(
     context: dg.AssetExecutionContext,
-    normalized_sales_data: pl.DataFrame,
+    internal_normalized_sales_data: pl.DataFrame,
 ) -> dict[str, pl.DataFrame]:
     """Create category dictionary from normalized sales data with percentage of sales by need state.
 
@@ -155,7 +155,7 @@ def sales_by_category(
 
     Args:
         context: Asset execution context
-        normalized_sales_data: Normalized sales data with categories
+        internal_normalized_sales_data: Normalized sales data with categories
 
     Returns:
         Dictionary of category-specific dataframes with need state percentage metrics
@@ -163,7 +163,9 @@ def sales_by_category(
     context.log.info("Creating category dictionary with need state percentage metrics")
 
     # Get unique categories
-    categories = normalized_sales_data.select(pl.col("CAT_DSC").unique()).to_series().to_list()
+    categories = (
+        internal_normalized_sales_data.select(pl.col("CAT_DSC").unique()).to_series().to_list()
+    )
 
     # Create result dictionary
     result = {}
@@ -171,7 +173,7 @@ def sales_by_category(
     # Process each category
     for cat in categories:
         # Filter data for this category
-        cat_data = normalized_sales_data.filter(pl.col("CAT_DSC") == cat)
+        cat_data = internal_normalized_sales_data.filter(pl.col("CAT_DSC") == cat)
 
         # Calculate store-need state sales
         store_ns_sales = cat_data.group_by(["STORE_NBR", "NEED_STATE"]).agg(
@@ -216,20 +218,20 @@ def sales_by_category(
 
 @dg.asset(
     io_manager_key="io_manager",
-    deps=["sales_by_category"],
+    deps=["internal_sales_by_category"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
     required_resource_keys={"output_sales_writer"},
 )
-def output_sales_table(
+def internal_output_sales_table(
     context: dg.AssetExecutionContext,
-    sales_by_category: dict[str, pl.DataFrame],
+    internal_sales_by_category: dict[str, pl.DataFrame],
 ) -> None:
     """Save preprocessed sales data to output.
 
     Args:
         context: Asset execution context
-        sales_by_category: Sales data with categories
+        internal_sales_by_category: Sales data with categories
     """
     context.log.info("Saving preprocessed sales data")
-    context.resources.output_sales_writer.write(data=sales_by_category)
+    context.resources.output_sales_writer.write(data=internal_sales_by_category)

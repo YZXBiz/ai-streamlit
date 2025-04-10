@@ -40,19 +40,19 @@ class Defaults:
 
 
 @dg.asset(
-    name="fe_raw_data",
+    name="internal_fe_raw_data",
     description="Loads raw sales data from pickle file",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["output_sales_table"],
+    deps=["internal_output_sales_table"],
     required_resource_keys={"output_sales_reader"},
 )
-def fe_raw_data(
+def internal_fe_raw_data(
     context: dg.AssetExecutionContext,
 ) -> dict[str, pl.DataFrame]:
     """Load raw sales data from a file using the configured reader resource.
 
-    This asset depends on output_sales_table to ensure the preprocessing
+    This asset depends on internal_output_sales_table to ensure the preprocessing
     pipeline completes before clustering starts.
 
     Args:
@@ -66,16 +66,16 @@ def fe_raw_data(
 
 
 @dg.asset(
-    name="filtered_features",
+    name="internal_filtered_features",
     description="Filters out ignored features from raw data",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["fe_raw_data"],
+    deps=["internal_fe_raw_data"],
     required_resource_keys={"config"},
 )
-def filtered_features(
+def internal_filtered_features(
     context: dg.AssetExecutionContext,
-    fe_raw_data: dict[str, pl.DataFrame],
+    internal_fe_raw_data: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Filter out features that should be ignored using PyCaret's ignore_features.
 
@@ -85,7 +85,7 @@ def filtered_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        fe_raw_data: Dictionary of raw dataframes by category
+        internal_fe_raw_data: Dictionary of raw dataframes by category
 
     Returns:
         Dictionary of dataframes with specified features filtered out
@@ -97,14 +97,14 @@ def filtered_features(
 
     if not ignore_features:
         context.log.info("No features to ignore, returning raw data")
-        return fe_raw_data
+        return internal_fe_raw_data
 
     context.log.info(f"Features to ignore: {ignore_features}")
 
     # Storing original features for metadata
     original_features = {}
 
-    for category, df in fe_raw_data.items():
+    for category, df in internal_fe_raw_data.items():
         # Store original feature count
         original_features[category] = df.columns
 
@@ -146,16 +146,16 @@ def filtered_features(
 
 
 @dg.asset(
-    name="imputed_features",
+    name="internal_imputed_features",
     description="Imputes missing values in features using PyCaret",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["filtered_features"],
+    deps=["internal_filtered_features"],
     required_resource_keys={"config"},
 )
-def imputed_features(
+def internal_imputed_features(
     context: dg.AssetExecutionContext,
-    filtered_features: dict[str, pl.DataFrame],
+    internal_filtered_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Impute missing values in features using PyCaret's imputation methods.
 
@@ -165,7 +165,7 @@ def imputed_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        filtered_features: Dictionary of filtered dataframes by category
+        internal_filtered_features: Dictionary of filtered dataframes by category
 
     Returns:
         Dictionary of dataframes with missing values imputed
@@ -190,7 +190,7 @@ def imputed_features(
     # Store original data for each category to potentially restore ignored features later
     original_data = {}
 
-    for category, df in filtered_features.items():
+    for category, df in internal_filtered_features.items():
         context.log.info(f"Imputing missing values for category: {category}")
 
         # Store original data
@@ -227,16 +227,16 @@ def imputed_features(
 
 
 @dg.asset(
-    name="normalized_data",
+    name="internal_normalized_data",
     description="Applies feature scaling/normalization using PyCaret",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["imputed_features"],
+    deps=["internal_imputed_features"],
     required_resource_keys={"config"},
 )
-def normalized_data(
+def internal_normalized_data(
     context: dg.AssetExecutionContext,
-    imputed_features: dict[str, pl.DataFrame],
+    internal_imputed_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Normalize features using PyCaret's normalization methods.
 
@@ -245,7 +245,7 @@ def normalized_data(
 
     Args:
         context: Asset execution context with access to resources and logging
-        imputed_features: Dictionary of imputed dataframes by category
+        internal_imputed_features: Dictionary of imputed dataframes by category
 
     Returns:
         Dictionary of dataframes with normalized features
@@ -261,12 +261,12 @@ def normalized_data(
     normalize = getattr(context.resources.config, "normalize", Defaults.NORMALIZE)
     if not normalize:
         context.log.info("Normalization disabled, returning imputed features")
-        return imputed_features
+        return internal_imputed_features
 
     # Get normalization method
     norm_method = getattr(context.resources.config, "norm_method", Defaults.NORM_METHOD)
 
-    for category, df in imputed_features.items():
+    for category, df in internal_imputed_features.items():
         context.log.info(f"Normalizing features for category: {category}")
 
         # Convert Polars DataFrame to Pandas
@@ -293,16 +293,16 @@ def normalized_data(
 
 
 @dg.asset(
-    name="outlier_removed_features",
+    name="internal_outlier_removed_features",
     description="Detects and removes outliers",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["normalized_data"],
+    deps=["internal_normalized_data"],
     required_resource_keys={"config"},
 )
-def outlier_removed_features(
+def internal_outlier_removed_features(
     context: dg.AssetExecutionContext,
-    normalized_data: dict[str, pl.DataFrame],
+    internal_normalized_data: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Detect and remove outliers using isolation forest or other methods.
 
@@ -312,7 +312,7 @@ def outlier_removed_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        normalized_data: Dictionary of normalized dataframes by category
+        internal_normalized_data: Dictionary of normalized dataframes by category
 
     Returns:
         Dictionary of dataframes with outliers removed
@@ -335,7 +335,7 @@ def outlier_removed_features(
     )
     if not outlier_detection:
         context.log.info("Outlier detection disabled, returning normalized data")
-        return normalized_data
+        return internal_normalized_data
 
     # Get all configuration parameters
     outlier_threshold = getattr(
@@ -343,7 +343,7 @@ def outlier_removed_features(
     )
     outliers_method = getattr(context.resources.config, "outliers_method", Defaults.OUTLIER_METHOD)
 
-    for category, df in normalized_data.items():
+    for category, df in internal_normalized_data.items():
         context.log.info(f"Removing outliers for category: {category}")
 
         # Convert Polars DataFrame to Pandas
@@ -378,16 +378,16 @@ def outlier_removed_features(
 
 
 @dg.asset(
-    name="dimensionality_reduced_features",
+    name="internal_dimensionality_reduced_features",
     description="Reduces feature dimensions using PCA",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["outlier_removed_features"],
+    deps=["internal_outlier_removed_features"],
     required_resource_keys={"config"},
 )
-def dimensionality_reduced_features(
+def internal_dimensionality_reduced_features(
     context: dg.AssetExecutionContext,
-    outlier_removed_features: dict[str, pl.DataFrame],
+    internal_outlier_removed_features: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Reduce feature dimensions using PCA.
 
@@ -397,7 +397,7 @@ def dimensionality_reduced_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        outlier_removed_features: Dictionary of dataframes with outliers removed
+        internal_outlier_removed_features: Dictionary of dataframes with outliers removed
 
     Returns:
         Dictionary of dataframes with reduced dimensionality
@@ -414,13 +414,13 @@ def dimensionality_reduced_features(
     pca_active = getattr(context.resources.config, "pca_active", Defaults.PCA_ACTIVE)
     if not pca_active:
         context.log.info("PCA disabled, returning outlier-removed features")
-        return outlier_removed_features
+        return internal_outlier_removed_features
 
     # Get all configuration parameters
     pca_components = getattr(context.resources.config, "pca_components", Defaults.PCA_COMPONENTS)
     pca_method = getattr(context.resources.config, "pca_method", Defaults.PCA_METHOD)
 
-    for category, df in outlier_removed_features.items():
+    for category, df in internal_outlier_removed_features.items():
         context.log.info(f"Applying PCA for category: {category}")
 
         # Track original feature count
@@ -457,16 +457,16 @@ def dimensionality_reduced_features(
 
 
 @dg.asset(
-    name="feature_metadata",
+    name="internal_feature_metadata",
     description="Feature engineering metadata asset",
     group_name="clustering",
     compute_kind="internal_clustering_feature_engineering",
-    deps=["dimensionality_reduced_features"],
+    deps=["internal_dimensionality_reduced_features"],
     required_resource_keys={"config"},
 )
-def feature_metadata(
+def internal_feature_metadata(
     context: dg.AssetExecutionContext,
-    dimensionality_reduced_features: dict[str, pl.DataFrame],
+    internal_dimensionality_reduced_features: dict[str, pl.DataFrame],
 ) -> dict[str, dict[str, Any]]:
     """Generate comprehensive metadata on engineered features.
 
@@ -477,7 +477,7 @@ def feature_metadata(
 
     Args:
         context: Asset execution context with access to resources and logging
-        dimensionality_reduced_features: Dictionary of fully processed dataframes by category
+        internal_dimensionality_reduced_features: Dictionary of fully processed dataframes by category
 
     Returns:
         Dictionary of metadata organized by category, containing information
@@ -497,7 +497,7 @@ def feature_metadata(
     )
     context.log.info(f"Generating feature metadata with detail level: {detail_level}")
 
-    for category, df in dimensionality_reduced_features.items():
+    for category, df in internal_dimensionality_reduced_features.items():
         context.log.info(f"Creating metadata for category: {category}")
 
         # Basic metadata for all detail levels

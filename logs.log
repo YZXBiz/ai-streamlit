@@ -11778,3 +11778,1387 @@ ValueError: Number of labels is 2. Valid values are 2 to n_samples - 1 (inclusiv
 2025-04-10 06:46:29,291:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
   dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
 
+2025-04-10 06:47:32,649:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:47:32,649:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:47:32,649:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:47:32,649:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:47:34,271:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:47:34,273:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:47:34,276:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:47:34,278:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:48:37,696:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:48:37,697:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:48:37,697:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:48:37,697:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:48:39,275:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:48:39,278:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:48:39,280:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:48:39,283:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:49:42,635:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:49:42,635:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:49:42,635:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:49:42,635:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:49:44,217:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:49:44,220:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:49:44,222:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:49:44,225:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:50:47,637:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:50:47,637:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:50:47,637:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:50:47,637:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:50:49,205:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:50:49,208:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:50:49,211:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:50:49,215:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:51:52,618:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:51:52,618:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:51:52,618:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:51:52,618:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:51:54,202:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:51:54,205:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:51:54,207:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:51:54,210:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:52:57,537:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:52:57,537:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:52:57,537:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:52:57,537:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:52:59,132:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:52:59,135:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:52:59,137:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:52:59,139:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:54:02,556:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:54:02,556:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:54:02,557:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:54:02,557:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:54:04,134:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:54:04,136:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:54:04,139:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:54:04,141:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:55:07,538:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:55:07,538:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:55:07,538:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:55:07,538:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:55:09,142:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:55:09,145:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:55:09,147:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:55:09,150:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:56:12,510:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:56:12,510:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:56:12,510:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:56:12,510:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:56:14,110:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:56:14,113:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:56:14,115:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:56:14,118:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:57:17,555:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:57:17,555:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:57:17,555:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:57:17,555:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:57:19,143:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:57:19,145:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:57:19,149:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:57:19,153:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:58:22,544:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:58:22,544:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:58:22,544:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:58:22,544:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:58:24,132:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:58:24,135:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:58:24,137:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:58:24,140:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 06:59:27,489:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:59:27,490:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:59:27,490:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:59:27,490:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 06:59:29,065:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 06:59:29,068:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 06:59:29,070:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 06:59:29,072:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:00:32,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:00:32,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:00:32,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:00:32,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:00:34,128:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:00:34,131:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:00:34,133:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:00:34,136:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:01:37,569:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:01:37,569:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:01:37,569:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:01:37,569:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:01:39,170:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:01:39,173:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:01:39,175:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:01:39,178:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:02:42,496:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:02:42,496:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:02:42,496:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:02:42,496:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:02:44,100:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:02:44,102:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:02:44,105:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:02:44,107:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:03:47,474:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:03:47,474:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:03:47,474:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:03:47,474:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:03:49,032:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:03:49,035:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:03:49,037:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:03:49,040:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:04:52,414:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:04:52,415:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:04:52,415:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:04:52,415:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:04:54,009:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:04:54,011:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:04:54,013:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:04:54,016:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:05:57,417:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:05:57,417:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:05:57,417:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:05:57,417:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:05:58,989:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:05:58,991:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:05:58,994:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:05:58,996:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:07:02,407:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:07:02,407:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:07:02,407:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:07:02,407:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:07:03,982:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:07:03,985:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:07:03,987:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:07:03,990:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:08:07,366:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:08:07,366:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:08:07,366:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:08:07,366:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:08:08,943:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:08:08,946:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:08:08,948:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:08:08,951:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:09:12,326:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:09:12,326:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:09:12,326:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:09:12,326:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:09:13,892:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:09:13,895:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:09:13,897:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:09:13,899:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:10:17,296:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:10:17,296:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:10:17,297:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:10:17,297:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:10:18,866:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:10:18,869:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:10:18,871:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:10:18,874:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:11:22,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:11:22,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:11:22,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:11:22,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:11:23,900:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:11:23,902:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:11:23,905:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:11:23,907:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:12:27,372:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:12:27,372:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:12:27,372:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:12:27,373:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:12:28,941:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:12:28,943:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:12:28,946:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:12:28,948:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:13:32,298:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:13:32,298:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:13:32,298:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:13:32,298:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:13:33,859:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:13:33,862:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:13:33,864:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:13:33,867:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:14:37,295:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:14:37,295:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:14:37,295:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:14:37,295:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:14:38,865:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:14:38,868:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:14:38,871:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:14:38,873:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:15:42,247:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:15:42,247:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:15:42,247:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:15:42,247:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:15:43,864:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:15:43,866:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:15:43,869:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:15:43,871:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 07:16:47,282:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:16:47,282:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:16:47,282:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:16:47,282:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 07:16:48,842:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 07:16:48,845:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 07:16:48,847:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 07:16:48,850:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:50:22,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:50:22,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:50:22,307:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:50:22,307:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:50:24,062:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:50:24,065:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:50:24,067:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:50:24,070:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:51:27,411:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:51:27,411:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:51:27,411:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:51:27,411:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:51:28,943:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:51:28,945:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:51:28,947:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:51:28,950:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:52:32,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:52:32,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:52:32,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:52:32,293:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:52:33,824:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:52:33,826:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:52:33,829:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:52:33,831:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:52:34,251:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:53:10,712:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:10,712:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:10,712:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:10,712:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:12,271:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:53:12,273:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:53:12,276:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:53:12,278:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:53:12,554:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:53:37,626:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:37,627:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:37,627:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:37,627:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:53:39,166:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:53:39,168:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:53:39,171:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:53:39,173:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:53:39,443:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:54:42,895:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:54:42,895:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:54:42,895:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:54:42,895:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:54:44,442:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:54:44,445:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:54:44,448:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:54:44,450:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:54:44,727:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:55:48,194:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:55:48,194:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:55:48,194:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:55:48,195:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:55:49,748:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:55:49,750:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:55:49,753:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:55:49,755:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:55:50,028:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:56:53,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:56:53,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:56:53,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:56:53,458:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:56:55,004:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:56:55,007:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:56:55,009:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:56:55,012:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:56:55,285:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:57:30,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:30,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:30,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:30,526:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:32,118:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:57:32,120:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:57:32,123:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:57:32,125:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:57:32,397:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:57:58,732:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:58,733:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:58,733:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:57:58,733:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:58:00,310:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:58:00,313:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:58:00,315:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:58:00,318:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:58:00,594:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:59:03,996:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:03,996:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:03,996:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:03,996:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:05,539:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:59:05,541:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:59:05,543:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:59:05,546:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:59:05,816:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 13:59:52,835:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:52,835:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:52,835:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:52,835:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 13:59:54,356:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 13:59:54,358:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 13:59:54,361:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 13:59:54,363:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 13:59:54,637:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:00:09,377:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:09,377:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:09,377:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:09,377:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:10,976:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:00:10,978:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:00:10,981:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:00:10,983:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:00:11,266:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:00:51,187:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:51,187:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:51,187:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:51,187:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:00:52,757:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:00:52,759:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:00:52,762:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:00:52,764:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:00:53,036:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:01:10,290:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:01:10,291:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:01:10,291:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:01:10,291:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:01:11,838:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:01:11,840:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:01:11,842:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:01:11,845:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:01:12,117:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:23:20,502:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:23:20,502:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:23:20,502:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:23:20,502:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:23:22,072:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:23:22,075:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:23:22,077:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:23:22,080:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:23:22,354:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:24:25,696:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:24:25,696:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:24:25,696:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:24:25,696:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:24:27,251:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:24:27,254:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:24:27,256:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:24:27,259:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:24:27,543:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:25:30,927:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:25:30,927:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:25:30,927:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:25:30,927:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:25:32,466:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:25:32,468:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:25:32,470:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:25:32,473:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:25:32,745:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:26:36,224:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:26:36,224:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:26:36,224:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:26:36,224:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:26:37,764:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:26:37,767:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:26:37,769:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:26:37,771:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:26:38,042:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:27:41,476:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:27:41,476:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:27:41,476:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:27:41,476:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:27:43,017:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:27:43,020:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:27:43,023:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:27:43,025:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:27:43,302:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:28:46,784:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:28:46,784:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:28:46,784:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:28:46,784:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:28:48,340:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:28:48,343:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:28:48,345:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:28:48,347:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:28:48,622:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:29:52,028:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:29:52,028:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:29:52,028:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:29:52,028:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:29:53,583:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:29:53,586:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:29:53,588:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:29:53,591:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:29:53,874:WARNING:/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SnowflakeWriter" shadows an attribute in parent "Writer"
+  warnings.warn(
+
+2025-04-10 14:30:57,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:30:57,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:30:57,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:30:57,306:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:30:58,861:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:30:58,864:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:30:58,866:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:30:58,869:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:32:02,264:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:32:02,264:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:32:02,264:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:32:02,264:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:32:03,809:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:32:03,812:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:32:03,814:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:32:03,816:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:33:07,118:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:33:07,118:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:33:07,118:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:33:07,118:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:33:08,661:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:33:08,664:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:33:08,667:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:33:08,669:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:34:12,005:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:34:12,005:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:34:12,005:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:34:12,005:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:34:13,557:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:34:13,559:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:34:13,562:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:34:13,564:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:35:16,931:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:35:16,931:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:35:16,931:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:35:16,931:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:35:18,460:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:35:18,462:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:35:18,465:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:35:18,467:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:36:21,868:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:36:21,868:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:36:21,868:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:36:21,868:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:36:23,446:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:36:23,448:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:36:23,450:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:36:23,453:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:37:26,854:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:37:26,854:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:37:26,854:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:37:26,854:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:37:28,421:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:37:28,423:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:37:28,426:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:37:28,428:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:38:31,765:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:38:31,766:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:38:31,766:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:38:31,766:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:38:33,321:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:38:33,323:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:38:33,326:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:38:33,328:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:39:36,736:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:39:36,737:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:39:36,737:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:39:36,737:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:39:38,332:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:20: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(SalesSchema),
+
+2025-04-10 14:39:38,334:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:42: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
+
+2025-04-10 14:39:38,337:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:68: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
+
+2025-04-10 14:39:38,339:WARNING:/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py:106: BetaWarning: Function `pandera_schema_to_dagster_type` is currently in beta, and may have breaking changes in minor version releases, with behavior changes in patch releases.
+  dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
+
+2025-04-10 14:40:41,642:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:40:41,642:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:40:41,642:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:40:41,643:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:41:46,514:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:41:46,514:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:41:46,514:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:41:46,514:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:42:51,302:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:42:51,302:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:42:51,302:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:42:51,302:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:43:56,074:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:43:56,074:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:43:56,074:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:43:56,074:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:45:00,909:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:45:00,909:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:45:00,909:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:45:00,909:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:46:05,705:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:46:05,705:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:46:05,705:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:46:05,705:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:47:10,494:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:47:10,494:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:47:10,494:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:47:10,494:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:48:15,260:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:48:15,260:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:48:15,260:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:48:15,261:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:49:20,077:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:49:20,078:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:49:20,078:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:49:20,078:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:50:24,837:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:50:24,837:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:50:24,837:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:50:24,837:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:51:29,719:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:51:29,719:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:51:29,719:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:51:29,719:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:52:34,612:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:52:34,613:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:52:34,613:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:52:34,613:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:53:39,432:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:53:39,432:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:53:39,432:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:53:39,433:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:54:44,271:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:54:44,271:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:54:44,271:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:54:44,271:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:55:49,054:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:55:49,055:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:55:49,055:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:55:49,055:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:56:53,825:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:56:53,825:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:56:53,825:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:56:53,825:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:57:58,656:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:57:58,656:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:57:58,656:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:57:58,657:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:59:03,452:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:59:03,452:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:59:03,452:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
+2025-04-10 14:59:03,452:WARNING:
+'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
