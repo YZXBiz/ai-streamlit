@@ -264,3 +264,35 @@ def cluster_reassignment(
     context.log.info(f"Reassigned {reassigned_count} stores from small clusters")
 
     return final_assignments
+
+
+@dg.asset(
+    name="save_merged_cluster_assignments",
+    description="Saves final merged cluster assignments to storage",
+    group_name="merging",
+    compute_kind="merged_cluster_assignment",
+    deps=["cluster_reassignment"],
+    required_resource_keys={"merged_cluster_assignments"},
+)
+def save_merged_cluster_assignments(
+    context: dg.AssetExecutionContext,
+    cluster_reassignment: pl.DataFrame,
+) -> None:
+    """Save final merged cluster assignments to persistent storage.
+
+    Uses the configured output resource to save the merged cluster assignments
+    for later use in analysis or reporting.
+
+    Args:
+        context: Dagster asset execution context
+        cluster_reassignment: DataFrame with final cluster assignments
+    """
+    context.log.info("Saving merged cluster assignments to storage")
+
+    # Use the configured output resource
+    assignments_output = context.resources.merged_cluster_assignments
+
+    # Save the assignments
+    assignments_output.write(cluster_reassignment)
+
+    context.log.info("Successfully saved merged cluster assignments")
