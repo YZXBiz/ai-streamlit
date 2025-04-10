@@ -8,7 +8,7 @@ import yaml
 
 # Import all assets from the top-level assets module
 from clustering.dagster.assets import (
-    # External ML assets
+    cluster_reassignment,
     external_assign_clusters,
     external_calculate_cluster_metrics,
     external_dimensionality_reduced_features,
@@ -47,6 +47,9 @@ from clustering.dagster.assets import (
     internal_save_cluster_assignments,
     internal_save_clustering_models,
     internal_train_clustering_models,
+    merged_cluster_assignments,
+    merged_clusters,
+    optimized_merged_clusters,
     preprocessed_external_data,
 )
 from clustering.dagster.resources import alerts_service, data_io, logger_service
@@ -172,8 +175,26 @@ full_pipeline_job = dg.define_asset_job(
         external_save_cluster_assignments,
         external_calculate_cluster_metrics,
         external_generate_cluster_visualizations,
+        # Merging
+        merged_clusters,
+        merged_cluster_assignments,
+        optimized_merged_clusters,
+        cluster_reassignment,
     ],
     tags={"kind": "complete_pipeline"},
+)
+
+# 6. Merging job (combining internal and external clusters)
+merging_job = dg.define_asset_job(
+    name="merging_job",
+    selection=[
+        # Merging assets
+        merged_clusters,
+        merged_cluster_assignments,
+        optimized_merged_clusters,
+        cluster_reassignment,
+    ],
+    tags={"kind": "merging"},
 )
 
 
@@ -264,9 +285,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
             writers_config.get("external_data_output", {})
         ),
         # Model output writer
-        "model_output": data_io.data_writer.configured(writers_config.get("model_output", {})),
+        "internal_model_output": data_io.data_writer.configured(
+            writers_config.get("model_output", {})
+        ),
         # Cluster assignments writer
-        "cluster_assignments": data_io.data_writer.configured(
+        "internal_cluster_assignments": data_io.data_writer.configured(
             writers_config.get("cluster_assignments", {})
         ),
         # External model output writer
@@ -342,6 +365,11 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
         # Model evaluation - External
         external_calculate_cluster_metrics,
         external_generate_cluster_visualizations,
+        # Merging assets
+        merged_clusters,
+        merged_cluster_assignments,
+        optimized_merged_clusters,
+        cluster_reassignment,
     ]
 
     # Create and return definitions with all jobs
@@ -354,6 +382,7 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
             internal_clustering_job,
             external_clustering_job,
             full_pipeline_job,
+            merging_job,
         ],
     )
 

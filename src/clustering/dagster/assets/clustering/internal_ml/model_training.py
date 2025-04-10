@@ -282,7 +282,7 @@ def internal_train_clustering_models(
     group_name="internal_model_training",
     compute_kind="io",
     deps=["internal_train_clustering_models"],
-    required_resource_keys={"config", "model_output"},
+    required_resource_keys={"config", "internal_model_output"},
 )
 def internal_save_clustering_models(
     context: dg.AssetExecutionContext,
@@ -299,7 +299,7 @@ def internal_save_clustering_models(
     # Save models using the configured writer - only if we have models
     if models:
         context.log.info("Saving trained models to output location")
-        context.resources.model_output.write(models)
+        context.resources.internal_model_output.write(models)
     else:
         context.log.warning(
             "No models were trained (all categories were skipped or had insufficient data). "
@@ -391,7 +391,7 @@ def internal_assign_clusters(
     group_name="cluster_assignment",
     compute_kind="io",
     deps=["internal_assign_clusters"],
-    required_resource_keys={"cluster_assignments"},
+    required_resource_keys={"internal_cluster_assignments"},
 )
 def internal_save_cluster_assignments(
     context: dg.AssetExecutionContext,
@@ -406,7 +406,7 @@ def internal_save_cluster_assignments(
     # Save cluster assignments
     if internal_assign_clusters:
         context.log.info("Saving cluster assignments to output location")
-        context.resources.cluster_assignments.write(internal_assign_clusters)
+        context.resources.internal_cluster_assignments.write(internal_assign_clusters)
     else:
         context.log.warning("No cluster assignments to save")
 

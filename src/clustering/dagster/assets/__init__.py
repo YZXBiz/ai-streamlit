@@ -27,13 +27,27 @@ from clustering.dagster.assets.clustering import (
     internal_feature_metadata,
     internal_filtered_features,
     internal_generate_cluster_visualizations,
-    internal_imputed_features, 
+    internal_imputed_features,
     internal_normalized_data,
     internal_optimal_cluster_counts,
     internal_outlier_removed_features,
     internal_save_cluster_assignments,
     internal_save_clustering_models,
     internal_train_clustering_models,
+)
+
+# Import merging assets
+from clustering.dagster.assets.merging.merge import (
+    cluster_reassignment,
+    merged_cluster_assignments,
+    merged_clusters,
+    optimized_merged_clusters,
+)
+
+# Import preprocessing external assets if needed
+from clustering.dagster.assets.preprocessing.external import (
+    external_features_data,
+    preprocessed_external_data,
 )
 
 # Preprocessing assets
@@ -44,12 +58,6 @@ from clustering.dagster.assets.preprocessing.internal import (
     internal_raw_sales_data,
     internal_sales_by_category,
     internal_sales_with_categories,
-)
-
-# Import preprocessing external assets if needed
-from clustering.dagster.assets.preprocessing.external import (
-    external_features_data,
-    preprocessed_external_data,
 )
 
 __all__ = [
@@ -63,7 +71,7 @@ __all__ = [
     # Preprocessing - external
     "external_features_data",
     "preprocessed_external_data",
-    # Clustering - Internal ML assets  
+    # Clustering - Internal ML assets
     "internal_fe_raw_data",
     "internal_filtered_features",
     "internal_imputed_features",
@@ -93,4 +101,9 @@ __all__ = [
     "external_save_cluster_assignments",
     "external_calculate_cluster_metrics",
     "external_generate_cluster_visualizations",
+    # Merging assets
+    "merged_clusters",
+    "merged_cluster_assignments",
+    "optimized_merged_clusters",
+    "cluster_reassignment",
 ]
