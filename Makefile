@@ -47,7 +47,7 @@ install:
 # Update all dependencies
 update:
 	@echo "Update all dependencies"
-	uv lock --upgrade && uv sync --all-packages
+	uv lock --upgrade && uv sync --all-packages --no-install-package kaleido
 
 # Create configs directory if it doesn't exist
 setup-configs:

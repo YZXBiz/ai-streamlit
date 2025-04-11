@@ -45,7 +45,6 @@ dependencies = [
     "fastexcel>=0.13.0",
     # Machine learning frameworks
     "pycaret",
-    "kaleido",
     # Cloud and storage
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
@@ -99,8 +98,6 @@ docs = [
 ]
 
 [tool.uv.sources]
-# Platform-specific kaleido sources
-kaleido = { url = "https://github.com/plotly/Kaleido/releases/download/v0.2.1/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
 # pycaret = { git = "https://github.com/Jackson-Yang_cvsh/modified-pycaret.git" }
 
 [tool.ruff]
