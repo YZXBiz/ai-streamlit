@@ -1,0 +1,6 @@
+{
+  "image": "debian:bullseye-slim",
+  "features": {
+    "ghcr.io/va-h/devcontainers-features/uv:1": {}
+  }
+}
