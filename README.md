@@ -1,15 +1,22 @@
 # Store Clustering
 
-An advanced Python package for retail store clustering analysis using Dagster for workflow orchestration.
+An advanced Python package for retail store clustering analysis using Dagster for workflow orchestration and UV for high-performance dependency management.
+
+<div align="center">
 
 ![Store Clustering](https://img.shields.io/badge/Store-Clustering-blue)
 ![Dagster](https://img.shields.io/badge/Dagster-v1.10.4-orange)
 ![Python](https://img.shields.io/badge/Python-v3.11+-green)
+![UV](https://img.shields.io/badge/UV-April%202025-purple)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## 🌟 Highlights
+</div>
+
+## 🌟 Key Features
 
 - **Dual Clustering Pipeline**: Internal (store performance) and external (market data) clustering with automatic merging
 - **Dagster Asset-based Architecture**: Modular, reproducible asset-based data pipeline with comprehensive versioning
+- **UV-powered Dependency Management**: Ultra-fast package installation and consistent environments across development and production
 - **Advanced Feature Engineering**: Automated feature selection, normalization, imputation, and outlier removal
 - **Configurable Workflows**: YAML-based configuration with environment-specific settings
 - **Intelligent Cluster Optimization**: Automatic small cluster reassignment to nearest large clusters
@@ -18,11 +25,19 @@ An advanced Python package for retail store clustering analysis using Dagster fo
 
 This project provides a comprehensive solution for clustering retail stores based on multiple data sources. The pipeline processes both internal performance metrics and external market data to create refined clusters, then intelligently merges them for a holistic view of store characteristics.
 
-The project uses Dagster's asset-based paradigm for workflow orchestration, allowing for:
-- Granular asset versioning and dependency tracking
-- Intelligent materialization based on code and data version changes
-- Automated data quality checks and monitoring
-- Intuitive visualizations of the pipeline and results
+The project leverages two cutting-edge technologies:
+
+- **Dagster**: For robust, asset-based workflow orchestration that provides:
+  - Granular asset versioning and dependency tracking
+  - Intelligent materialization based on code and data version changes
+  - Automated data quality checks and monitoring
+  - Intuitive visualizations of the pipeline and results
+
+- **UV**: For high-performance Python dependency management that delivers:
+  - 10-100x faster package installation than traditional tools
+  - Reproducible environments with lockfile support
+  - Integrated virtual environment management
+  - Global caching for optimal disk usage efficiency
 
 ### 🔄 Data Versioning
 
@@ -46,41 +61,79 @@ The pipeline is structured into three main stages:
 ### Prerequisites
 
 - Python 3.11 or higher
-- uv (Python package manager)
+- UV package manager ([learn more](https://github.com/astral-sh/uv))
 - Docker and Docker Compose (optional, for containerization)
 
-### Setup
+### Quick Start
 
-1. Clone the repository:
+```bash
+# Clone the repository
+git clone https://github.com/cvshealth/store-clustering.git
+cd store-clustering
+
+# Install UV if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Set up virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv sync
+
+# Create configuration
+cp .env.example .env
+make setup-configs
+
+# Start Dagster UI
+make dagster-ui
+```
+
+### Detailed Setup
+
+1. **Install UV** (if not already installed):
+
+   ```bash
+   # Using curl (recommended)
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Alternative options
+   # Using pipx (if available)
+   pipx install uv
+   
+   # Using Homebrew (on macOS)
+   brew install uv
+   ```
+
+2. **Clone and configure the repository**:
 
    ```bash
    git clone https://github.com/cvshealth/store-clustering.git
    cd store-clustering
-   ```
-
-2. Create your `.env` file:
-
-   ```bash
    cp .env.example .env
    # Edit .env with your credentials
    ```
 
-3. Install dependencies:
+3. **Install dependencies** (choose one option):
 
    ```bash
-   make install  # For production
+   # Option 1: Using Makefile (recommended)
+   make install
+   
+   # Option 2: Using UV directly
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv sync
+   ```
+
+4. **Install development dependencies** (optional):
+
+   ```bash
+   # Using UV to install development dependencies
+   uv add --dev pytest ruff mypy pre-commit
    # OR
-   uv venv  # Create virtual environment
-   uv sync --all-packages  # Install all packages
+   uv add --all-extras
    ```
 
-4. For development, install additional dependencies:
-
-   ```bash
-   uv pip install --python-file pyproject.toml -e ".[dev]"
-   ```
-
-5. Set up configuration:
+5. **Set up configuration**:
    ```bash
    make setup-configs
    ```
@@ -89,7 +142,9 @@ The pipeline is structured into three main stages:
 
 ### Running the Pipeline
 
-#### Using Make Commands
+The project offers multiple ways to run the pipeline, with convenient Makefile commands or direct UV-based execution.
+
+#### Using Makefile Commands (Recommended)
 
 ```bash
 # Start the Dagster UI
@@ -100,13 +155,11 @@ make run-full
 
 # Run specific stages
 make run-internal-preprocessing
-make run-internal-ml
-make run-external-preprocessing
-make run-external-ml
+make run-external-clustering
 make run-merging
 ```
 
-#### Using Dagster Directly
+#### Using UV Directly
 
 ```bash
 # Start the Dagster UI
@@ -120,13 +173,39 @@ uv run -m dagster job execute -m clustering.dagster.definitions -j internal_prep
 
 ```bash
 # Format, lint and type-check code
-make format lint type-check
+make format    # Format with ruff
+make lint      # Lint with ruff
+make type-check  # Check types with mypy and pyright
+make check-all   # Run all checks at once
 
-# Run tests
+# Run tests with coverage reporting
 make test
 
-# Clean up artifacts
+# Clean up build artifacts and cache files
 make clean
+```
+
+### Environment Management with UV
+
+```bash
+# Create a new virtual environment
+uv venv
+
+# Activate the environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install all dependencies from lockfile
+uv sync
+
+# Add a new dependency
+uv add pandas matplotlib
+
+# Update the lockfile
+uv lock
+
+# Run a tool without installing
+uvx black .  # Format code with black
+uvx pytest   # Run tests with pytest
 ```
 
 ## 🧩 Data Flow
