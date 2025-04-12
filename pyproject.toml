@@ -78,6 +78,10 @@ dependencies = [
     "poethepoet",
 ]
 
+# Entry points for command-line scripts
+[project.scripts]
+clustering = "clustering.cli.commands:main"
+
 # =========================================
 # Development & Optional Dependencies
 # =========================================
