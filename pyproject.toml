@@ -1,3 +1,7 @@
+# =========================================
+# Build System & Project Metadata
+# =========================================
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -13,55 +17,72 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Jackson Yang", email = "Jackson.Yang@cvshealth.com" }]
+
+# =========================================
+# Dependencies (by category)
+# =========================================
+
 dependencies = [
-    # Core dependencies
+    # === Core Platform ===
     "dagster>=1.6.0",
+    "dagster-webserver>=1.10.4",
     "dagster-duckdb-polars>=0.21.0",
+    "dagster-pandera>=0.26.9",
+
+    # === Data Processing ===
+    # Query engines
+    "duckdb>=1.2.1",
     "polars>=0.20.0",
-    "duckdb>=1.2.1",                 # Using higher version constraint
-    # Data processing
-    "pandas>=2.1.4",              # Using higher version constraint
-    "scikit-learn>=1.0.0,<1.5.0", # Combined constraints for compatibility with pycaret==3.3.2
-    "numba>=0.60.0",
-    "numpy>=1.26.0,<2.0.0",       # Constrained for compatibility with pandas==2.1.4
+    "pyarrow<19.0.0",
+    "sqlalchemy<2.0",
+
+    # Data manipulation
+    "pandas>=2.1.4",
+    "numpy>=1.26.0,<2.0.0",    # Constrained for pandas compatibility
     "pandera[polars]>=0.21.0",
     "dask>=2025.2.0",
-    # Visualization
+    "numba>=0.60.0",
+
+    # === Machine Learning ===
+    "scikit-learn>=1.0.0,<1.5.0", # Compatibility with pycaret==3.3.2
+    "pycaret",
+    "shap>=0.46.0",
+
+    # === Visualization ===
     "matplotlib<3.8.0",
     "plotly>=5.24.1",
     "yellowbrick>=1.5",
-    # Utilities
-    "pydantic>=2.10.3",         # Using higher version constraint
+
+    # === Cloud & Storage ===
+    "azure-identity>=1.21.0",
+    "azure-storage-blob>=12.25.0",
+    "snowflake-connector-python>=3.13.2",
+    "dvc[azure]>=3.59.1",
+
+    # === Utilities ===
+    "pydantic>=2.10.3",
     "pydantic-settings>=2.6.1",
     "omegaconf>=2.3.0",
     "rich>=13.0.0",
     "loguru>=0.7.2",
+
+    # === System & Environment ===
+    "apache-airflow>=2.10.5",
     "psutil>=6.1.0",
     "plyer>=2.1.0",
     "ipykernel>=6.29.5",
     "setuptools>=75.6.0",
-    "shap>=0.46.0",
     "openpyxl>=3.1.5",
     "fastexcel>=0.13.0",
-    # Machine learning frameworks
-    "pycaret",
-    # Cloud and storage
-    "azure-identity>=1.21.0",
-    "azure-storage-blob>=12.25.0",
-    "snowflake-connector-python>=3.13.2",
-    # Database and query engines
-    "pyarrow<19.0.0",
-    "sqlalchemy<2.0",
-    # Workflow orchestration
-    "apache-airflow>=2.10.5",
-    "dagster-webserver>=1.10.4",
-    # Version control and task automation
     "poethepoet",
-    "dvc[azure]>=3.59.1",
-    "dagster-pandera>=0.26.9",
 ]
 
+# =========================================
+# Development & Optional Dependencies
+# =========================================
+
 [project.optional-dependencies]
+# Development dependencies
 dev = [
     # Testing
     "pytest",
@@ -75,20 +96,16 @@ dev = [
     # Package management
     "uv",
 
-    # Documentation (included in dev for convenience)
-    "sphinx",
-    "sphinx-rtd-theme",
-    "sphinx-autodoc-typehints",
-]
-
-# Separate docs dependencies for those who only want documentation tools
-docs = [
     # Documentation
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-autodoc-typehints",
 ]
 
+# Documentation-only dependencies
+docs = ["sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints"]
+
+# Define dependency groups (for UV)
 [dependency-groups]
 docs = [
     "sphinx>=8.1.3",
@@ -97,8 +114,13 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
 ]
 
+# Special source configurations
 [tool.uv.sources]
 # pycaret = { git = "https://github.com/Jackson-Yang_cvsh/modified-pycaret.git" }
+
+# =========================================
+# Code Quality & Linting Configuration
+# =========================================
 
 [tool.ruff]
 target-version = "py310"
@@ -121,6 +143,7 @@ ignore = [
     "N805", # first argument is self
     "F405", # star imports are not allowed
     "N806", # Upper case letters are not allowed in function names
+    "E501", # Line too long (handled by formatter)
 ]
 
 [tool.ruff.lint.isort]
@@ -129,14 +152,16 @@ known-first-party = ["clustering"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+# Ignores for specific file patterns
 [tool.ruff.lint.per-file-ignores]
+# Test files
 "tests/**/*.py" = [
     "D100", # Missing docstring in public module
     "D101", # Missing docstring in public class
     "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
 ]
-# Additional ignores for specific files with many issues
+# Dagster files
 "src/clustering/dagster/**/*.py" = [
     "D104", # Missing docstring in public package
     "D105", # Missing docstring in magic method
@@ -144,6 +169,7 @@ convention = "google"
     "B007", # Loop control variable not used within loop body
     "B008", # Do not perform function call in argument defaults
 ]
+# IO modules
 "src/clustering/io/readers/**/*.py" = [
     "B904", # Use raise from for exception chaining
 ]
@@ -155,12 +181,9 @@ convention = "google"
 "src/clustering/dagster/assets/clustering/internal.py" = ["E501"]
 "src/clustering/dagster/definitions.py" = ["E501"]
 
-# Additional linting rules
-ignore = [
-    "D203", # one-blank-line-before-class (conflicts with no-blank-line-before-class)
-    "D212", # multi-line-summary-first-line (conflicts with multi-line-summary-second-line)
-    "E501", # Line too long (handled by formatter)
-]
+# =========================================
+# Type Checking Configuration
+# =========================================
 
 [tool.mypy]
 python_version = "3.10"
@@ -175,6 +198,10 @@ plugins = ["pydantic.mypy"]
 module = ["tests.*", "scripts.*"]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+# =========================================
+# Testing Configuration
+# =========================================
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -196,6 +223,10 @@ exclude_lines = [
     "pass",
     "raise ImportError",
 ]
+
+# =========================================
+# Dagster Configuration
+# =========================================
 
 [tool.dagster]
 module_name = "clustering.dagster"
