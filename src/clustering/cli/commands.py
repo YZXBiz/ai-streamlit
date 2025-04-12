@@ -6,13 +6,14 @@ clustering pipeline. It allows users to run jobs, manage sensors, and access the
 
 import os
 import sys
+from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Callable, cast
 
 import click
 import dagster as dg
 from dagster._core.instance import DagsterInstance
-
+s
 from clustering.dagster import create_definitions
 from clustering.infra import CONFIG
 
@@ -21,7 +22,7 @@ try:
     from dotenv import load_dotenv
 except ImportError:
 
-    def load_dotenv(dotenv_path=None):
+    def load_dotenv(dotenv_path: str | Path | None = None) -> bool:
         """Fallback implementation if dotenv is not installed."""
         click.secho(
             "Warning: python-dotenv not installed. Environment variables from .env files will not be loaded.",
@@ -29,7 +30,6 @@ except ImportError:
         )
         return False
 
-# Import dagster sensors for CLI commands
 from clustering.dagster.sensors import (
     external_data_sensor,
     internal_clustering_complete_sensor,
@@ -66,7 +66,7 @@ def load_env_file(env: str = "dev") -> bool:
 def run_job(
     job_name: str,
     env: str = "dev",
-    tags: Optional[Dict[str, str]] = None,
+    tags: dict[str, str] | None = None,
     raise_on_error: bool = False,
 ) -> dg.ExecuteJobResult:
     """Run a Dagster job.
@@ -113,7 +113,7 @@ def run_job(
     return result
 
 
-def parse_tags(tag_strings: List[str]) -> Dict[str, str]:
+def parse_tags(tag_strings: list[str]) -> dict[str, str]:
     """Parse tags from command line arguments.
 
     Args:
@@ -162,7 +162,7 @@ def sensor():
 
 @sensor.command()
 @click.argument("sensor_name", required=False)
-def start(sensor_name: Optional[str]):
+def start(sensor_name: str | None):
     """Start a sensor by name or all sensors if no name is provided.
     
     SENSOR_NAME: Optional name of the sensor to start
@@ -197,7 +197,7 @@ def start(sensor_name: Optional[str]):
 
 @sensor.command()
 @click.argument("sensor_name", required=False)
-def stop(sensor_name: Optional[str]):
+def stop(sensor_name: str | None):
     """Stop a sensor by name or all sensors if no name is provided.
     
     SENSOR_NAME: Optional name of the sensor to stop
