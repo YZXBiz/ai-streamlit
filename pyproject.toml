@@ -46,6 +46,7 @@ dependencies = [
     # === Machine Learning ===
     "scikit-learn>=1.0.0,<1.5.0", # Compatibility with pycaret==3.3.2
     "pycaret",
+    "kaleido==0.2.1",
     "shap>=0.46.0",
 
     # === Visualization ===
@@ -116,7 +117,7 @@ docs = [
 
 # Special source configurations
 [tool.uv.sources]
-# pycaret = { git = "https://github.com/Jackson-Yang_cvsh/modified-pycaret.git" }
+# kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
 
 # =========================================
 # Code Quality & Linting Configuration
