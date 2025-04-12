@@ -49,7 +49,7 @@ class Defaults:
 )
 def external_fe_raw_data(
     context: dg.AssetExecutionContext,
-) -> dict[str, pl.DataFrame]:
+) -> pl.DataFrame:
     """Load raw external data using the configured reader resource.
 
     This asset depends on preprocessed_external_data to ensure the preprocessing
@@ -59,7 +59,7 @@ def external_fe_raw_data(
         context: Asset execution context with access to resources and logging
 
     Returns:
-        Dictionary mapping category names to their respective dataframes
+        DataFrame with external data
     """
     context.log.info("Loading external data by category")
     return context.resources.external_data_reader.read()
@@ -75,8 +75,8 @@ def external_fe_raw_data(
 )
 def external_filtered_features(
     context: dg.AssetExecutionContext,
-    external_fe_raw_data: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    external_fe_raw_data: pl.DataFrame,
+) -> pl.DataFrame:
     """Filter out features that should be ignored using PyCaret's ignore_features.
 
     Uses the configuration to determine which features should be excluded from
@@ -85,13 +85,11 @@ def external_filtered_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_fe_raw_data: Dictionary of raw dataframes by category from external sources
+        external_fe_raw_data: DataFrame with raw data from external sources
 
     Returns:
-        Dictionary of dataframes with specified features filtered out
+        DataFrame with specified features filtered out
     """
-    filtered_data = {}
-
     # Get features to ignore from context resources
     ignore_features = getattr(context.resources.config, "ignore_features", [])
 
@@ -102,40 +100,33 @@ def external_filtered_features(
     context.log.info(f"Features to ignore: {ignore_features}")
 
     # Storing original features for metadata
-    original_features = {}
+    original_features = external_fe_raw_data.columns
 
-    for category, df in external_fe_raw_data.items():
-        # Store original feature count
-        original_features[category] = df.columns
+    # Get features that actually exist in this dataframe
+    features_to_ignore = [col for col in ignore_features if col in external_fe_raw_data.columns]
 
-        # Get features that actually exist in this dataframe
-        features_to_ignore = [col for col in ignore_features if col in df.columns]
+    if not features_to_ignore:
+        context.log.info(f"No features to ignore")
+        return external_fe_raw_data
 
-        if not features_to_ignore:
-            context.log.info(f"No features to ignore for {category}")
-            filtered_data[category] = df
-            continue
+    context.log.info(f"Ignoring features via PyCaret setup: {features_to_ignore}")
 
-        context.log.info(
-            f"Ignoring features via PyCaret setup for {category}: {features_to_ignore}"
-        )
+    # Convert Polars DataFrame to Pandas
+    pandas_df = external_fe_raw_data.to_pandas()
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
+    # Initialize PyCaret experiment with ignore_features
+    exp = ClusteringExperiment()
+    exp.setup(
+        data=pandas_df,
+        ignore_features=features_to_ignore,
+        session_id=Defaults.SESSION_ID,
+        verbose=False,
+    )
 
-        # Initialize PyCaret experiment with ignore_features
-        exp = ClusteringExperiment()
-        exp.setup(
-            data=pandas_df,
-            ignore_features=features_to_ignore,
-            session_id=Defaults.SESSION_ID,
-            verbose=False,
-        )
+    # Get the transformed data with ignored features removed
+    filtered_data = pl.from_pandas(exp.X_train_transformed)
 
-        # Get the transformed data with ignored features removed
-        filtered_data[category] = pl.from_pandas(exp.X_train_transformed)
-
-        context.log.info(f"Removed features from {category}: {features_to_ignore}")
+    context.log.info(f"Removed features: {features_to_ignore}")
 
     # Store the ignored features in the context metadata for potential later use
     context.add_output_metadata(
@@ -155,20 +146,20 @@ def external_filtered_features(
 )
 def external_imputed_features(
     context: dg.AssetExecutionContext,
-    external_filtered_features: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    external_filtered_features: pl.DataFrame,
+) -> pl.DataFrame:
     """Impute missing values in external features using PyCaret's imputation methods.
 
-    Handles missing values in each category dataframe using the configured
+    Handles missing values in the dataframe using the configured
     imputation strategy. Imputation is configurable for both numeric and
     categorical features.
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_filtered_features: Dictionary of filtered dataframes by category
+        external_filtered_features: DataFrame with filtered features
 
     Returns:
-        Dictionary of dataframes with missing values imputed
+        DataFrame with missing values imputed
 
     Notes:
         Configuration parameters:
@@ -176,8 +167,6 @@ def external_imputed_features(
         - numeric_imputation: Method for numeric features ('mean', 'median', etc.)
         - categorical_imputation: Method for categorical features ('mode', etc.)
     """
-    processed_data = {}
-
     # Get all configuration parameters with defaults
     imputation_type = getattr(context.resources.config, "imputation_type", Defaults.IMPUTATION_TYPE)
     numeric_imputation = getattr(
@@ -187,40 +176,37 @@ def external_imputed_features(
         context.resources.config, "categorical_imputation", Defaults.CATEGORICAL_IMPUTATION
     )
 
-    # Store original data for each category to potentially restore ignored features later
-    original_data = {}
+    context.log.info(f"Imputing missing values")
 
-    for category, df in external_filtered_features.items():
-        context.log.info(f"Imputing missing values for category: {category}")
+    # Store original data
+    original_data = external_filtered_features
 
-        # Store original data
-        original_data[category] = df
+    # Convert Polars DataFrame to Pandas
+    pandas_df = external_filtered_features.to_pandas()
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
+    # Initialize PyCaret experiment
+    exp = ClusteringExperiment()
 
-        # Initialize PyCaret experiment
-        exp = ClusteringExperiment()
+    setup_params = {
+        "data": pandas_df,
+        "imputation_type": imputation_type,
+        "numeric_imputation": numeric_imputation,
+        "categorical_imputation": categorical_imputation,
+        "verbose": False,
+        "session_id": Defaults.SESSION_ID,
+    }
 
-        setup_params = {
-            "data": pandas_df,
-            "imputation_type": imputation_type,
-            "numeric_imputation": numeric_imputation,
-            "categorical_imputation": categorical_imputation,
-            "verbose": False,
-            "session_id": Defaults.SESSION_ID,
-        }
+    exp.setup(**setup_params)
 
-        exp.setup(**setup_params)
+    # Get the imputed data
+    processed_data = pl.from_pandas(exp.X_train_transformed)
 
-        # Get the imputed data
-        processed_data[category] = pl.from_pandas(exp.X_train_transformed)
-
-        context.log.info(f"Missing value imputation completed for {category}")
+    context.log.info(f"Missing value imputation completed")
 
     # Store original data in context for potential restoration of ignored features
+    # Properly wrap the tuple with MetadataValue.json
     context.add_output_metadata(
-        {"original_data_shape": {k: v.shape for k, v in original_data.items()}}
+        {"original_data_shape": dg.MetadataValue.json(list(original_data.shape))}
     )
 
     return processed_data
@@ -236,8 +222,8 @@ def external_imputed_features(
 )
 def external_normalized_data(
     context: dg.AssetExecutionContext,
-    external_imputed_features: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    external_imputed_features: pl.DataFrame,
+) -> pl.DataFrame:
     """Normalize features using PyCaret's normalization methods.
 
     Applies feature scaling/normalization to numeric features based on the
@@ -245,18 +231,16 @@ def external_normalized_data(
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_imputed_features: Dictionary of imputed dataframes by category
+        external_imputed_features: DataFrame with imputed features
 
     Returns:
-        Dictionary of dataframes with normalized features
+        DataFrame with normalized features
 
     Notes:
         Configuration parameters:
         - normalize: Boolean to enable/disable normalization
         - norm_method: Method to use for normalization ('robust', 'zscore', etc.)
     """
-    processed_data = {}
-
     # Check if normalization is enabled
     normalize = getattr(context.resources.config, "normalize", Defaults.NORMALIZE)
     if not normalize:
@@ -266,28 +250,27 @@ def external_normalized_data(
     # Get normalization method
     norm_method = getattr(context.resources.config, "norm_method", Defaults.NORM_METHOD)
 
-    for category, df in external_imputed_features.items():
-        context.log.info(f"Normalizing features for category: {category}")
+    context.log.info(f"Normalizing features")
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
+    # Convert Polars DataFrame to Pandas
+    pandas_df = external_imputed_features.to_pandas()
 
-        # Initialize experiment
-        exp = ClusteringExperiment()
+    # Initialize experiment
+    exp = ClusteringExperiment()
 
-        setup_params = {
-            "data": pandas_df,
-            "normalize": True,
-            "normalize_method": norm_method,
-            "verbose": False,
-            "session_id": Defaults.SESSION_ID,
-        }
+    setup_params = {
+        "data": pandas_df,
+        "normalize": True,
+        "normalize_method": norm_method,
+        "verbose": False,
+        "session_id": Defaults.SESSION_ID,
+    }
 
-        exp.setup(**setup_params)
+    exp.setup(**setup_params)
 
-        processed_data[category] = pl.from_pandas(exp.X_train_transformed)
+    processed_data = pl.from_pandas(exp.X_train_transformed)
 
-        context.log.info(f"Normalization completed for {category}")
+    context.log.info(f"Normalization completed")
 
     return processed_data
 
@@ -302,20 +285,20 @@ def external_normalized_data(
 )
 def external_outlier_removed_features(
     context: dg.AssetExecutionContext,
-    external_normalized_data: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    external_normalized_data: pl.DataFrame,
+) -> pl.DataFrame:
     """Detect and remove outliers using isolation forest or other methods.
 
     Applies outlier detection and removal using PyCaret. It processes
-    each category-specific dataframe by detecting and removing outliers according
+    the dataframe by detecting and removing outliers according
     to the configured method and threshold.
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_normalized_data: Dictionary of normalized dataframes by category
+        external_normalized_data: DataFrame with normalized features
 
     Returns:
-        Dictionary of dataframes with outliers removed
+        DataFrame with outliers removed
 
     Notes:
         Configuration parameters:
@@ -327,8 +310,6 @@ def external_outlier_removed_features(
         - outlier_threshold: float, default = 0.05
           The percentage outliers to be removed from the dataset.
     """
-    processed_data = {}
-
     # Check if outlier detection is enabled
     outlier_detection = getattr(
         context.resources.config, "outlier_detection", Defaults.OUTLIER_DETECTION
@@ -343,36 +324,35 @@ def external_outlier_removed_features(
     )
     outliers_method = getattr(context.resources.config, "outliers_method", Defaults.OUTLIER_METHOD)
 
-    for category, df in external_normalized_data.items():
-        context.log.info(f"Removing outliers for category: {category}")
+    context.log.info(f"Removing outliers")
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
-        original_rows = len(pandas_df)
+    # Convert Polars DataFrame to Pandas
+    pandas_df = external_normalized_data.to_pandas()
+    original_rows = len(pandas_df)
 
-        # Initialize experiment
-        exp = ClusteringExperiment()
+    # Initialize experiment
+    exp = ClusteringExperiment()
 
-        # Use configurable parameters
-        setup_params = {
-            "data": pandas_df,
-            "remove_outliers": True,
-            "outliers_method": outliers_method,
-            "outliers_threshold": outlier_threshold,
-            "verbose": False,
-            "session_id": Defaults.SESSION_ID,
-        }
+    # Use configurable parameters
+    setup_params = {
+        "data": pandas_df,
+        "remove_outliers": True,
+        "outliers_method": outliers_method,
+        "outliers_threshold": outlier_threshold,
+        "verbose": False,
+        "session_id": Defaults.SESSION_ID,
+    }
 
-        # Set up experiment
-        exp.setup(**setup_params)
+    # Set up experiment
+    exp.setup(**setup_params)
 
-        # Get the outlier-cleaned data
-        cleaned_df = exp.X_train_transformed
-        processed_data[category] = pl.from_pandas(cleaned_df)
+    # Get the outlier-cleaned data
+    cleaned_df = exp.X_train_transformed
+    processed_data = pl.from_pandas(cleaned_df)
 
-        # Report how many outliers were removed
-        removed = original_rows - len(cleaned_df)
-        context.log.info(f"Removed {removed} outliers from {category}")
+    # Report how many outliers were removed
+    removed = original_rows - len(cleaned_df)
+    context.log.info(f"Removed {removed} outliers")
 
     return processed_data
 
@@ -387,8 +367,8 @@ def external_outlier_removed_features(
 )
 def external_dimensionality_reduced_features(
     context: dg.AssetExecutionContext,
-    external_outlier_removed_features: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    external_outlier_removed_features: pl.DataFrame,
+) -> pl.DataFrame:
     """Reduce feature dimensions using PCA.
 
     Applies Principal Component Analysis (PCA) to reduce the dimensionality
@@ -397,10 +377,10 @@ def external_dimensionality_reduced_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_outlier_removed_features: Dictionary of dataframes with outliers removed
+        external_outlier_removed_features: DataFrame with outliers removed
 
     Returns:
-        Dictionary of dataframes with reduced dimensionality
+        DataFrame with reduced feature dimensions
 
     Notes:
         Configuration parameters:
@@ -408,8 +388,6 @@ def external_dimensionality_reduced_features(
         - pca_components: Float (0-1) for variance retention or int for components
         - pca_method: Method to use ('linear', 'kernel', etc.)
     """
-    processed_data = {}
-
     # Check if PCA is enabled
     pca_active = getattr(context.resources.config, "pca_active", Defaults.PCA_ACTIVE)
     if not pca_active:
@@ -420,38 +398,37 @@ def external_dimensionality_reduced_features(
     pca_components = getattr(context.resources.config, "pca_components", Defaults.PCA_COMPONENTS)
     pca_method = getattr(context.resources.config, "pca_method", Defaults.PCA_METHOD)
 
-    for category, df in external_outlier_removed_features.items():
-        context.log.info(f"Applying PCA for category: {category}")
+    context.log.info(f"Applying PCA")
 
-        # Track original feature count
-        original_features = df.width
+    # Track original feature count
+    original_features = external_outlier_removed_features.width
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
+    # Convert Polars DataFrame to Pandas
+    pandas_df = external_outlier_removed_features.to_pandas()
 
-        # Initialize experiment
-        exp = ClusteringExperiment()
+    # Initialize experiment
+    exp = ClusteringExperiment()
 
-        # Use configurable parameters
-        setup_params = {
-            "data": pandas_df,
-            "pca": True,
-            "pca_method": pca_method,
-            "pca_components": pca_components,
-            "verbose": False,
-            "session_id": Defaults.SESSION_ID,
-        }
+    # Use configurable parameters
+    setup_params = {
+        "data": pandas_df,
+        "pca": True,
+        "pca_method": pca_method,
+        "pca_components": pca_components,
+        "verbose": False,
+        "session_id": Defaults.SESSION_ID,
+    }
 
-        # Set up experiment
-        exp.setup(**setup_params)
+    # Set up experiment
+    exp.setup(**setup_params)
 
-        # Get the PCA-transformed data
-        pca_df = exp.X_train_transformed
-        processed_data[category] = pl.from_pandas(pca_df)
+    # Get the PCA-transformed data
+    pca_df = exp.X_train_transformed
+    processed_data = pl.from_pandas(pca_df)
 
-        # Report feature reduction
-        new_features = processed_data[category].width
-        context.log.info(f"PCA reduced features from {original_features} to {new_features}")
+    # Report feature reduction
+    new_features = processed_data.width
+    context.log.info(f"PCA reduced features from {original_features} to {new_features}")
 
     return processed_data
 
@@ -466,22 +443,21 @@ def external_dimensionality_reduced_features(
 )
 def external_feature_metadata(
     context: dg.AssetExecutionContext,
-    external_dimensionality_reduced_features: dict[str, pl.DataFrame],
-) -> dict[str, dict[str, Any]]:
+    external_dimensionality_reduced_features: pl.DataFrame,
+) -> pl.DataFrame:
     """Generate comprehensive metadata on engineered features.
 
-    Creates detailed metadata for each category of processed data,
+    Creates detailed metadata for the processed data,
     including schema information, data shape, null counts, and optionally
     statistical summaries, sample data, correlation matrices, and preprocessing
     configuration details.
 
     Args:
         context: Asset execution context with access to resources and logging
-        external_dimensionality_reduced_features: Dictionary of fully processed dataframes by category
+        external_dimensionality_reduced_features: DataFrame with reduced feature dimensions
 
     Returns:
-        Dictionary of metadata organized by category, containing information
-        about the processed data to facilitate analysis and debugging
+        DataFrame containing metadata about the processed data
 
     Notes:
         The level of detail in the metadata is controlled by the
@@ -489,86 +465,96 @@ def external_feature_metadata(
         - "basic": Only includes schema, shape and null counts
         - "full": Includes statistics, samples, correlations and config details
     """
-    metadata = {}
-
     # Use metadata detail level from config or default to full
     detail_level = getattr(
         context.resources.config, "feature_metadata_detail", Defaults.METADATA_DETAIL
     )
     context.log.info(f"Generating feature metadata with detail level: {detail_level}")
 
-    for category, df in external_dimensionality_reduced_features.items():
-        context.log.info(f"Creating metadata for category: {category}")
+    df = external_dimensionality_reduced_features
+    context.log.info(f"Creating metadata")
 
-        # Basic metadata for all detail levels
-        base_metadata = {
-            "schema": df.schema,
-            "shape": df.shape,
-            "null_counts": df.null_count().to_dict(),
-        }
+    # Basic metadata for all detail levels
+    base_metadata = {
+        "schema": str(df.schema),
+        "shape": str(df.shape),
+        "null_counts": str(df.null_count().to_dict()),
+    }
 
-        # Add detailed stats if requested
-        if detail_level == "full":
-            try:
-                context.log.info(f"Adding detailed statistics for {category}")
+    # Create a DataFrame from the metadata
+    metadata_df = pl.DataFrame([base_metadata])
 
-                # Add descriptive statistics
-                base_metadata["stats"] = df.describe().to_dicts()
+    # Add detailed stats if requested
+    if detail_level == "full":
+        try:
+            context.log.info(f"Adding detailed statistics")
 
-                # Add sample data
-                base_metadata["sample"] = df.head(5).to_dicts()
+            # Add descriptive statistics as string columns
+            stats_dict = {f"stats_{i}": str(v) for i, v in enumerate(df.describe().to_dicts())}
+            metadata_df = metadata_df.with_columns([
+                pl.lit(v).alias(k) for k, v in stats_dict.items()
+            ])
 
-                # Add correlation matrix for numeric columns
-                numeric_cols = df.select(pl.col(pl.NUMERIC_DTYPES)).columns
-                if numeric_cols:
-                    context.log.info(
-                        f"Calculating correlation matrix for {len(numeric_cols)} numeric columns"
-                    )
-                    corr_matrix = df.select(numeric_cols).to_pandas().corr().to_dict()
-                    base_metadata["correlations"] = corr_matrix
+            # Add sample data
+            sample_dict = {f"sample_{i}": str(v) for i, v in enumerate(df.head(5).to_dicts())}
+            metadata_df = metadata_df.with_columns([
+                pl.lit(v).alias(k) for k, v in sample_dict.items()
+            ])
 
-                # Add preprocessing configuration to metadata
-                # Use consistent defaults with the actual implementation
-                pca_components = getattr(
-                    context.resources.config, "pca_components", Defaults.PCA_COMPONENTS
+            # Add correlation matrix for numeric columns
+            numeric_cols = df.select(pl.col(pl.NUMERIC_DTYPES)).columns
+            if numeric_cols:
+                context.log.info(f"Calculating correlation matrix for {len(numeric_cols)} numeric columns")
+                corr_matrix = df.select(numeric_cols).to_pandas().corr().to_dict()
+                metadata_df = metadata_df.with_column(
+                    pl.lit(str(corr_matrix)).alias("correlations")
                 )
 
-                base_metadata["config"] = {
-                    "algorithm": getattr(context.resources.config, "algorithm", Defaults.ALGORITHM),
-                    "normalization": {
-                        "enabled": getattr(
-                            context.resources.config, "normalize", Defaults.NORMALIZE
-                        ),
-                        "method": getattr(
-                            context.resources.config, "norm_method", Defaults.NORM_METHOD
-                        ),
-                    },
-                    "pca": {
-                        "enabled": getattr(
-                            context.resources.config, "pca_active", Defaults.PCA_ACTIVE
-                        ),
-                        "variance": pca_components,
-                    },
-                    "outlier_detection": {
-                        "enabled": getattr(
-                            context.resources.config,
-                            "outlier_detection",
-                            Defaults.OUTLIER_DETECTION,
-                        ),
-                        "threshold": getattr(
-                            context.resources.config,
-                            "outlier_threshold",
-                            Defaults.OUTLIER_THRESHOLD,
-                        ),
-                    },
-                }
+            # Add preprocessing configuration to metadata
+            # Use consistent defaults with the actual implementation
+            pca_components = getattr(
+                context.resources.config, "pca_components", Defaults.PCA_COMPONENTS
+            )
 
-            except Exception as e:
-                context.log.warning(f"Error calculating detailed stats for {category}: {str(e)}")
-                # Log the traceback for easier debugging
-                context.log.exception("Detailed exception information:")
+            config_info = {
+                "algorithm": getattr(context.resources.config, "algorithm", Defaults.ALGORITHM),
+                "normalization": {
+                    "enabled": getattr(
+                        context.resources.config, "normalize", Defaults.NORMALIZE
+                    ),
+                    "method": getattr(
+                        context.resources.config, "norm_method", Defaults.NORM_METHOD
+                    ),
+                },
+                "pca": {
+                    "enabled": getattr(
+                        context.resources.config, "pca_active", Defaults.PCA_ACTIVE
+                    ),
+                    "variance": pca_components,
+                },
+                "outlier_detection": {
+                    "enabled": getattr(
+                        context.resources.config,
+                        "outlier_detection",
+                        Defaults.OUTLIER_DETECTION,
+                    ),
+                    "threshold": getattr(
+                        context.resources.config,
+                        "outlier_threshold",
+                        Defaults.OUTLIER_THRESHOLD,
+                    ),
+                },
+            }
+            
+            metadata_df = metadata_df.with_column(
+                pl.lit(str(config_info)).alias("config")
+            )
 
-        metadata[category] = base_metadata
-        context.log.info(f"Completed metadata generation for {category}")
+        except Exception as e:
+            context.log.warning(f"Error calculating detailed stats: {str(e)}")
+            # Log the traceback for easier debugging
+            context.log.exception("Detailed exception information:")
 
-    return metadata
+    context.log.info(f"Completed metadata generation")
+
+    return metadata_df

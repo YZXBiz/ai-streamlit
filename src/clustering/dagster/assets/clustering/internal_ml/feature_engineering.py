@@ -387,8 +387,8 @@ def internal_outlier_removed_features(
 )
 def internal_dimensionality_reduced_features(
     context: dg.AssetExecutionContext,
-    internal_outlier_removed_features: dict[str, pl.DataFrame],
-) -> dict[str, pl.DataFrame]:
+    internal_outlier_removed_features: pl.DataFrame,
+) -> pl.DataFrame:
     """Reduce feature dimensions using PCA.
 
     Applies Principal Component Analysis (PCA) to reduce the dimensionality
@@ -397,10 +397,10 @@ def internal_dimensionality_reduced_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        internal_outlier_removed_features: Dictionary of dataframes with outliers removed
+        internal_outlier_removed_features: DataFrame with outliers removed
 
     Returns:
-        Dictionary of dataframes with reduced dimensionality
+        DataFrame with reduced dimensionality
 
     Notes:
         Configuration parameters:
@@ -408,8 +408,6 @@ def internal_dimensionality_reduced_features(
         - pca_components: Float (0-1) for variance retention or int for components
         - pca_method: Method to use ('linear', 'kernel', etc.)
     """
-    processed_data = {}
-
     # Check if PCA is enabled
     pca_active = getattr(context.resources.config, "pca_active", Defaults.PCA_ACTIVE)
     if not pca_active:
@@ -420,38 +418,37 @@ def internal_dimensionality_reduced_features(
     pca_components = getattr(context.resources.config, "pca_components", Defaults.PCA_COMPONENTS)
     pca_method = getattr(context.resources.config, "pca_method", Defaults.PCA_METHOD)
 
-    for category, df in internal_outlier_removed_features.items():
-        context.log.info(f"Applying PCA for category: {category}")
+    context.log.info(f"Applying PCA")
 
-        # Track original feature count
-        original_features = df.width
+    # Track original feature count
+    original_features = internal_outlier_removed_features.width
 
-        # Convert Polars DataFrame to Pandas
-        pandas_df = df.to_pandas()
+    # Convert Polars DataFrame to Pandas
+    pandas_df = internal_outlier_removed_features.to_pandas()
 
-        # Initialize experiment
-        exp = ClusteringExperiment()
+    # Initialize experiment
+    exp = ClusteringExperiment()
 
-        # Use configurable parameters
-        setup_params = {
-            "data": pandas_df,
-            "pca": True,
-            "pca_method": pca_method,
-            "pca_components": pca_components,
-            "verbose": False,
-            "session_id": Defaults.SESSION_ID,
-        }
+    # Use configurable parameters
+    setup_params = {
+        "data": pandas_df,
+        "pca": True,
+        "pca_method": pca_method,
+        "pca_components": pca_components,
+        "verbose": False,
+        "session_id": Defaults.SESSION_ID,
+    }
 
-        # Set up experiment
-        exp.setup(**setup_params)
+    # Set up experiment
+    exp.setup(**setup_params)
 
-        # Get the PCA-transformed data
-        pca_df = exp.X_train_transformed
-        processed_data[category] = pl.from_pandas(pca_df)
+    # Get the PCA-transformed data
+    pca_df = exp.X_train_transformed
+    processed_data = pl.from_pandas(pca_df)
 
-        # Report feature reduction
-        new_features = processed_data[category].width
-        context.log.info(f"PCA reduced features from {original_features} to {new_features}")
+    # Report feature reduction
+    new_features = processed_data.width
+    context.log.info(f"PCA reduced features from {original_features} to {new_features}")
 
     return processed_data
 
