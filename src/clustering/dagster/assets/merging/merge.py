@@ -454,6 +454,13 @@ def cluster_reassignment(
                 small_centroid.reshape(1, -1), large_centroid.reshape(1, -1), metric="euclidean"
             )[0][0]
             distances[large_id] = distance
+            
+            # Explicitly clean up memory
+            del large_centroid
+            # Force garbage collection periodically
+            if len(distances) % 10 == 0:
+                import gc
+                gc.collect()
 
         # Assign to nearest large cluster
         if distances:
@@ -463,6 +470,12 @@ def cluster_reassignment(
             context.log.warning(f"Could not find any large cluster for reassignment of {small_id}")
             # Keep the original assignment if no reassignment is possible
             reassignment_map[small_id] = small_id
+        
+        # Clean up memory after processing each small cluster
+        del small_centroid
+        del distances
+        import gc
+        gc.collect()
 
     # Apply reassignments to create final cluster assignments
     def map_to_final_cluster(cluster_id):

@@ -15,7 +15,7 @@
 # Declare all targets as phony (not files)
 .PHONY: install update format lint type-check test clean build setup-configs setup-tests \
         dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full run-merging \
-        docs docs-server docs-deps help version dev run-job setup full-pipeline
+        docs docs-server docs-deps help version dev run-job setup full-pipeline run-memory-optimized run-visualization
 
 ################################################################################
 # CONFIGURATION
@@ -37,7 +37,10 @@ DOCS_DIR := docs
 DAGSTER_ENV := dev
 ENV ?= dev
 
-# Command aliases for tools
+# Export UV link mode to fix hardlinking warnings
+export UV_LINK_MODE := copy
+
+# Command aliases for uv tools
 PYTHON := uv run
 
 ################################################################################
@@ -237,6 +240,33 @@ full-pipeline: setup ## Run the full pipeline with specified environment (usage:
 	@echo "==> Running full pipeline in $(ENV) environment"
 	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run full_pipeline_job --env $(ENV)
 	@echo "✓ Full pipeline completed"
+
+################################################################################
+# MEMORY MANAGEMENT TARGETS
+################################################################################
+
+##@ Memory Management
+
+.PHONY: run-memory-optimized run-visualization
+
+run-memory-optimized: setup ## Run a job with memory optimization settings
+	@echo "==> Running job with memory optimization"
+	@if [ -z "$(JOB)" ]; then \
+		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
+		exit 1; \
+	fi
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) \
+	 DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
+	 python -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $(JOB)
+	@echo "✓ Memory-optimized job $(JOB) completed"
+
+run-visualization: setup ## Run visualization job with memory optimization
+	@echo "==> Running visualization job with memory optimization"
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) \
+	 DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
+	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \
+	 python -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_visualization
+	@echo "✓ Visualization job completed"
 
 ################################################################################
 # DOCUMENTATION TARGETS
