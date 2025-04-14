@@ -12,11 +12,6 @@
 #
 ################################################################################
 
-# Declare all targets as phony (not files)
-.PHONY: install update format lint type-check test clean build setup-configs setup-tests \
-        dagster-ui dagster-test dagster-job-% run-internal-% run-external-% run-full run-merging \
-        docs docs-server docs-deps help version dev run-job setup full-pipeline run-memory-optimized run-visualization
-
 ################################################################################
 # CONFIGURATION
 ################################################################################
@@ -40,8 +35,32 @@ ENV ?= dev
 # Export UV link mode to fix hardlinking warnings
 export UV_LINK_MODE := copy
 
-# Command aliases for uv tools
+# Command aliases for Python tools
 PYTHON := uv run
+
+################################################################################
+# HELP TARGET
+################################################################################
+
+.PHONY: help
+help: ## Display this help message
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mStore Clustering Makefile Help\033[0m\n"} \
+		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } \
+		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "Usage examples:"
+	@echo "  make install             # Install dependencies"
+	@echo "  make dev                 # Start Dagster dev server"
+	@echo "  make run-full ENV=prod   # Run full pipeline in production environment"
+	@echo "  make dagster-job-JOB     # Run a specific Dagster job"
+	@echo ""
+	@echo "Project info:"
+	@echo "  Version: $(VERSION)"
+	@echo "  Author:  $(AUTHOR)"
+	@echo ""
+
+# Default target
+.DEFAULT_GOAL := help
 
 ################################################################################
 # SETUP TARGETS
@@ -103,39 +122,31 @@ setup-tests: ## Set up test directory structure
 .PHONY: dev
 dev: setup ## Start Dagster development server
 	@echo "==> Starting Dagster development server"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m dagster dev
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster dev
 
 .PHONY: format
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
-	@uv run -m ruff format $(SRC_DIR) $(TESTS_DIR)
+	@$(PYTHON) -m ruff format $(SRC_DIR) $(TESTS_DIR)
 	@echo "✓ Code formatting complete"
 
 .PHONY: lint
 lint: ## Lint code and auto-fix issues where possible
 	@echo "==> Linting code with ruff"
-	@uv run -m ruff check $(SRC_DIR) $(TESTS_DIR) --fix
+	@$(PYTHON) -m ruff check $(SRC_DIR) $(TESTS_DIR) --fix
 	@echo "✓ Code linting complete"
 
 .PHONY: type-check
 type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
-	@uv run -m mypy $(SRC_DIR) $(TESTS_DIR)
+	@$(PYTHON) -m mypy $(SRC_DIR) $(TESTS_DIR)
 	@echo "==> Running pyright type checker"
-	@uv run -m pyright $(SRC_DIR) $(TESTS_DIR)
+	@$(PYTHON) -m pyright $(SRC_DIR) $(TESTS_DIR)
 	@echo "✓ Type checking complete"
 
 .PHONY: check-all
 check-all: format lint type-check ## Run all code quality checks (format, lint, type-check)
 	@echo "✓ All code quality checks completed successfully"
-
-##@ Testing
-
-.PHONY: test
-test: ## Run tests with coverage reporting
-	@echo "==> Running tests with coverage"
-	@uv run --no-deps -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
-	@echo "✓ Tests completed"
 
 .PHONY: version
 version: ## Display version and author information
@@ -144,6 +155,24 @@ version: ## Display version and author information
 	@echo "  Developed by $(AUTHOR)"
 	@echo "  Copyright (c) 2025 CVS Health"
 	@echo "=================================================="
+
+################################################################################
+# TESTING TARGETS
+################################################################################
+
+##@ Testing
+
+.PHONY: test
+test: ## Run tests with coverage reporting
+	@echo "==> Running tests with coverage"
+	@$(PYTHON) --no-deps -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
+	@echo "✓ Tests completed"
+
+.PHONY: dagster-test
+dagster-test: setup ## Run Dagster-specific tests
+	@echo "==> Running Dagster implementation tests"
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
+	@echo "✓ Dagster tests completed"
 
 ################################################################################
 # BUILD & CLEAN TARGETS
@@ -184,45 +213,43 @@ clean: ## Clean up all build artifacts and temporary files
 .PHONY: dagster-ui
 dagster-ui: setup ## Start the Dagster UI web interface
 	@echo "==> Starting Dagster UI with $(DAGSTER_ENV) environment"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
 	@echo "✓ Dagster UI started. Access at http://localhost:3000"
-
-.PHONY: dagster-test
-dagster-test: setup ## Run Dagster-specific tests
-	@echo "==> Running Dagster implementation tests"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
-	@echo "✓ Dagster tests completed"
 
 .PHONY: dagster-job-%
 dagster-job-%: setup ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
 	@echo "==> Running Dagster job: $*"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
 	@echo "✓ Job $* completed"
+
+################################################################################
+# PIPELINE WORKFLOW TARGETS
+################################################################################
 
 ##@ Pipeline Workflows
 
 .PHONY: run-internal-%
-run-internal-%: setup ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-clustering)
+run-internal-%: setup ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
 	@echo "==> Running internal $* pipeline"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
 	@echo "✓ Internal $* pipeline completed"
 
 .PHONY: run-external-%
-run-external-%: setup ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-clustering)
+run-external-%: setup ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-ml)
 	@echo "==> Running external $* pipeline"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
 	@echo "✓ External $* pipeline completed"
 
 .PHONY: run-full
 run-full: setup ## Run the complete pipeline (internal, external, and merging)
 	@echo "==> Running full pipeline job"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
 	@echo "✓ Full pipeline completed"
 
 .PHONY: run-merging
 run-merging: setup ## Run only the cluster merging job
 	@echo "==> Running merging job"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) uv run -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
 	@echo "✓ Merging job completed"
 
 .PHONY: run-job
@@ -232,13 +259,13 @@ run-job: setup ## Run a specific job with environment (usage: make run-job JOB=j
 		echo "Error: JOB parameter is required. Usage: make run-job JOB=job_name ENV=env_name"; \
 		exit 1; \
 	fi
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run $(JOB) --env $(ENV)
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m $(PACKAGE_NAME) run $(JOB) --env $(ENV)
 	@echo "✓ Job $(JOB) completed"
 
 .PHONY: full-pipeline
 full-pipeline: setup ## Run the full pipeline with specified environment (usage: make full-pipeline ENV=prod)
 	@echo "==> Running full pipeline in $(ENV) environment"
-	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) python -m clustering run full_pipeline_job --env $(ENV)
+	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) $(PYTHON) -m $(PACKAGE_NAME) run full_pipeline_job --env $(ENV)
 	@echo "✓ Full pipeline completed"
 
 ################################################################################
@@ -247,9 +274,8 @@ full-pipeline: setup ## Run the full pipeline with specified environment (usage:
 
 ##@ Memory Management
 
-.PHONY: run-memory-optimized run-visualization
-
-run-memory-optimized: setup ## Run a job with memory optimization settings
+.PHONY: run-memory-optimized
+run-memory-optimized: setup ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
 	@echo "==> Running job with memory optimization"
 	@if [ -z "$(JOB)" ]; then \
 		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
@@ -257,15 +283,16 @@ run-memory-optimized: setup ## Run a job with memory optimization settings
 	fi
 	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) \
 	 DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
-	 python -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $(JOB)
+	 $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $(JOB)
 	@echo "✓ Memory-optimized job $(JOB) completed"
 
+.PHONY: run-visualization
 run-visualization: setup ## Run visualization job with memory optimization
 	@echo "==> Running visualization job with memory optimization"
 	@DAGSTER_HOME=$(DAGSTER_HOME_DIR) \
 	 DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
 	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \
-	 python -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_visualization
+	 $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_visualization
 	@echo "✓ Visualization job completed"
 
 ################################################################################
@@ -283,37 +310,11 @@ docs-deps: ## Install documentation dependencies
 .PHONY: docs
 docs: docs-deps ## Build documentation
 	@echo "==> Building documentation"
-	@cd $(DOCS_DIR) && $(MAKE) html
+	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(MAKE) html
 	@echo "✓ Documentation built successfully. Open docs/build/html/index.html to view"
 
 .PHONY: docs-server
 docs-server: docs-deps ## Start documentation server (http://localhost:8000)
 	@echo "==> Starting documentation server"
-	@cd $(DOCS_DIR) && uv run -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
-	@echo "✓ Documentation server running at http://localhost:8000"
-
-################################################################################
-# HELP TARGET
-################################################################################
-
-##@ Help
-
-.PHONY: help
-help: ## Display this help message
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mStore Clustering Makefile Help\033[0m\n"} \
-		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } \
-		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
-	@echo ""
-	@echo "Usage examples:"
-	@echo "  make install             # Install dependencies"
-	@echo "  make dev                 # Start Dagster dev server"
-	@echo "  make run-full ENV=prod   # Run full pipeline in production environment"
-	@echo "  make dagster-job-JOB     # Run a specific Dagster job"
-	@echo ""
-	@echo "Project info:"
-	@echo "  Version: $(VERSION)"
-	@echo "  Author:  $(AUTHOR)"
-	@echo ""
-
-# Default target
-.DEFAULT_GOAL := help 
+	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(PYTHON) -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
+	@echo "✓ Documentation server running at http://localhost:8000" 

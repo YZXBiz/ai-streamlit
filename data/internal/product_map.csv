@@ -1,0 +1,8 @@
+PRODUCT_ID,CATEGORY,NEED_STATE,CDT,ATTRIBUTE_1,ATTRIBUTE_2,ATTRIBUTE_3,ATTRIBUTE_4,ATTRIBUTE_5,ATTRIBUTE_6,PLANOGRAM_DSC,PLANOGRAM_NBR,NEW_ITEM,TO_BE_DROPPED
+1001,Grocery,Dairy,Food,Milk,Organic,,,,,Standard Dairy,1001,FALSE,FALSE
+1002,Grocery,Bakery,Food,Bread,Wheat,,,,,Standard Bakery,1002,FALSE,FALSE
+1003,Health,Pharmacy,Medicine,Prescription,OTC,,,,,Standard Pharmacy,1003,FALSE,FALSE
+1004,Health,OTC,Medicine,Pain Relief,Fever Reducer,,,,,Standard OTC,1004,FALSE,FALSE
+1005,Beauty,Skincare,Personal,Moisturizer,SPF,,,,,Standard Skincare,1005,FALSE,FALSE
+1006,Beauty,Haircare,Personal,Shampoo,Color Protection,,,,,Standard Haircare,1006,FALSE,FALSE
+1007,Beauty,Makeup,Personal,Foundation,Powder,,,,,Standard Makeup,1007,FALSE,FALSE 

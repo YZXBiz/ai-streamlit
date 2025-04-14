@@ -387,8 +387,8 @@ def internal_outlier_removed_features(
 )
 def internal_dimensionality_reduced_features(
     context: dg.AssetExecutionContext,
-    internal_outlier_removed_features: pl.DataFrame,
-) -> pl.DataFrame:
+    internal_outlier_removed_features: dict[str, pl.DataFrame],
+) -> dict[str, pl.DataFrame]:
     """Reduce feature dimensions using PCA.
 
     Applies Principal Component Analysis (PCA) to reduce the dimensionality
@@ -397,10 +397,10 @@ def internal_dimensionality_reduced_features(
 
     Args:
         context: Asset execution context with access to resources and logging
-        internal_outlier_removed_features: DataFrame with outliers removed
+        internal_outlier_removed_features: Dictionary of DataFrames with outliers removed
 
     Returns:
-        DataFrame with reduced dimensionality
+        Dictionary of DataFrames with reduced dimensionality
 
     Notes:
         Configuration parameters:
@@ -418,37 +418,40 @@ def internal_dimensionality_reduced_features(
     pca_components = getattr(context.resources.config, "pca_components", Defaults.PCA_COMPONENTS)
     pca_method = getattr(context.resources.config, "pca_method", Defaults.PCA_METHOD)
 
-    context.log.info(f"Applying PCA")
+    processed_data = {}
 
-    # Track original feature count
-    original_features = internal_outlier_removed_features.width
+    for category, df in internal_outlier_removed_features.items():
+        context.log.info(f"Applying PCA for category: {category}")
 
-    # Convert Polars DataFrame to Pandas
-    pandas_df = internal_outlier_removed_features.to_pandas()
+        # Track original feature count
+        original_features = df.width
 
-    # Initialize experiment
-    exp = ClusteringExperiment()
+        # Convert Polars DataFrame to Pandas
+        pandas_df = df.to_pandas()
 
-    # Use configurable parameters
-    setup_params = {
-        "data": pandas_df,
-        "pca": True,
-        "pca_method": pca_method,
-        "pca_components": pca_components,
-        "verbose": False,
-        "session_id": Defaults.SESSION_ID,
-    }
+        # Initialize experiment
+        exp = ClusteringExperiment()
 
-    # Set up experiment
-    exp.setup(**setup_params)
+        # Use configurable parameters
+        setup_params = {
+            "data": pandas_df,
+            "pca": True,
+            "pca_method": pca_method,
+            "pca_components": pca_components,
+            "verbose": False,
+            "session_id": Defaults.SESSION_ID,
+        }
 
-    # Get the PCA-transformed data
-    pca_df = exp.X_train_transformed
-    processed_data = pl.from_pandas(pca_df)
+        # Set up experiment
+        exp.setup(**setup_params)
 
-    # Report feature reduction
-    new_features = processed_data.width
-    context.log.info(f"PCA reduced features from {original_features} to {new_features}")
+        # Get the PCA-transformed data
+        pca_df = exp.X_train_transformed
+        processed_data[category] = pl.from_pandas(pca_df)
+
+        # Report feature reduction
+        new_features = processed_data[category].width
+        context.log.info(f"PCA reduced features for {category} from {original_features} to {new_features}")
 
     return processed_data
 

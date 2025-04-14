@@ -1,0 +1,47 @@
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53602 - LOGS_CAPTURED - Started capturing logs in process (pid: 53602).
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53602 - internal_raw_sales_data - STEP_START - Started execution of step "internal_raw_sales_data".
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mINFO[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - internal_raw_sales_data - Reading need state sales data
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53602 - internal_raw_sales_data - STEP_OUTPUT - Yielded output "result" of type "SalesSchema". Warning! Type check failed.
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mERROR[0m - [31minternal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53602 - internal_raw_sales_data - STEP_FAILURE - Execution of step "internal_raw_sales_data" failed.
+
+dagster._core.errors.DagsterTypeCheckDidNotPass: Type check failed for step output "result" - expected type "SalesSchema". Description: {
+    "DATA": {
+        "DATATYPE_COERCION": [
+            {
+                "schema": "SalesSchema",
+                "column": "SalesSchema",
+                "check": "coerce_dtype('{'SKU_NBR': DataType(Int64), 'STORE_NBR': DataType(Int64), 'CAT_DSC': DataType(String), 'TOTAL_SALES': DataType(Float64)}')",
+                "error": "Could not coerce 'TOTAL_SALES' in LazyFrame with schema Schema([('SKU_NBR', Int64), ('STORE_NBR', Int64), ('CAT_DSC', String), ('TOTAL_SALES', String)]) into type Float64"
+            }
+        ],
+        "CHECK_ERROR": [
+            {
+                "schema": "SalesSchema",
+                "column": "TOTAL_SALES",
+                "check": "greater_than_or_equal_to(0)",
+                "error": "ComputeError(\"cannot compare string with numeric type (i32)\")"
+            }
+        ]
+    },
+    "SCHEMA": {
+        "WRONG_DATATYPE": [
+            {
+                "schema": "SalesSchema",
+                "column": "TOTAL_SALES",
+                "check": "dtype('Float64')",
+                "error": "expected column 'TOTAL_SALES' to have type Float64, got String"
+            }
+        ]
+    }
+}
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 245, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 508, in core_dagster_event_sequence_for_step
+    for evt in _type_check_and_store_output(step_context, user_event):
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 552, in _type_check_and_store_output
+    yield from _type_check_output(step_context, step_output_handle, output)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 425, in _type_check_output
+    raise DagsterTypeCheckDidNotPass(
+[0m

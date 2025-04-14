@@ -1,0 +1,38 @@
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53601 - LOGS_CAPTURED - Started capturing logs in process (pid: 53601).
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53601 - internal_product_category_mapping - STEP_START - Started execution of step "internal_product_category_mapping".
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53601 - internal_product_category_mapping - STEP_OUTPUT - Yielded output "result" of type "NSMappingSchema". Warning! Type check failed.
+[32m2025-04-14 05:30:06 +0000[0m - dagster - [34mERROR[0m - [31minternal_preprocessing_job - fc7fece2-3eaa-4314-b595-123fa58d3106 - 53601 - internal_product_category_mapping - STEP_FAILURE - Execution of step "internal_product_category_mapping" failed.
+
+dagster._core.errors.DagsterTypeCheckDidNotPass: Type check failed for step output "result" - expected type "NSMappingSchema". Description: {
+    "DATA": {
+        "DATATYPE_COERCION": [
+            {
+                "schema": "NSMappingSchema",
+                "column": "NSMappingSchema",
+                "check": "coerce_dtype('{'PRODUCT_ID': DataType(Int64), 'CATEGORY': DataType(String), 'NEED_STATE': DataType(String), 'CDT': DataType(String), 'ATTRIBUTE_1': DataType(String), 'ATTRIBUTE_2': DataType(String), 'ATTRIBUTE_3': DataType(String), 'ATTRIBUTE_4': DataType(String), 'ATTRIBUTE_5': DataType(String), 'ATTRIBUTE_6': DataType(String), 'PLANOGRAM_DSC': DataType(String), 'PLANOGRAM_NBR': DataType(Int64), 'NEW_ITEM': DataType(Boolean), 'TO_BE_DROPPED': DataType(Boolean)}')",
+                "error": "Could not coerce 'TO_BE_DROPPED' in LazyFrame with schema Schema([('PRODUCT_ID', Int64), ('CATEGORY', String), ('NEED_STATE', String), ('CDT', String), ('ATTRIBUTE_1', String), ('ATTRIBUTE_2', String), ('ATTRIBUTE_3', String), ('ATTRIBUTE_4', String), ('ATTRIBUTE_5', String), ('ATTRIBUTE_6', String), ('PLANOGRAM_DSC', String), ('PLANOGRAM_NBR', Int64), ('NEW_ITEM', Boolean), ('TO_BE_DROPPED', String)]) into type Boolean"
+            }
+        ]
+    },
+    "SCHEMA": {
+        "WRONG_DATATYPE": [
+            {
+                "schema": "NSMappingSchema",
+                "column": "TO_BE_DROPPED",
+                "check": "dtype('Boolean')",
+                "error": "expected column 'TO_BE_DROPPED' to have type Boolean, got String"
+            }
+        ]
+    }
+}
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 245, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 508, in core_dagster_event_sequence_for_step
+    for evt in _type_check_and_store_output(step_context, user_event):
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 552, in _type_check_and_store_output
+    yield from _type_check_output(step_context, step_output_handle, output)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 425, in _type_check_output
+    raise DagsterTypeCheckDidNotPass(
+[0m

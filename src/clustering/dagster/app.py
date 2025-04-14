@@ -6,7 +6,7 @@ from datetime import datetime
 
 import dagster as dg
 
-from clustering.dagster.definitions import create_definitions
+from clustering.dagster.definitions import defs, get_definitions
 
 
 def get_dagster_home() -> str:
@@ -40,11 +40,8 @@ def run_job(env: str = "dev") -> None:
     # Set environment variable
     os.environ["DAGSTER_ENV"] = env
 
-    # Get the definitions with the specified environment
-    definitions = create_definitions(env=env)
-
     # Get the full pipeline job
-    full_pipeline_job = definitions.get_job_def("full_pipeline_job")
+    full_pipeline_job = defs.get_job_def("full_pipeline_job")
 
     # Create Dagster instance
     instance = dg.DagsterInstance.get()
@@ -68,12 +65,9 @@ def run_app(host: str = "localhost", port: int = 3000, env: str = "dev") -> None
     dagster_home = get_dagster_home()
     print(f"Using Dagster home: {dagster_home}")
 
-    # Create definitions
-    definitions = create_definitions(env=env)
-
     # Run webserver
     dg.webserver.run_webserver(
         host=host,
         port=port,
-        workspace=dg.workspace.UnscopedDefinitionsWorkspace(definitions),
+        workspace=dg.workspace.UnscopedDefinitionsWorkspace(defs),
     )

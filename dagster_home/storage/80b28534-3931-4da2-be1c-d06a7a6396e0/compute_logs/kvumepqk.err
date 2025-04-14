@@ -1,0 +1,31 @@
+[32m2025-04-14 05:25:57 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 80b28534-3931-4da2-be1c-d06a7a6396e0 - 31325 - LOGS_CAPTURED - Started capturing logs in process (pid: 31325).
+[32m2025-04-14 05:25:57 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 80b28534-3931-4da2-be1c-d06a7a6396e0 - 31325 - internal_product_category_mapping - STEP_START - Started execution of step "internal_product_category_mapping".
+[32m2025-04-14 05:25:57 +0000[0m - dagster - [34mERROR[0m - [31minternal_preprocessing_job - 80b28534-3931-4da2-be1c-d06a7a6396e0 - 31325 - internal_product_category_mapping - STEP_FAILURE - Execution of step "internal_product_category_mapping" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "internal_product_category_mapping"::
+
+polars.exceptions.ColumnNotFoundError: NEED_STATE
+
+Resolved plan until failure:
+
+	---> FAILED HERE RESOLVING 'sink' <---
+DF ["PRODUCT_ID", "CATEGORY", "SUBCATEGORY"]; PROJECT */3 COLUMNS
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 56, in op_execution_error_boundary
+    yield
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 391, in iterate_with_context
+    next_output = next(iterator)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 127, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 115, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py", line 58, in internal_product_category_mapping
+    .with_columns(pl.col("NEED_STATE").str.to_uppercase())
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/dataframe/frame.py", line 9806, in with_columns
+    return self.lazy().with_columns(*exprs, **named_exprs).collect(_eager=True)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/_utils/deprecation.py", line 93, in wrapper
+    return function(*args, **kwargs)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/lazyframe/frame.py", line 2206, in collect
+    return wrap_df(ldf.collect(engine, callback))
+[0m
