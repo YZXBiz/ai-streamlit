@@ -44,13 +44,16 @@ LOGS_DIR ?= $(shell pwd)/logs
 DAGSTER_ENV ?= dev
 ENV ?= dev
 
+# Set UV_LINK_MODE if not already defined, default to copy
+UV_LINK_MODE ?= copy
+
 # Export environment variables for child processes
 export DAGSTER_HOME = $(DAGSTER_HOME_DIR)
 export DATA_DIR
 export INTERNAL_DATA_DIR
 export EXTERNAL_DATA_DIR
 export MERGING_DATA_DIR
-export UV_LINK_MODE := copy  # Fix hardlinking warnings
+export UV_LINK_MODE
 
 # Python command
 PYTHON := uv run
