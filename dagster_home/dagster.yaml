@@ -1,0 +1,36 @@
+storage:
+  sqlite:
+    base_dir: /workspaces/testing-dagster/dagster_home/storage
+    wal_mode: true
+    connect_args:
+      timeout: 60
+
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+# Global run coordinator settings to limit concurrent runs
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: DefaultRunCoordinator
+  config:
+    max_concurrent_runs: 4
+
+# Default executor for all jobs (can be overridden by job-specific configs)
+executor:
+  module: dagster.core.executor
+  class: MultiprocessExecutor
+  config:
+    max_concurrent: 1  # Default to sequential execution
+
+compute_logs:
+  module: dagster.core.storage.compute_log_manager
+  class: LocalComputeLogManager
+  config:
+    base_dir: /workspaces/testing-dagster/dagster_home/storage
+
+# Default directory for IO manager
+default_resource_config:
+  io_manager:
+    config:
+      base_dir: /workspaces/testing-dagster/tmp/data

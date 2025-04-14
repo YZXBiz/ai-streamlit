@@ -235,6 +235,56 @@ full_pipeline_job = dg.define_asset_job(
         save_merged_cluster_assignments,
     ],
     tags={"kind": "complete_pipeline"},
+    config={
+        "execution": {
+            "config": {
+                "multiprocess": {
+                    "max_concurrent": 1  # Sequential execution
+                }
+            }
+        },
+        "resources": {
+            "io_manager": {
+                "config": {
+                    "base_dir": "/workspaces/testing-dagster/tmp/data"
+                }
+            }
+        }
+    }
+)
+
+# Add preset configurations for different execution modes
+full_pipeline_job = full_pipeline_job.with_config_schema()
+full_pipeline_job = full_pipeline_job.with_presets(
+    {
+        "sequential": {
+            "execution": {
+                "config": {
+                    "multiprocess": {
+                        "max_concurrent": 1
+                    }
+                }
+            }
+        },
+        "limited_parallel": {
+            "execution": {
+                "config": {
+                    "multiprocess": {
+                        "max_concurrent": 2
+                    }
+                }
+            }
+        },
+        "parallel": {
+            "execution": {
+                "config": {
+                    "multiprocess": {
+                        "max_concurrent": 4
+                    }
+                }
+            }
+        }
+    }
 )
 
 # -----------------------------------------------------------------------------
