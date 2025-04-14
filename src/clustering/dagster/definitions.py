@@ -242,47 +242,6 @@ full_pipeline_job = dg.define_asset_job(
                     "max_concurrent": 1  # Sequential execution
                 }
             }
-        },
-        "resources": {
-            "io_manager": {
-                "config": {
-                    "base_dir": "/workspaces/testing-dagster/tmp/data"
-                }
-            }
-        }
-    }
-)
-
-# Add preset configurations for different execution modes
-full_pipeline_job = full_pipeline_job.with_config_schema()
-full_pipeline_job = full_pipeline_job.with_presets(
-    {
-        "sequential": {
-            "execution": {
-                "config": {
-                    "multiprocess": {
-                        "max_concurrent": 1
-                    }
-                }
-            }
-        },
-        "limited_parallel": {
-            "execution": {
-                "config": {
-                    "multiprocess": {
-                        "max_concurrent": 2
-                    }
-                }
-            }
-        },
-        "parallel": {
-            "execution": {
-                "config": {
-                    "multiprocess": {
-                        "max_concurrent": 4
-                    }
-                }
-            }
         }
     }
 )
@@ -353,7 +312,9 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     # Define all resources
     resources = {
         # Core resources
-        "io_manager": dg.FilesystemIOManager(base_dir="storage"),
+        "io_manager": dg.FilesystemIOManager(
+            base_dir=os.environ.get("DAGSTER_STORAGE_DIR", "storage")
+        ),
         
         # Parameter resources (both names point to same resource)
         "job_params": params_resource,

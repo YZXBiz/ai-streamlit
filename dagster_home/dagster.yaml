@@ -1,9 +1,14 @@
 storage:
-  sqlite:
-    base_dir: /workspaces/testing-dagster/dagster_home/storage
-    wal_mode: true
-    connect_args:
-      timeout: 60
+  postgres:
+    postgres_db:
+      username: postgres
+      password: postgres
+      hostname: localhost
+      db_name: dagster
+      port: 5432
+      # Alternatively, use connection_string instead of individual parameters
+      # connection_string: 
+      #   env: DAGSTER_PG_CONNECTION_STRING
 
 run_launcher:
   module: dagster.core.launcher
@@ -16,21 +21,10 @@ run_coordinator:
   config:
     max_concurrent_runs: 4
 
-# Default executor for all jobs (can be overridden by job-specific configs)
-executor:
-  module: dagster.core.executor
-  class: MultiprocessExecutor
-  config:
-    max_concurrent: 1  # Default to sequential execution
-
 compute_logs:
   module: dagster.core.storage.compute_log_manager
   class: LocalComputeLogManager
   config:
-    base_dir: /workspaces/testing-dagster/dagster_home/storage
-
-# Default directory for IO manager
-default_resource_config:
-  io_manager:
-    config:
-      base_dir: /workspaces/testing-dagster/tmp/data
+    base_dir: 
+      env: DAGSTER_HOME
+      relative_path: /storage
