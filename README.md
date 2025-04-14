@@ -33,6 +33,10 @@ The primary goal is to identify meaningful store segments that can inform busine
   - [FAQ](#-faq)
   - [Project Ownership](#-project-ownership)
   - [License](#-license)
+  - [Environment Configuration](#environment-configuration)
+    - [Environment Variables](#environment-variables)
+    - [Configuration Files](#configuration-files)
+    - [Running with Environment Configuration](#running-with-environment-configuration)
 
 ## ✨ Features
 
@@ -205,3 +209,60 @@ A: Add a new reader configuration in the environment config file and create a co
 ## 📄 License
 
 Copyright © 2025 CVS Health. All rights reserved.
+
+## Environment Configuration
+
+The application uses a Hydra-inspired configuration system for flexible environment-based configuration.
+
+### Environment Variables
+
+The following environment variables can be set to override default paths:
+
+- `DATA_DIR`: Base directory for all data files (default: `/workspaces/testing-dagster/data`)
+- `INTERNAL_DATA_DIR`: Directory for internal data (defaults to `${paths.base_data_dir}/internal`)
+- `EXTERNAL_DATA_DIR`: Directory for external data (defaults to `${paths.base_data_dir}/external`)
+- `MERGING_DATA_DIR`: Directory for merged data (defaults to `${paths.base_data_dir}/merging`)
+- `DAGSTER_HOME`: Directory for Dagster configuration and storage
+
+### Configuration Files
+
+Configuration is managed through YAML files located in `src/clustering/dagster/resources/configs/`:
+
+- `dev.yml`: Development environment config
+- `staging.yml`: Staging environment config
+- `prod.yml`: Production environment config
+
+These files support Hydra-style variable substitution:
+
+```yaml
+# Environment variables with defaults
+paths:
+  base_data_dir: ${env:DATA_DIR,/default/path}
+  
+# Nested references
+internal_data_dir: ${paths.base_data_dir}/internal
+```
+
+### Running with Environment Configuration
+
+To run the application with the configured environment:
+
+1. Set up the environment:
+   ```bash
+   source setup_env.sh
+   ```
+
+2. Run Dagster:
+   ```bash
+   ./run_dagster.sh
+   ```
+
+### How the Configuration System Works
+
+The configuration system emulates Hydra's functionality:
+
+1. **Environment variable interpolation**: `${env:VAR,default}` syntax resolves to environment variables with fallback values
+2. **Nested references**: `${paths.base_data_dir}` syntax enables referencing other configuration values
+3. **Automatic resolution**: All variables are resolved before the configuration is used
+
+This approach allows for portable configurations across different environments without hardcoded paths.

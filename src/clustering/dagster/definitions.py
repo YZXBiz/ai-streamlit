@@ -7,6 +7,9 @@ from typing import Dict, Any
 import dagster as dg
 import yaml
 
+# Replace the environment resolver with our Hydra-style config loader
+from clustering.utils.hydra_config import load_config as hydra_load_config
+
 # -----------------------------------------------------------------------------
 # Asset imports
 # -----------------------------------------------------------------------------
@@ -257,13 +260,13 @@ def load_config(env: str = "dev") -> dict[str, Any]:
         env: Environment name (dev, staging, prod)
         
     Returns:
-        Dictionary containing configuration data
+        Dictionary containing configuration data with resolved environment variables
     """
     config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
     
     try:
-        with open(config_path) as f:
-            config_data = yaml.safe_load(f)
+        # Use the Hydra-style config loader to resolve environment variables
+        config_data = hydra_load_config(config_path)
             
         if config_data is None:
             print(f"WARNING: Config file {config_path} parsed as None, using empty config")

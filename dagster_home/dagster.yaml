@@ -6,9 +6,6 @@ storage:
       hostname: localhost
       db_name: dagster
       port: 5432
-      # Alternatively, use connection_string instead of individual parameters
-      # connection_string: 
-      #   env: DAGSTER_PG_CONNECTION_STRING
 
 run_launcher:
   module: dagster.core.launcher

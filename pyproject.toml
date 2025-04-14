@@ -28,45 +28,38 @@ dependencies = [
     "dagster-webserver>=1.10.4",
     "dagster-duckdb-polars>=0.21.0",
     "dagster-pandera>=0.26.9",
-
     # === Data Processing ===
     # Query engines
     "duckdb>=1.2.1",
     "polars>=0.20.0",
     "pyarrow<19.0.0",
     "sqlalchemy<2.0",
-
     # Data manipulation
     "pandas>=2.1.4",
     "numpy>=1.26.0,<2.0.0",    # Constrained for pandas compatibility
     "pandera[polars]>=0.21.0",
     "dask>=2025.2.0",
     "numba>=0.60.0",
-
     # === Machine Learning ===
     "scikit-learn>=1.0.0,<1.5.0", # Compatibility with pycaret==3.3.2
     "pycaret",
     "kaleido==0.2.1",
     "shap>=0.46.0",
-
     # === Visualization ===
     "matplotlib<3.8.0",
     "plotly>=5.24.1",
     "yellowbrick>=1.5",
-
     # === Cloud & Storage ===
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
     "snowflake-connector-python>=3.13.2",
     "dvc[azure]>=3.59.1",
-
     # === Utilities ===
     "pydantic>=2.10.3",
     "pydantic-settings>=2.6.1",
     "omegaconf>=2.3.0",
     "rich>=13.0.0",
     "loguru>=0.7.2",
-
     # === System & Environment ===
     "apache-airflow>=2.10.5",
     "psutil>=6.1.0",
@@ -75,7 +68,7 @@ dependencies = [
     "setuptools>=75.6.0",
     "openpyxl>=3.1.5",
     "fastexcel>=0.13.0",
-    "poethepoet",
+    "hydra-core>=1.3.2",
 ]
 
 # Entry points for command-line scripts
