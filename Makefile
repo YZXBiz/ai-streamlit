@@ -97,41 +97,6 @@ help: ## Display this help message
 
 ##@ Setup
 
-.PHONY: setup setup-env setup-tests
-setup: ## Initialize the project directory structure
-	@echo "==> Setting up project directory structure"
-	@mkdir -p $(DAGSTER_HOME_DIR)
-	@touch $(DAGSTER_HOME_DIR)/dagster.yaml
-	@echo "✓ Dagster home directory created at $(DAGSTER_HOME_DIR)"
-
-setup-env: setup ## Set up the environment with necessary directories
-	@echo "==> Setting up environment directories"
-	@mkdir -p $(DATA_DIR)
-	@mkdir -p $(INTERNAL_DATA_DIR)
-	@mkdir -p $(EXTERNAL_DATA_DIR)
-	@mkdir -p $(MERGING_DATA_DIR)
-	@mkdir -p $(LOGS_DIR)
-	@mkdir -p $(DAGSTER_HOME_DIR)/storage
-	@echo "==> Environment configuration:"
-	@echo "- DAGSTER_HOME: $(DAGSTER_HOME_DIR)"
-	@echo "- DATA_DIR: $(DATA_DIR)"
-	@echo "- INTERNAL_DATA_DIR: $(INTERNAL_DATA_DIR)"
-	@echo "- EXTERNAL_DATA_DIR: $(EXTERNAL_DATA_DIR)"
-	@echo "- MERGING_DATA_DIR: $(MERGING_DATA_DIR)"
-	@echo "- LOGS_DIR: $(LOGS_DIR)"
-	@echo "✓ Environment setup complete"
-
-setup-tests: ## Set up test directory structure
-	@echo "==> Creating test directory structure"
-	@mkdir -p $(TESTS_DIR)/unit
-	@mkdir -p $(TESTS_DIR)/integration
-	@echo "==> Creating test initialization files"
-	@touch $(TESTS_DIR)/__init__.py
-	@touch $(TESTS_DIR)/unit/__init__.py
-	@touch $(TESTS_DIR)/integration/__init__.py
-	@touch $(TESTS_DIR)/conftest.py
-	@echo "✓ Test directory structure created at $(TESTS_DIR)"
-
 .PHONY: print-env
 print-env: ## Display current environment variable values
 	@echo "==> Current environment configuration:"
@@ -181,9 +146,9 @@ docs-deps: ## Install documentation dependencies
 ##@ Development
 
 .PHONY: dev format lint type-check check-all version
-dev: setup-env ## Start Dagster development server
+dev: ## Start Dagster development server without creating directories
 	@echo "==> Starting Dagster development server"
-	@$(PYTHON) -m dagster dev -f $(PACKAGE_NAME).dagster.definitions
+	@$(PYTHON) -m dagster dev -m $(PACKAGE_NAME).dagster.definitions
 	@echo "✓ Dagster development server stopped"
 
 format: ## Format code with ruff formatter
@@ -235,7 +200,7 @@ test-integration: ## Run only integration tests
 	@$(PYTHON) --no-deps -m pytest $(TESTS_DIR)/integration -v
 	@echo "✓ Integration tests completed"
 
-dagster-test: setup-env ## Run Dagster-specific tests
+dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
 	@$(PYTHON) -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
 	@echo "✓ Dagster tests completed"
@@ -269,6 +234,11 @@ clean: ## Clean up all build artifacts and temporary files
 	@rm -rf $(DAGSTER_HOME_DIR)/.tmp_*
 	@echo "✓ Clean complete"
 
+clean-temp: ## Clean only temporary dagster files
+	@echo "==> Cleaning temporary Dagster files"
+	@find . -name ".tmp_dagster*" -type d -exec rm -rf {} +
+	@echo "✓ Temporary files cleaned"
+
 ################################################################################
 # DAGSTER COMMANDS
 ################################################################################
@@ -276,12 +246,12 @@ clean: ## Clean up all build artifacts and temporary files
 ##@ Dagster Commands
 
 .PHONY: dagster-ui dagster-job-%
-dagster-ui: setup-env ## Start the Dagster UI web interface
+dagster-ui: ## Start the Dagster UI web interface
 	@echo "==> Starting Dagster UI with $(DAGSTER_ENV) environment"
 	@$(PYTHON) -m $(PACKAGE_NAME).dagster.app --env $(DAGSTER_ENV)
 	@echo "✓ Dagster UI started. Access at http://localhost:3000"
 
-dagster-job-%: setup-env ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
+dagster-job-%: ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
 	@echo "==> Running Dagster job: $*"
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $*
 	@echo "✓ Job $* completed"
@@ -293,27 +263,27 @@ dagster-job-%: setup-env ## Run a specific Dagster job (usage: make dagster-job-
 ##@ Pipeline Workflows
 
 .PHONY: run-internal-% run-external-% run-merging run-full run-job full-pipeline
-run-internal-%: setup-env ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
+run-internal-%: ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
 	@echo "==> Running internal $* pipeline"
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j internal_$*_job
 	@echo "✓ Internal $* pipeline completed"
 
-run-external-%: setup-env ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-ml)
+run-external-%: ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-ml)
 	@echo "==> Running external $* pipeline"
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j external_$*_job
 	@echo "✓ External $* pipeline completed"
 
-run-merging: setup-env ## Run only the cluster merging job
+run-merging: ## Run only the cluster merging job
 	@echo "==> Running merging job"
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j merging_job
 	@echo "✓ Merging job completed"
 
-run-full: setup-env ## Run the complete pipeline (internal, external, and merging)
+run-full: ## Run the complete pipeline (internal, external, and merging)
 	@echo "==> Running full pipeline job"
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
 	@echo "✓ Full pipeline completed"
 
-run-job: setup-env ## Run a specific job with environment (usage: make run-job JOB=job_name ENV=prod)
+run-job: ## Run a specific job with environment (usage: make run-job JOB=job_name ENV=prod)
 	@echo "==> Running job $(JOB) in $(ENV) environment"
 	@if [ -z "$(JOB)" ]; then \
 		echo "Error: JOB parameter is required. Usage: make run-job JOB=job_name ENV=env_name"; \
@@ -322,7 +292,7 @@ run-job: setup-env ## Run a specific job with environment (usage: make run-job J
 	@$(PYTHON) -m $(PACKAGE_NAME) run $(JOB) --env $(ENV)
 	@echo "✓ Job $(JOB) completed"
 
-full-pipeline: setup-env ## Run the full pipeline with specified environment (usage: make full-pipeline ENV=prod)
+full-pipeline: ## Run the full pipeline with specified environment (usage: make full-pipeline ENV=prod)
 	@echo "==> Running full pipeline in $(ENV) environment"
 	@$(PYTHON) -m $(PACKAGE_NAME) run full_pipeline_job --env $(ENV)
 	@echo "✓ Full pipeline completed"
@@ -334,7 +304,7 @@ full-pipeline: setup-env ## Run the full pipeline with specified environment (us
 ##@ Memory Management
 
 .PHONY: run-memory-optimized run-visualization
-run-memory-optimized: setup-env ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
+run-memory-optimized: ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
 	@echo "==> Running job with memory optimization"
 	@if [ -z "$(JOB)" ]; then \
 		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
@@ -344,7 +314,7 @@ run-memory-optimized: setup-env ## Run a job with memory optimization settings (
 	 $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j $(JOB)
 	@echo "✓ Memory-optimized job $(JOB) completed"
 
-run-visualization: setup-env ## Run visualization job with memory optimization
+run-visualization: ## Run visualization job with memory optimization
 	@echo "==> Running visualization job with memory optimization"
 	@DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
 	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \

@@ -2,6 +2,7 @@
 
 from clustering.infra.app_settings import CONFIG, AppConfig, JobSettings, SecretSettings
 from clustering.infra.logging import LoggerService
+from clustering.infra.hydra_config import OmegaConfLoader, load_config
 
 __all__ = [
     # Config
@@ -11,4 +12,7 @@ __all__ = [
     "SecretSettings",
     # Logging
     "LoggerService",
+    # Hydra Config
+    "OmegaConfLoader",
+    "load_config",
 ]

@@ -7,8 +7,8 @@ from typing import Dict, Any
 import dagster as dg
 import yaml
 
-# Replace the environment resolver with our Hydra-style config loader
-from clustering.utils.hydra_config import load_config as hydra_load_config
+# Import Hydra-style config loader from the new location in infra
+from clustering.infra.hydra_config import load_config as hydra_load_config
 
 # -----------------------------------------------------------------------------
 # Asset imports
@@ -87,30 +87,99 @@ from clustering.dagster.assets import (
 from clustering.dagster.resources import data_io, logger_service
 
 # -----------------------------------------------------------------------------
+# Asset selection lists
+# -----------------------------------------------------------------------------
+
+# Group assets by categories to avoid redundancy in job definitions
+internal_preprocessing_assets = [
+    internal_raw_sales_data,
+    internal_product_category_mapping,
+    internal_sales_with_categories,
+    internal_normalized_sales_data,
+    internal_sales_by_category,
+    internal_output_sales_table,
+]
+
+external_preprocessing_assets = [
+    external_features_data,
+    preprocessed_external_data,
+]
+
+internal_feature_engineering_assets = [
+    internal_fe_raw_data,
+    internal_filtered_features,
+    internal_imputed_features,
+    internal_normalized_data,
+    internal_outlier_removed_features,
+    internal_dimensionality_reduced_features,
+    internal_feature_metadata,
+]
+
+internal_model_training_assets = [
+    internal_optimal_cluster_counts,
+    internal_train_clustering_models,
+    internal_save_clustering_models,
+]
+
+internal_cluster_assignment_assets = [
+    internal_assign_clusters,
+    internal_save_cluster_assignments,
+]
+
+internal_cluster_analysis_assets = [
+    internal_calculate_cluster_metrics,
+    internal_generate_cluster_visualizations,
+]
+
+external_feature_engineering_assets = [
+    external_fe_raw_data,
+    external_filtered_features,
+    external_imputed_features,
+    external_normalized_data,
+    external_outlier_removed_features,
+    external_dimensionality_reduced_features,
+    external_feature_metadata,
+]
+
+external_model_training_assets = [
+    external_optimal_cluster_counts,
+    external_train_clustering_models,
+    external_save_clustering_models,
+]
+
+external_cluster_assignment_assets = [
+    external_assign_clusters,
+    external_save_cluster_assignments,
+]
+
+external_cluster_analysis_assets = [
+    external_calculate_cluster_metrics,
+    external_generate_cluster_visualizations,
+]
+
+merging_assets_list = [
+    merged_clusters,
+    merged_cluster_assignments,
+    optimized_merged_clusters,
+    cluster_reassignment,
+    save_merged_cluster_assignments,
+]
+
+# -----------------------------------------------------------------------------
 # Job definitions
 # -----------------------------------------------------------------------------
 
 # 1. Internal preprocessing job
 internal_preprocessing_job = dg.define_asset_job(
     name="internal_preprocessing_job",
-    selection=[
-        internal_raw_sales_data,
-        internal_product_category_mapping,
-        internal_sales_with_categories,
-        internal_normalized_sales_data,
-        internal_sales_by_category,
-        internal_output_sales_table,
-    ],
+    selection=internal_preprocessing_assets,
     tags={"kind": "internal_preprocessing"},
 )
 
 # 2. External preprocessing job
 external_preprocessing_job = dg.define_asset_job(
     name="external_preprocessing_job",
-    selection=[
-        external_features_data,
-        preprocessed_external_data,
-    ],
+    selection=external_preprocessing_assets,
     tags={"kind": "external_preprocessing"},
 )
 
@@ -119,23 +188,13 @@ internal_ml_job = dg.define_asset_job(
     name="internal_ml_job",
     selection=[
         # Feature engineering assets
-        internal_fe_raw_data,
-        internal_filtered_features,
-        internal_imputed_features,
-        internal_normalized_data,
-        internal_outlier_removed_features,
-        internal_dimensionality_reduced_features,
-        internal_feature_metadata,
+        *internal_feature_engineering_assets,
         # Model training assets
-        internal_optimal_cluster_counts,
-        internal_train_clustering_models,
-        internal_save_clustering_models,
+        *internal_model_training_assets,
         # Cluster assignment
-        internal_assign_clusters,
-        internal_save_cluster_assignments,
+        *internal_cluster_assignment_assets,
         # Cluster analysis
-        internal_calculate_cluster_metrics,
-        internal_generate_cluster_visualizations,
+        *internal_cluster_analysis_assets,
     ],
     tags={"kind": "internal_ml"},
 )
@@ -145,23 +204,13 @@ external_ml_job = dg.define_asset_job(
     name="external_ml_job",
     selection=[
         # Feature engineering assets
-        external_fe_raw_data,
-        external_filtered_features,
-        external_imputed_features,
-        external_normalized_data,
-        external_outlier_removed_features,
-        external_dimensionality_reduced_features,
-        external_feature_metadata,
+        *external_feature_engineering_assets,
         # Model training assets
-        external_optimal_cluster_counts,
-        external_train_clustering_models,
-        external_save_clustering_models,
+        *external_model_training_assets,
         # Cluster assignment
-        external_assign_clusters,
-        external_save_cluster_assignments,
+        *external_cluster_assignment_assets,
         # Cluster analysis
-        external_calculate_cluster_metrics,
-        external_generate_cluster_visualizations,
+        *external_cluster_analysis_assets,
     ],
     tags={"kind": "external_ml"},
 )
@@ -169,14 +218,7 @@ external_ml_job = dg.define_asset_job(
 # 5. Merging job
 merging_job = dg.define_asset_job(
     name="merging_job",
-    selection=[
-        # Merging assets
-        merged_clusters,
-        merged_cluster_assignments,
-        optimized_merged_clusters,
-        cluster_reassignment,
-        save_merged_cluster_assignments,
-    ],
+    selection=merging_assets_list,
     tags={"kind": "merging"},
 )
 
@@ -185,57 +227,27 @@ full_pipeline_job = dg.define_asset_job(
     name="full_pipeline_job",
     selection=[
         # Internal preprocessing
-        internal_raw_sales_data,
-        internal_product_category_mapping,
-        internal_sales_with_categories,
-        internal_normalized_sales_data,
-        internal_sales_by_category,
-        internal_output_sales_table,
+        *internal_preprocessing_assets,
         # Internal feature engineering
-        internal_fe_raw_data,
-        internal_filtered_features,
-        internal_imputed_features,
-        internal_normalized_data,
-        internal_outlier_removed_features,
-        internal_dimensionality_reduced_features,
-        internal_feature_metadata,
+        *internal_feature_engineering_assets,
         # Internal model training
-        internal_optimal_cluster_counts,
-        internal_train_clustering_models,
-        internal_save_clustering_models,
+        *internal_model_training_assets,
         # Internal cluster assignment
-        internal_assign_clusters,
-        internal_save_cluster_assignments,
+        *internal_cluster_assignment_assets,
         # Internal cluster analysis
-        internal_calculate_cluster_metrics,
-        internal_generate_cluster_visualizations,
+        *internal_cluster_analysis_assets,
         # External preprocessing
-        external_features_data,
-        preprocessed_external_data,
+        *external_preprocessing_assets,
         # External feature engineering
-        external_fe_raw_data,
-        external_filtered_features,
-        external_imputed_features,
-        external_normalized_data,
-        external_outlier_removed_features,
-        external_dimensionality_reduced_features,
-        external_feature_metadata,
+        *external_feature_engineering_assets,
         # External model training
-        external_optimal_cluster_counts,
-        external_train_clustering_models,
-        external_save_clustering_models,
+        *external_model_training_assets,
         # External cluster assignment
-        external_assign_clusters,
-        external_save_cluster_assignments,
+        *external_cluster_assignment_assets,
         # External cluster analysis
-        external_calculate_cluster_metrics,
-        external_generate_cluster_visualizations,
+        *external_cluster_analysis_assets,
         # Merging
-        merged_clusters,
-        merged_cluster_assignments,
-        optimized_merged_clusters,
-        cluster_reassignment,
-        save_merged_cluster_assignments,
+        *merging_assets_list,
     ],
     tags={"kind": "complete_pipeline"},
     config={
@@ -396,68 +408,17 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
 
     # Collect all assets in a single list
     assets = [
-        # Preprocessing assets - Internal
-        internal_raw_sales_data,
-        internal_product_category_mapping,
-        internal_sales_with_categories,
-        internal_normalized_sales_data,
-        internal_sales_by_category,
-        internal_output_sales_table,
-        
-        # Preprocessing assets - External
-        external_features_data,
-        preprocessed_external_data,
-        
-        # Feature engineering assets - Internal
-        internal_fe_raw_data,
-        internal_filtered_features,
-        internal_imputed_features,
-        internal_normalized_data,
-        internal_outlier_removed_features,
-        internal_dimensionality_reduced_features,
-        internal_feature_metadata,
-        
-        # Feature engineering assets - External
-        external_fe_raw_data,
-        external_filtered_features,
-        external_imputed_features,
-        external_normalized_data,
-        external_outlier_removed_features,
-        external_dimensionality_reduced_features,
-        external_feature_metadata,
-        
-        # Model training - Internal
-        internal_optimal_cluster_counts,
-        internal_train_clustering_models,
-        internal_save_clustering_models,
-        
-        # Model training - External
-        external_optimal_cluster_counts,
-        external_train_clustering_models,
-        external_save_clustering_models,
-        
-        # Cluster assignment - Internal
-        internal_assign_clusters,
-        internal_save_cluster_assignments,
-        
-        # Cluster assignment - External
-        external_assign_clusters,
-        external_save_cluster_assignments,
-        
-        # Cluster analysis - Internal
-        internal_calculate_cluster_metrics,
-        internal_generate_cluster_visualizations,
-        
-        # Cluster analysis - External
-        external_calculate_cluster_metrics,
-        external_generate_cluster_visualizations,
-        
-        # Merging assets
-        merged_clusters,
-        merged_cluster_assignments,
-        optimized_merged_clusters,
-        cluster_reassignment,
-        save_merged_cluster_assignments,
+        *internal_preprocessing_assets,
+        *external_preprocessing_assets,
+        *internal_feature_engineering_assets,
+        *external_feature_engineering_assets,
+        *internal_model_training_assets,
+        *external_model_training_assets,
+        *internal_cluster_assignment_assets,
+        *external_cluster_assignment_assets,
+        *internal_cluster_analysis_assets,
+        *external_cluster_analysis_assets,
+        *merging_assets_list,
     ]
 
     # Create and return definitions with all assets, resources, and jobs

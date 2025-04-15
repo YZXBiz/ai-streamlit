@@ -9,6 +9,10 @@ build-backend = "hatchling.build"
 [tool.hatch.metadata]
 allow-direct-references = true
 
+# =========================================
+# Project Core Metadata
+# =========================================
+
 [project]
 name = "clustering"
 version = "0.1.0"
@@ -19,31 +23,29 @@ license = { text = "MIT" }
 authors = [{ name = "Jackson Yang", email = "Jackson.Yang@cvshealth.com" }]
 
 # =========================================
-# Dependencies (by category)
+# Dependencies (by category, alphabetized)
 # =========================================
 
 dependencies = [
     # === Core Platform ===
     "dagster>=1.6.0",
-    "dagster-webserver>=1.10.4",
     "dagster-duckdb-polars>=0.21.0",
     "dagster-pandera>=0.26.9",
+    "dagster-webserver>=1.10.4",
     # === Data Processing ===
-    # Query engines
+    "dask>=2025.2.0",
     "duckdb>=1.2.1",
+    "numba>=0.60.0",
+    "numpy>=1.26.0,<2.0.0",    # Constrained for pandas compatibility
+    "pandera[polars]>=0.21.0",
+    "pandas>=2.1.4",
     "polars>=0.20.0",
     "pyarrow<19.0.0",
     "sqlalchemy<2.0",
-    # Data manipulation
-    "pandas>=2.1.4",
-    "numpy>=1.26.0,<2.0.0",    # Constrained for pandas compatibility
-    "pandera[polars]>=0.21.0",
-    "dask>=2025.2.0",
-    "numba>=0.60.0",
     # === Machine Learning ===
-    "scikit-learn>=1.0.0,<1.5.0", # Compatibility with pycaret==3.3.2
-    "pycaret",
     "kaleido==0.2.1",
+    "pycaret",
+    "scikit-learn>=1.0.0,<1.5.0", # Compatibility with pycaret==3.3.2
     "shap>=0.46.0",
     # === Visualization ===
     "matplotlib<3.8.0",
@@ -52,26 +54,30 @@ dependencies = [
     # === Cloud & Storage ===
     "azure-identity>=1.21.0",
     "azure-storage-blob>=12.25.0",
-    "snowflake-connector-python>=3.13.2",
     "dvc[azure]>=3.59.1",
+    "snowflake-connector-python>=3.13.2",
     # === Utilities ===
+    "loguru>=0.7.2",
+    "omegaconf>=2.3.0",
     "pydantic>=2.10.3",
     "pydantic-settings>=2.6.1",
-    "omegaconf>=2.3.0",
     "rich>=13.0.0",
-    "loguru>=0.7.2",
     # === System & Environment ===
     "apache-airflow>=2.10.5",
-    "psutil>=6.1.0",
-    "plyer>=2.1.0",
-    "ipykernel>=6.29.5",
-    "setuptools>=75.6.0",
-    "openpyxl>=3.1.5",
+    "dagster-postgres>=0.26.10",
     "fastexcel>=0.13.0",
     "hydra-core>=1.3.2",
+    "ipykernel>=6.29.5",
+    "openpyxl>=3.1.5",
+    "plyer>=2.1.0",
+    "psutil>=6.1.0",
+    "setuptools>=75.6.0",
 ]
 
-# Entry points for command-line scripts
+# =========================================
+# Entry Points
+# =========================================
+
 [project.scripts]
 clustering = "clustering.cli.commands:main"
 
@@ -80,30 +86,27 @@ clustering = "clustering.cli.commands:main"
 # =========================================
 
 [project.optional-dependencies]
-# Development dependencies
 dev = [
+    # Linting & formatting
+    "mypy",
+    "pre-commit",
+    "ruff",
+    # Package management
+    "uv",
     # Testing
     "pytest",
     "pytest-cov",
-
-    # Linting & formatting
-    "ruff",
-    "mypy",
-    "pre-commit",
-
-    # Package management
-    "uv",
-
     # Documentation
     "sphinx",
-    "sphinx-rtd-theme",
     "sphinx-autodoc-typehints",
+    "sphinx-rtd-theme",
 ]
+docs = ["sphinx", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
 
-# Documentation-only dependencies
-docs = ["sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints"]
+# =========================================
+# Dependency Groups (for UV)
+# =========================================
 
-# Define dependency groups (for UV)
 [dependency-groups]
 docs = [
     "sphinx>=8.1.3",
@@ -112,7 +115,10 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
 ]
 
-# Special source configurations
+# =========================================
+# Special Source Configurations
+# =========================================
+
 [tool.uv.sources]
 # kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
 
@@ -150,16 +156,13 @@ known-first-party = ["clustering"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-# Ignores for specific file patterns
 [tool.ruff.lint.per-file-ignores]
-# Test files
 "tests/**/*.py" = [
     "D100", # Missing docstring in public module
     "D101", # Missing docstring in public class
     "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
 ]
-# Dagster files
 "src/clustering/dagster/**/*.py" = [
     "D104", # Missing docstring in public package
     "D105", # Missing docstring in magic method
@@ -167,14 +170,12 @@ convention = "google"
     "B007", # Loop control variable not used within loop body
     "B008", # Do not perform function call in argument defaults
 ]
-# IO modules
 "src/clustering/io/readers/**/*.py" = [
     "B904", # Use raise from for exception chaining
 ]
 "src/clustering/io/writers/**/*.py" = [
     "B904", # Use raise from for exception chaining
 ]
-# Specific files with line length issues
 "src/clustering/core/sql_templates.py" = ["E501"]
 "src/clustering/dagster/assets/clustering/internal.py" = ["E501"]
 "src/clustering/dagster/definitions.py" = ["E501"]

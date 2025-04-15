@@ -1,0 +1,8 @@
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - LOGS_CAPTURED - Started capturing logs in process (pid: 82055).
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - internal_raw_sales_data - STEP_START - Started execution of step "internal_raw_sales_data".
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - internal_raw_sales_data - Reading need state sales data
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - internal_raw_sales_data - STEP_OUTPUT - Yielded output "result" of type "SalesSchema". (Type check passed).
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - internal_raw_sales_data - Writing file at: storage/internal_raw_sales_data using PickledObjectFilesystemIOManager...
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - internal_raw_sales_data - ASSET_MATERIALIZATION - Materialized value internal_raw_sales_data.
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - internal_raw_sales_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-15 03:53:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 82055 - internal_raw_sales_data - STEP_SUCCESS - Finished execution of step "internal_raw_sales_data" in 160ms.

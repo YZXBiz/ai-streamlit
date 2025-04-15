@@ -1,0 +1,18 @@
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - LOGS_CAPTURED - Started capturing logs in process (pid: 99130).
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - merged_clusters - STEP_START - Started execution of step "merged_clusters".
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - merged_clusters - Loading internal and external cluster assignments
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - merged_clusters - Joining internal and external clusters
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - merged_clusters - Using cluster columns: internal='Cluster', external='Cluster'
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - merged_clusters - Created shape: (1, 1)
+┌────────────────┐
+│ merged_cluster │
+│ ---            │
+│ u32            │
+╞════════════════╡
+│ 3              │
+└────────────────┘ merged clusters
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - merged_clusters - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - merged_clusters - Writing file at: storage/merged_clusters using PickledObjectFilesystemIOManager...
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - merged_clusters - ASSET_MATERIALIZATION - Materialized value merged_clusters.
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - merged_clusters - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-15 03:57:32 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 99130 - merged_clusters - STEP_SUCCESS - Finished execution of step "merged_clusters" in 225ms.

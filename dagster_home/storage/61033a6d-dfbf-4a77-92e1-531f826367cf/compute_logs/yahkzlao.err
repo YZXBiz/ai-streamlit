@@ -1,0 +1,11 @@
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - LOGS_CAPTURED - Started capturing logs in process (pid: 81221).
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - external_features_data - STEP_START - Started execution of step "external_features_data".
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - external_features_data - Initializing external data readers
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - external_features_data - Reading data from all external sources
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - external_features_data - Reading from: CSVReader(path=/workspaces/testing-dagster/data/external/placerai.csv)
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - external_features_data - Only one external data source. No merging needed.
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - external_features_data - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - external_features_data - Writing file at: storage/external_features_data using PickledObjectFilesystemIOManager...
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - external_features_data - ASSET_MATERIALIZATION - Materialized value external_features_data.
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - external_features_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-15 03:53:13 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 81221 - external_features_data - STEP_SUCCESS - Finished execution of step "external_features_data" in 193ms.

@@ -1,27 +1,4 @@
 storage:
-  postgres:
-    postgres_db:
-      username: postgres
-      password: postgres
-      hostname: localhost
-      db_name: dagster
-      port: 5432
-
-run_launcher:
-  module: dagster.core.launcher
-  class: DefaultRunLauncher
-
-# Global run coordinator settings to limit concurrent runs
-run_coordinator:
-  module: dagster.core.run_coordinator
-  class: DefaultRunCoordinator
-  config:
-    max_concurrent_runs: 4
-
-compute_logs:
-  module: dagster.core.storage.compute_log_manager
-  class: LocalComputeLogManager
-  config:
-    base_dir: 
+  sqlite:
+    base_dir:
       env: DAGSTER_HOME
-      relative_path: /storage

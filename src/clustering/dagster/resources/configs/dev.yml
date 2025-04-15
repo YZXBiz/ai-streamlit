@@ -8,9 +8,9 @@ logger:
 # Base paths configuration - can be overridden by environment variables
 paths:
   base_data_dir: ${env:DATA_DIR,/workspaces/testing-dagster/data}
-  internal_data_dir: ${env:INTERNAL_DATA_DIR,${paths.base_data_dir}/internal}
-  external_data_dir: ${env:EXTERNAL_DATA_DIR,${paths.base_data_dir}/external}
-  merging_data_dir: ${env:MERGING_DATA_DIR,${paths.base_data_dir}/merging}
+  internal_data_dir: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}
+  external_data_dir: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}
+  merging_data_dir: ${env:MERGING_DATA_DIR,/workspaces/testing-dagster/data/merging}
 
 # Job configuration parameters
 job_params:
@@ -58,36 +58,36 @@ readers:
   internal_ns_map:
     kind: "CSVReader"
     config:
-      path: ${paths.internal_data_dir}/ns_map.csv
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_map.csv
   internal_ns_sales:
     kind: "CSVReader"
     config:
-      path: ${paths.internal_data_dir}/ns_sales.csv
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_sales.csv
   output_sales:
     kind: "PickleReader"
     config:
-      path: ${paths.internal_data_dir}/sales_by_category.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
   
   # External data sources
   external_placerai:
     kind: "CSVReader"
     config:
-      path: ${paths.external_data_dir}/placerai.csv
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/placerai.csv
   external_data_source:
     kind: "PickleReader"
     config:
-      path: ${paths.external_data_dir}/processed_external_data.pkl
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/processed_external_data.pkl
 
 writers:
   # Internal data writers
   internal_sales_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.internal_data_dir}/sales_by_category.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
   internal_sales_percent_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.internal_data_dir}/sales_by_category_percent.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category_percent.pkl
   internal_clusters_output:
     kind: "SnowflakeWriter"
     config:
@@ -97,29 +97,29 @@ writers:
   feature_engineering_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.internal_data_dir}/engineered_features.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/engineered_features.pkl
   model_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.internal_data_dir}/clustering_models.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/clustering_models.pkl
   cluster_assignments:
     kind: "PickleWriter"
     config:
-      path: ${paths.internal_data_dir}/cluster_assignments.pkl
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/cluster_assignments.pkl
   
   # External data writers
   external_data_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.external_data_dir}/processed_external_data.pkl
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/processed_external_data.pkl
   external_model_output:
     kind: "PickleWriter"
     config:
-      path: ${paths.external_data_dir}/clustering_models.pkl
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/clustering_models.pkl
   external_cluster_assignments:
     kind: "PickleWriter"
     config:
-      path: ${paths.external_data_dir}/cluster_assignments.pkl
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/cluster_assignments.pkl
   merged_clusters_output:
     kind: "SnowflakeWriter"
     config:
@@ -129,4 +129,4 @@ writers:
   merged_cluster_assignments:
     kind: "PickleWriter"
     config:
-      path: ${paths.merging_data_dir}/merged_cluster_assignments.pkl
+      path: ${env:MERGING_DATA_DIR,/workspaces/testing-dagster/data/merging}/merged_cluster_assignments.pkl
