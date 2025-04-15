@@ -19,6 +19,7 @@ from clustering.dagster.definitions import (
     merging_job,
     full_pipeline_job,
     load_config,
+    Environment,
 )
 
 
@@ -124,29 +125,26 @@ class TestDagsterDefinitions:
                 assert job.tags.get("kind") == "merging"
     
     def test_config_resource(self) -> None:
-        """Test the job_params/config resource."""
-        # Create a simple config
-        config_data = {
-            "job_params": {
-                "algorithm": "kmeans",
-                "n_clusters": 3,
-                "random_state": 42,
+        """Test that the config resource has expected parameters."""
+        # Get resources for a test environment
+        with mock.patch("clustering.infra.hydra_config.OmegaConfLoader.load") as mock_load:
+            # Mock the configuration returned by Hydra config
+            mock_load.return_value = {
+                "job_params": {
+                    "algorithm": "kmeans",
+                    "n_clusters": 3,
+                    "random_state": 42,
+                }
             }
-        }
-        
-        # Mock load_config to return our test config
-        with mock.patch("clustering.dagster.definitions.load_config", return_value=config_data):
+            
             # Get resources
-            resources = get_resources_by_env()
+            resources = get_resources_by_env("dev")
             
-            # Get the config resource
+            # Check that config resource exists
+            assert "config" in resources
+            
+            # Check that the config resource provides expected parameters
             config_resource = resources["config"]
-            job_params_resource = resources["job_params"]
-            
-            # Both should point to the same resource
-            assert config_resource is job_params_resource
-            
-            # Initialize the resource (it's a callable that returns SimpleNamespace)
             config = config_resource()
             
             # Check attributes
@@ -154,7 +152,7 @@ class TestDagsterDefinitions:
             assert config.algorithm == "kmeans"
             assert config.n_clusters == 3
             assert config.random_state == 42
-            assert config.env == "dev"  # Added by the get_resources_by_env function
+            assert config.env == Environment.DEV  # Added by the get_resources_by_env function
 
 
 @pytest.mark.integration

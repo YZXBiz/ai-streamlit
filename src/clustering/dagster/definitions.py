@@ -7,6 +7,8 @@ from typing import Any
 import dagster as dg
 import yaml
 
+from clustering.infra import Environment
+
 # -----------------------------------------------------------------------------
 # Asset imports
 # -----------------------------------------------------------------------------
@@ -300,7 +302,7 @@ def _get_default_config(env: str) -> dict[str, Any]:
 # -----------------------------------------------------------------------------
 
 
-def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
+def get_resources_by_env(env: str | Environment = Environment.DEV) -> dict[str, dg.ResourceDefinition]:
     """Get resource definitions based on environment.
 
     Args:
@@ -309,8 +311,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     Returns:
         Dictionary of resource definitions
     """
+    # Convert Environment enum to string if needed
+    env_str = env.value if isinstance(env, Environment) else env
+    
     # Load configuration
-    config_data = load_config(env)
+    config_data = load_config(env_str)
 
     # Extract configuration sections
     job_params = config_data.get("job_params", {})
@@ -320,7 +325,12 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
 
     # Create config object
     params = SimpleNamespace(**job_params)
-    params.env = env  # Add environment name
+    # Set the env as Environment enum if possible
+    try:
+        params.env = Environment(env_str)
+    except ValueError:
+        # Fallback to string if not a valid enum value
+        params.env = env_str
 
     # Create the params resource
     params_resource = dg.resource(lambda: params)()
@@ -337,7 +347,7 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         # Logger
         "logger": logger_service.configured(
             {
-                "sink": logger_config.get("sink", f"logs/dagster_{env}.log"),
+                "sink": logger_config.get("sink", f"logs/dagster_{env_str}.log"),
                 "level": logger_config.get("level", "INFO"),
             }
         ),
@@ -395,7 +405,7 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
 # -----------------------------------------------------------------------------
 
 
-def create_definitions(env: str = "dev") -> dg.Definitions:
+def create_definitions(env: str | Environment = Environment.DEV) -> dg.Definitions:
     """Create Dagster definitions for the specified environment.
 
     Args:
@@ -442,7 +452,7 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
 # -----------------------------------------------------------------------------
 
 # Create default definitions for dev environment
-defs = create_definitions(env="dev")
+defs = create_definitions(env=Environment.DEV)
 
 
 def get_definitions():

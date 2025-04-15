@@ -14,7 +14,7 @@ from dagster import ExecuteInProcessResult
 from dagster._core.instance import DagsterInstance
 
 from clustering.dagster import create_definitions
-from clustering.infra import CONFIG
+from clustering.infra import CONFIG, Environment
 
 # Add dotenv import
 try:
@@ -30,7 +30,7 @@ except ImportError:
         return False
 
 
-def load_env_file(env: str = "dev") -> bool:
+def load_env_file(env: str | Environment = Environment.DEV) -> bool:
     """Load environment variables from .env file.
 
     Args:
@@ -39,9 +39,12 @@ def load_env_file(env: str = "dev") -> bool:
     Returns:
         Whether the .env file was loaded successfully
     """
+    # Convert Environment enum to string if needed
+    env_str = env.value if isinstance(env, Environment) else env
+    
     # First try environment-specific .env file
     root_dir = Path(__file__).parent.parent.parent.parent  # Get to project root
-    env_file = root_dir / f".env.{env}"
+    env_file = root_dir / f".env.{env_str}"
     if env_file.exists():
         click.secho(f"Loading environment variables from {env_file}", fg="green")
         return load_dotenv(dotenv_path=env_file)
@@ -58,7 +61,7 @@ def load_env_file(env: str = "dev") -> bool:
 
 def run_job(
     job_name: str,
-    env: str = "dev",
+    env: str | Environment = Environment.DEV,
     tags: dict[str, str] | None = None,
     raise_on_error: bool = False,
 ) -> ExecuteInProcessResult:
@@ -76,11 +79,14 @@ def run_job(
     Raises:
         ValueError: If the job is not found
     """
+    # Convert Environment enum to string if needed
+    env_str = env.value if isinstance(env, Environment) else env
+    
     # Create definitions for the specified environment
     try:
-        definitions = create_definitions(env)
+        definitions = create_definitions(env_str)
     except Exception as e:
-        raise ValueError(f"Failed to create definitions for environment '{env}': {e}") from e
+        raise ValueError(f"Failed to create definitions for environment '{env_str}': {e}") from e
 
     # Get the job
     job = definitions.get_job_def(job_name)
@@ -89,7 +95,7 @@ def run_job(
         raise ValueError(f"Job '{job_name}' not found. Available jobs: {', '.join(available_jobs)}")
 
     # Set up tags
-    all_tags = {"env": env}
+    all_tags = {"env": env_str}
     if tags:
         all_tags.update(tags)
 
@@ -143,8 +149,8 @@ def main():
 @click.argument("job_name", type=str)
 @click.option(
     "--env",
-    type=click.Choice(["dev", "staging", "prod"]),
-    default=CONFIG.env,
+    type=click.Choice([e.value for e in Environment]),
+    default=CONFIG.env.value,
     help="Environment to use (dev, staging, prod)",
 )
 @click.option("--tags", type=str, multiple=True, help="Tags in format key=value to add to the run")
@@ -210,8 +216,8 @@ def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool):
 @click.option("--port", type=int, default=3000, help="Port to bind to")
 @click.option(
     "--env",
-    type=click.Choice(["dev", "staging", "prod"]),
-    default=CONFIG.env,
+    type=click.Choice([e.value for e in Environment]),
+    default=CONFIG.env.value,
     help="Environment to use (dev, staging, prod)",
 )
 def ui(host: str, port: int, env: str):
@@ -275,7 +281,7 @@ def list_jobs():
 
     try:
         # Create definitions for the current environment
-        definitions = create_definitions(CONFIG.env)
+        definitions = create_definitions(CONFIG.env.value)
 
         # Get all job definitions
         jobs = [job_def.name for job_def in definitions.get_all_job_defs()]
