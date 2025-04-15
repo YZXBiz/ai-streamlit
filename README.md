@@ -102,13 +102,13 @@ To install this project as a Python package:
 
 ```bash
 # Install specific version (recommended)
-uv pip install clustering-pipeline==1.0.0
+uv add clustering-pipeline==1.0.0
 
 # Install from the local directory
-uv pip install -e .
+uv add -e .
 
 # Or install directly from GitHub
-uv pip install git+https://github.com/yourusername/testing-dagster.git@v1.0.0
+uv add git+https://github.com/yourusername/testing-dagster.git@v1.0.0
 ```
 
 ### Uninstallation
@@ -259,7 +259,7 @@ Verify package integrity during installation:
 
 ```bash
 # Download and verify package signature
-uv pip install clustering-pipeline --require-hashes
+uv add clustering-pipeline --require-hashes
 
 # View package metadata
 uv pip show clustering-pipeline
