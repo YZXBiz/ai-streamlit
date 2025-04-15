@@ -6,7 +6,9 @@ clustering pipeline. It allows users to run jobs, manage sensors, and access the
 
 import os
 import sys
+import traceback
 from pathlib import Path
+from typing import NoReturn, Optional, cast
 
 import click
 import dagster as dg
@@ -15,6 +17,7 @@ from dagster._core.instance import DagsterInstance
 
 from clustering.dagster import create_definitions
 from clustering.infra import CONFIG, Environment
+from clustering.utils import format_error
 
 # Add dotenv import
 try:
@@ -78,6 +81,7 @@ def run_job(
 
     Raises:
         ValueError: If the job is not found
+        Exception: Other errors that might occur during execution
     """
     # Convert Environment enum to string if needed
     env_str = env.value if isinstance(env, Environment) else env
@@ -119,7 +123,11 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
         tag_strings: List of strings in format key=value
 
     Returns:
-        Dictionary of tags
+        Dictionary of tags with keys and values as strings
+        
+    Examples:
+        >>> parse_tags(["env=prod", "version=1.0"])
+        {'env': 'prod', 'version': '1.0'}
     """
     tags = {}
     for tag in tag_strings:
@@ -132,6 +140,34 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
                 fg="yellow",
             )
     return tags
+
+
+def exit_with_error(message: str, exit_code: int = 1) -> NoReturn:
+    """Exit the program with an error message.
+    
+    Args:
+        message: Error message to display
+        exit_code: Exit code to use (default: 1)
+    """
+    click.secho(f"Error: {message}", fg="red")
+    sys.exit(exit_code)
+
+
+def get_available_jobs(env: str | Environment = Environment.DEV) -> list[str]:
+    """Get list of available jobs in the specified environment.
+    
+    Args:
+        env: Environment to use
+        
+    Returns:
+        List of job names
+        
+    Raises:
+        Exception: If jobs cannot be retrieved
+    """
+    env_str = env.value if isinstance(env, Environment) else env
+    definitions = create_definitions(env_str)
+    return [job_def.name for job_def in definitions.get_all_job_defs()]
 
 
 @click.group()
@@ -155,7 +191,8 @@ def main():
 )
 @click.option("--tags", type=str, multiple=True, help="Tags in format key=value to add to the run")
 @click.option("--verbose", "-v", is_flag=True, help="Show verbose output")
-def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool):
+@click.option("--debug", "-d", is_flag=True, help="Show debug information on failure")
+def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool, debug: bool):
     """Run a Dagster job.
 
     JOB_NAME: Name of the job to run. Options include:
@@ -188,26 +225,38 @@ def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool):
 
             if verbose:
                 click.secho("\nStep details:", fg="blue")
+                success_count = 0
                 for step_event in result.all_node_events:
                     if step_event.is_successful_output:
+                        success_count += 1
                         click.secho(f"  - {step_event.step_key}: SUCCESS", fg="green")
+                click.secho(f"\nCompleted {success_count} steps successfully", fg="green")
 
             sys.exit(0)
         else:
             click.secho(f"❌ Job '{job_name}' failed:", fg="red")
+            failure_count = 0
             for step_failure in result.all_node_events:
                 if step_failure.is_failure:
+                    failure_count += 1
+                    error_msg = getattr(step_failure.event_specific_data.error, "message", "Unknown error")
                     click.secho(
-                        f"  - Step '{step_failure.step_key}' failed: "
-                        f"{step_failure.event_specific_data.error.message}",
+                        f"  - Step '{step_failure.step_key}' failed: {error_msg}",
                         fg="red",
                     )
+            click.secho(f"\n{failure_count} steps failed", fg="red")
             sys.exit(1)
     except ValueError as e:
-        click.secho(f"Error: {e}", fg="red")
+        if debug:
+            click.secho(format_error(e), fg="red")
+        else:
+            click.secho(f"Error: {e}", fg="red")
         sys.exit(1)
     except Exception as e:
-        click.secho(f"Unexpected error running job '{job_name}': {e}", fg="red")
+        if debug:
+            click.secho(format_error(e), fg="red")
+        else:
+            click.secho(f"Unexpected error running job '{job_name}': {e}", fg="red")
         sys.exit(1)
 
 
@@ -241,11 +290,9 @@ def ui(host: str, port: int, env: str):
         click.secho(f"Access the UI at http://{host}:{port}", fg="green")
         run_app(host=host, port=port, env=env)
     except ImportError as e:
-        click.secho(f"Error importing app module: {e}", fg="red")
-        sys.exit(1)
+        exit_with_error(f"Error importing app module: {e}")
     except Exception as e:
-        click.secho(f"Unexpected error launching UI: {e}", fg="red")
-        sys.exit(1)
+        exit_with_error(f"Unexpected error launching UI: {e}")
 
 
 @main.command()
@@ -270,30 +317,32 @@ def minimal(host: str, port: int):
             ),
         )
     except Exception as e:
-        click.secho(f"Error running minimal example: {e}", fg="red")
-        sys.exit(1)
+        exit_with_error(f"Error running minimal example: {e}")
 
 
 @main.command()
-def list_jobs():
+@click.option(
+    "--env",
+    type=click.Choice([e.value for e in Environment]),
+    default=CONFIG.env.value,
+    help="Environment to use (dev, staging, prod)",
+)
+def list_jobs(env: str):
     """List all available jobs in the Dagster repository."""
-    click.secho("Listing available jobs:", fg="blue")
+    click.secho(f"Listing available jobs in {env.upper()} environment:", fg="blue")
 
     try:
         # Create definitions for the current environment
-        definitions = create_definitions(CONFIG.env.value)
-
-        # Get all job definitions
-        jobs = [job_def.name for job_def in definitions.get_all_job_defs()]
+        jobs = get_available_jobs(env)
 
         if jobs:
             for job in sorted(jobs):
                 click.secho(f"- {job}", fg="green")
+            click.secho(f"\nFound {len(jobs)} jobs", fg="blue")
         else:
             click.secho("No jobs found", fg="yellow")
     except Exception as e:
-        click.secho(f"Error listing jobs: {e}", fg="red")
-        sys.exit(1)
+        exit_with_error(f"Error listing jobs: {e}")
 
 
 if __name__ == "__main__":
