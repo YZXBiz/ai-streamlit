@@ -7,4 +7,4 @@ Infra Storage
 .. automodule:: clustering.infra.storage
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

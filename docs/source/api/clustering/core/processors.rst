@@ -7,4 +7,4 @@ Core Processors
 .. automodule:: clustering.core.processors
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

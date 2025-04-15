@@ -7,4 +7,4 @@ Core Transformers
 .. automodule:: clustering.core.transformers
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

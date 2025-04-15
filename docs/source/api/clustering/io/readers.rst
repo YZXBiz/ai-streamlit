@@ -39,4 +39,4 @@ IO Readers
 .. automodule:: clustering.io.readers.blob_reader
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

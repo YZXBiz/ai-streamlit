@@ -39,4 +39,4 @@ IO Writers
 .. automodule:: clustering.io.writers.blob_writer
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

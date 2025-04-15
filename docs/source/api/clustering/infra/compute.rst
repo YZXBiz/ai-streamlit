@@ -7,4 +7,4 @@ Infra Compute
 .. automodule:: clustering.infra.compute
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

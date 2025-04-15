@@ -8,4 +8,4 @@ Utils Config
 .. automodule:: clustering.utils.config
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:
