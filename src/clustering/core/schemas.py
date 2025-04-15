@@ -24,10 +24,10 @@ SeriesType = pd.Series | pl.Series | np.ndarray
 class Schema(pa.DataFrameModel):
     """Base class for all schemas."""
 
-    model_config: ClassVar[dict] = {
-        "coerce": True,
-        "strict": True,
-    }
+    class Config:
+        """Pandera schema configuration."""
+        coerce = True
+        strict = True
 
     @classmethod
     def check(cls: type[TSchema], data: pd.DataFrame | pl.DataFrame) -> pd.DataFrame | pl.DataFrame:

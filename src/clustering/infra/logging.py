@@ -33,9 +33,9 @@ class LoggerService(pdt.BaseModel):
     diagnose: bool = False
     catch: bool = True
 
-    model_config: ClassVar[dict[str, Any]] = {
-        "extra": "forbid",
-    }
+    class model_config:
+        """Pydantic model configuration."""
+        extra = "forbid"
 
     def start(self) -> None:
         """Start the logging service."""
@@ -55,7 +55,7 @@ class LoggerService(pdt.BaseModel):
         # Nothing to do as loguru handles this automatically
         pass
 
-    def logger(self) -> loguru.Logger:
+    def logger(self) -> "loguru.Logger":
         """Return the main logger.
 
         Returns:
