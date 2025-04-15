@@ -260,8 +260,11 @@ dagster-job-%: ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
 # PIPELINE WORKFLOWS
 ################################################################################
 
-##@ Pipeline Workflows
-
+#################################################
+# Direct Dagster CLI commands
+# These targets use the Dagster CLI directly for simplicity
+# Useful for development and debugging specific pipeline components
+#################################################
 .PHONY: run-internal-% run-external-% run-merging run-full run-job full-pipeline
 run-internal-%: ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
 	@echo "==> Running internal $* pipeline"
@@ -283,6 +286,14 @@ run-full: ## Run the complete pipeline (internal, external, and merging)
 	@$(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).dagster.definitions -j full_pipeline_job
 	@echo "✓ Full pipeline completed"
 
+#################################################
+# Custom CLI commands
+# These targets use the project's custom CLI which provides:
+# - Environment configuration (dev/staging/prod)
+# - Formatted output with status indicators
+# - Better error handling and reporting
+# - Support for tags and other advanced features
+#################################################
 run-job: ## Run a specific job with environment (usage: make run-job JOB=job_name ENV=prod)
 	@echo "==> Running job $(JOB) in $(ENV) environment"
 	@if [ -z "$(JOB)" ]; then \
