@@ -135,35 +135,52 @@ clustering completion fish > ~/.config/fish/completions/clustering.fish
 
 ### Environment Setup
 
-1. **Environment Variables**:
-   The project includes an example environment file (`.env.example`) that you should copy and customize:
+After installing the package, you'll need to set up your environment:
 
+1. **Create Environment Files**:
+   
    ```bash
-   # Copy the example environment file for development
-   cp .env.example .env.dev
+   # Initialize the configuration (this uses the built-in command)
+   clustering init-config
    
-   # For production (optional)
-   cp .env.example .env.prod
-   
-   # Edit the files with your specific configuration values
-   # Example .env file structure:
-   # DATA_DIR=/path/to/your/data
-   # INTERNAL_DATA_DIR=/path/to/your/data/internal
-   # EXTERNAL_DATA_DIR=/path/to/your/data/external
-   # MERGING_DATA_DIR=/path/to/your/data/merging
+   # This will create:
+   # - .env.dev (or .env.prod if --env=prod is specified)
+   # - Required directory structure
+   # - Example configuration files
    ```
 
-   > **Note:** `.env` files are included in `.gitignore` and should never be committed to version control as they may contain sensitive information.
-
-2. **Automated Setup** (Optional):
-   For convenience, you can run the included setup script which creates all necessary configuration and directories:
+   If you prefer manual setup, create the following files:
 
    ```bash
-   # Run the setup script
-   ./scripts/setup.sh
+   # Create a .env file for your environment
+   echo "DATA_DIR=./data
+   INTERNAL_DATA_DIR=./data/internal
+   EXTERNAL_DATA_DIR=./data/external
+   MERGING_DATA_DIR=./data/merging
+   DAGSTER_HOME=~/.dagster" > .env.dev
+   ```
+
+2. **Configure Dagster Home**:
+   The package needs a Dagster home directory:
+
+   ```bash
+   # Create Dagster home directory
+   mkdir -p ~/.dagster
    
-   # Or on Windows
-   .\scripts\setup.bat
+   # Create a basic dagster.yaml file
+   echo "telemetry:
+     enabled: false
+   storage:
+     sqlite:
+       base_dir: ~/.dagster" > ~/.dagster/dagster.yaml
+   ```
+
+3. **Verify Configuration**:
+   Ensure your setup is correct:
+
+   ```bash
+   # Verify the configuration
+   clustering verify-config
    ```
 
 ### Data Directory Structure
