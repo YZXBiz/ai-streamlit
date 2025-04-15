@@ -36,6 +36,7 @@ A data pipeline for clustering stores based on sales data and external data sour
   - [Documentation](#-documentation)
   - [Security & Privacy](#-security--privacy)
   - [FAQ](#-faq)
+  - [CI/CD Pipeline](#ci-cd-pipeline)
 
 ## 👥 Project Information
 
@@ -464,3 +465,40 @@ A: Yes, use `make run-memory-optimized JOB=job_name` to run with memory optimiza
 
 **Q: How do I add a new data source?**
 A: Add a new reader configuration in the environment config file and create a corresponding asset in the appropriate preprocessing module.
+
+## CI/CD Pipeline
+
+This project uses GitLab CI/CD for continuous integration and deployment. The pipeline is organized in a modular structure in the `gitlab-ci/` directory:
+
+### Structure
+
+- **`.gitlab-ci.yml`**: Root configuration file that includes the main configuration
+- **`gitlab-ci/main.yml`**: Main configuration file defining stages, variables, and cache settings
+- **`gitlab-ci/jobs/`**: Directory containing individual job configurations:
+  - **`lint.yml`**: Linting job using Ruff and MyPy
+  - **`test.yml`**: Testing job using pytest with coverage reporting
+  - **`build.yml`**: Docker build and push job
+  - **`deploy.yml`**: Deployment jobs for dev and production environments
+
+### Stages
+
+1. **Lint**: Runs static code analysis using Ruff and type checking with MyPy
+2. **Test**: Runs unit tests with pytest and collects coverage reports
+3. **Build**: Builds a Docker image and pushes it to the GitLab Container Registry
+4. **Deploy**: Deploys the application to the appropriate environment
+
+### Environment Deployments
+
+- **Development**: Automatically triggered for all branches except `main` and `production`
+- **Production**: Manually triggered for the `main` or `production` branches
+
+### Setup Requirements
+
+To use this CI/CD pipeline, you need to:
+
+1. Set up a GitLab project with runners enabled
+2. Configure the following CI/CD variables in your GitLab project settings:
+   - `DEPLOY_TOKEN`: Authentication token for deployment webhook
+   - `DEPLOY_WEBHOOK_URL`: URL endpoint for triggering deployments
+
+For local development, you can still use the Makefile commands for testing and running the application.
