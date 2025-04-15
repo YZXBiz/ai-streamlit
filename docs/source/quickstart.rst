@@ -4,7 +4,7 @@ Quickstart
 This guide will help you quickly get started using the CVS Dagster Project.
 
 Running the Pipeline Locally
----------------------------
+----------------------------
 
 1. Start the Dagster UI:
 
@@ -19,7 +19,7 @@ Running the Pipeline Locally
 4. Click "Launch Run" to execute the pipeline.
 
 Example Code
------------
+------------
 
 Here's a quick example of how to programmatically run an asset:
 

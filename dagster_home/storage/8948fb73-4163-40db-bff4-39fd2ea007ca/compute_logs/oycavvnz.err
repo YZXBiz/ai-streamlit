@@ -1,0 +1,94 @@
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - LOGS_CAPTURED - Started capturing logs in process (pid: 35251).
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - external_save_clustering_models - STEP_START - Started execution of step "external_save_clustering_models".
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - external_save_clustering_models - Loading file from: storage/external_train_clustering_models using PickledObjectFilesystemIOManager...
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - external_save_clustering_models - LOADED_INPUT - Loaded input "external_train_clustering_models" using input manager "io_manager"
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - external_save_clustering_models - STEP_INPUT - Got input "external_train_clustering_models" of type "Dict[String,Any]". (Type check passed).
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - external_save_clustering_models - Saving trained clustering models to storage
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - external_save_clustering_models - Successfully saved 0 models to storage
+[32m2025-04-15 17:33:59 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - external_save_clustering_models - STEP_OUTPUT - Yielded output "result" of type "Nothing". (Type check passed).
+Exception while writing logger call to event log: (sqlite3.OperationalError) locking protocol
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+[32m2025-04-15 17:34:10 +0000[0m - dagster - [34mERROR[0m - [31mfull_pipeline_job - 8948fb73-4163-40db-bff4-39fd2ea007ca - 35251 - external_save_clustering_models - STEP_FAILURE - Execution of step "external_save_clustering_models" failed.
+
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) locking protocol
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 245, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 508, in core_dagster_event_sequence_for_step
+    for evt in _type_check_and_store_output(step_context, user_event):
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 554, in _type_check_and_store_output
+    yield from _store_output(step_context, step_output_handle, output)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 751, in _store_output
+    yield from _log_materialization_or_observation_events_for_asset(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 903, in _log_materialization_or_observation_events_for_asset
+    yield _dagster_event_for_asset_event(step_context, asset_event, batch_metadata)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 912, in _dagster_event_for_asset_event
+    return DagsterEvent.asset_materialization(step_context, asset_event, batch_metadata)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 1050, in asset_materialization
+    return DagsterEvent.from_step(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 493, in from_step
+    log_step_event(step_context, event, batch_metadata)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 365, in log_step_event
+    step_context.log.log_dagster_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 394, in log_dagster_event
+    self.log(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 424, in log
+    self._log(level, msg, args, **kwargs)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1624, in _log
+    self.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1634, in handle
+    self.callHandlers(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1696, in callHandlers
+    hdlr.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 268, in emit
+    handler.handle(dagster_record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 262, in emit
+    self._instance.handle_new_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 2541, in handle_new_event
+    self._event_storage.store_event(events[0])
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 270, in store_event
+    with self.index_connection() as conn:
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/contextlib.py", line 142, in __exit__
+    next(self.gen)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 236, in _connect
+    with conn.begin():
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/util.py", line 235, in __exit__
+    with util.safe_reraise():
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/util.py", line 233, in __exit__
+    self.commit()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2469, in commit
+    self._do_commit()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2659, in _do_commit
+    self._connection_commit_impl()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2630, in _connection_commit_impl
+    self.connection._commit_impl()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1096, in _commit_impl
+    self._handle_dbapi_exception(e, None, None, None, None)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1094, in _commit_impl
+    self.engine.dialect.do_commit(self.connection)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 686, in do_commit
+    dbapi_connection.commit()
+
+The above exception was caused by the following exception:
+sqlite3.OperationalError: locking protocol
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1094, in _commit_impl
+    self.engine.dialect.do_commit(self.connection)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 686, in do_commit
+    dbapi_connection.commit()
+[0m

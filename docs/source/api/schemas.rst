@@ -7,3 +7,4 @@ This page documents the data schemas used in the project.
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:

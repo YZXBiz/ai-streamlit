@@ -12,3 +12,4 @@ This page documents the Dagster assets in the project.
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:

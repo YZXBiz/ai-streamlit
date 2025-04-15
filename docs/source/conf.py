@@ -33,6 +33,13 @@ extensions = [
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autoclass_content = "both"
+autodoc_mock_imports = [
+    "clustering.core.processors",
+    "clustering.core.transformers",
+    "clustering.infra.compute",
+    "clustering.infra.storage",
+    "clustering.utils.config",
+]
 
 # Configure Napoleon for Google style docstrings
 napoleon_google_docstring = True
@@ -44,7 +51,7 @@ napoleon_include_special_with_doc = True
 # Intersphinx mapping to common Python libraries
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "dagster": ("https://docs.dagster.io/latest", None),
+    "dagster": ("https://docs.dagster.io/", None),
 }
 
 templates_path = ["_templates"]

@@ -1,10 +1,11 @@
 Infrastructure Module
-===================
+=====================
 
 .. automodule:: clustering.infra
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Submodules
 ----------
@@ -12,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   clustering.infra.storage
-   clustering.infra.compute
+   clustering/infra/storage
+   clustering/infra/compute

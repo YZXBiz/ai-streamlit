@@ -10,7 +10,7 @@ Requirements
 * `uv` package manager (recommended)
 
 Installation Steps
-----------------
+-----------------
 
 1. Clone the repository:
 

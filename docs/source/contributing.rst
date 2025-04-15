@@ -4,7 +4,7 @@ Contributing
 Thank you for your interest in contributing to the CVS Dagster Project. This document outlines the process for contributing.
 
 Development Setup
----------------
+----------------
 
 Follow the installation instructions, then:
 
@@ -21,7 +21,7 @@ Follow the installation instructions, then:
       pre-commit install
 
 Code Style
----------
+----------
 
 This project follows:
 

@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to CVS Dagster Project's Documentation
-=============================================
+==============================================
 
 This documentation provides a comprehensive guide to the CVS Dagster data pipeline project,
 including detailed API references, conceptual explanations, and usage examples.

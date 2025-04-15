@@ -5,6 +5,7 @@ Core Module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Submodules
 ----------
@@ -12,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   clustering.core.schemas
-   clustering.core.processors
-   clustering.core.transformers
+   clustering/core/schemas
+   clustering/core/processors
+   clustering/core/transformers

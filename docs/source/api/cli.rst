@@ -12,4 +12,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   clustering.cli.commands
+   clustering/cli/commands

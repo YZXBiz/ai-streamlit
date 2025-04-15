@@ -1,0 +1,21 @@
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - LOGS_CAPTURED - Started capturing logs in process (pid: 25879).
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - STEP_START - Started execution of step "external_feature_metadata".
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Loading file from: storage/external_dimensionality_reduced_features using PickledObjectFilesystemIOManager...
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - LOADED_INPUT - Loaded input "external_dimensionality_reduced_features" using input manager "io_manager"
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - STEP_INPUT - Got input "external_dimensionality_reduced_features" of type "DataFrame". (Type check passed).
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Generating feature metadata with detail level: full
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Creating metadata
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Adding detailed statistics
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Calculating correlation matrix for 1 numeric columns
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mWARNING[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Error calculating detailed stats: 'DataFrame' object has no attribute 'with_column'
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mERROR[0m - [31mfull_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Detailed exception information:[0m
+Traceback (most recent call last):
+  File "/workspaces/testing-dagster/src/clustering/dagster/assets/clustering/external_ml/feature_engineering.py", line 509, in external_feature_metadata
+    metadata_df = metadata_df.with_column(
+AttributeError: 'DataFrame' object has no attribute 'with_column'. Did you mean: 'with_columns'?
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Completed metadata generation
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - external_feature_metadata - Writing file at: storage/external_feature_metadata using PickledObjectFilesystemIOManager...
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - ASSET_MATERIALIZATION - Materialized value external_feature_metadata.
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-15 17:31:37 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 0476af4c-675b-4026-9c5e-8ebcceea78d6 - 25879 - external_feature_metadata - STEP_SUCCESS - Finished execution of step "external_feature_metadata" in 426ms.

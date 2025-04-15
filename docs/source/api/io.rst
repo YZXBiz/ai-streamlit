@@ -5,6 +5,7 @@ IO Module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Submodules
 ----------
@@ -12,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   clustering.io.readers
-   clustering.io.writers
+   clustering/io/readers
+   clustering/io/writers

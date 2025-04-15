@@ -5,6 +5,7 @@ Utils Module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Submodules
 ----------
@@ -12,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   clustering.utils.logging
-   clustering.utils.config
+   clustering/utils/logging
+   clustering/utils/config
