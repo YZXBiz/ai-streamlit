@@ -136,37 +136,34 @@ clustering completion fish > ~/.config/fish/completions/clustering.fish
 ### Environment Setup
 
 1. **Environment Variables**:
-   Create the necessary environment files:
+   The project includes an example environment file (`.env.example`) that you should copy and customize:
 
    ```bash
-   # For development environment
-   touch .env.dev
+   # Copy the example environment file for development
+   cp .env.example .env.dev
    
-   # For production environment (optional)
-   touch .env.prod
+   # For production (optional)
+   cp .env.example .env.prod
    
-   # Example .env.dev content
-   DATA_DIR=/path/to/your/data
-   INTERNAL_DATA_DIR=/path/to/your/data/internal
-   EXTERNAL_DATA_DIR=/path/to/your/data/external
-   MERGING_DATA_DIR=/path/to/your/data/merging
+   # Edit the files with your specific configuration values
+   # Example .env file structure:
+   # DATA_DIR=/path/to/your/data
+   # INTERNAL_DATA_DIR=/path/to/your/data/internal
+   # EXTERNAL_DATA_DIR=/path/to/your/data/external
+   # MERGING_DATA_DIR=/path/to/your/data/merging
    ```
 
-2. **Dagster Home Setup**:
+   > **Note:** `.env` files are included in `.gitignore` and should never be committed to version control as they may contain sensitive information.
+
+2. **Automated Setup** (Optional):
+   For convenience, you can run the included setup script which creates all necessary configuration and directories:
+
    ```bash
-   # Create Dagster home directory
-   export DAGSTER_HOME=~/dagster_home
-   mkdir -p $DAGSTER_HOME
+   # Run the setup script
+   ./scripts/setup.sh
    
-   # Create a basic dagster.yaml file
-   cat << EOF > $DAGSTER_HOME/dagster.yaml
-   telemetry:
-     enabled: false
-   
-   storage:
-     sqlite:
-       base_dir: $DAGSTER_HOME
-   EOF
+   # Or on Windows
+   .\scripts\setup.bat
    ```
 
 ### Data Directory Structure
