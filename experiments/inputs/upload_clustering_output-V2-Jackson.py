@@ -1,44 +1,18 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 # # Dependencies
 
 # %pip install fsutils --user
-import pandas as pd
-import numpy as np
-import time
-import logging
-import itertools as it
-import argparse
+import difflib
 import os
-import time
-from pathlib import Path
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import svds
-from scipy.spatial import distance
-from pandas.api.types import CategoricalDtype
-from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
-from fsutils import run_sf_sql as rp, config, email, adls_gen2, log
 
 # from utils.utils import worker_output_table_validation
-from multiprocessing import Pool, freeze_support
-from snowflake.connector.connection import SnowflakeConnection, SnowflakeCursor
-from snowflake.connector.pandas_tools import write_pandas
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
+import pandas as pd
+from fsutils import config
+from fsutils import run_sf_sql as rp
 
 # from pandasql import sqldf
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from sklearn.metrics import calinski_harabasz_score, silhouette_score
-from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
-
-import os
-import pandas as pd
-import difflib
+from snowflake.connector.pandas_tools import write_pandas
 
 # Pandas Display Settings
 pd.set_option("display.max_columns", None)  # Show all columns
@@ -299,8 +273,6 @@ latest_datetime = earliest_datetime
 # -------------------------------------------------------------------
 # Snowflake-related imports and writing to Snowflake
 # -------------------------------------------------------------------
-from fsutils import run_sf_sql as rp, config, email, adls_gen2
-from snowflake.connector.pandas_tools import write_pandas
 
 # Define the config map name
 configmapname = "notebook-medium"
@@ -405,8 +377,9 @@ f"FINAL_ASSORTMENT_STORE_CLUSTERS_{latest_datetime}_MERGED"
 
 
 import pandas as pd
+from fsutils import config
+from fsutils import run_sf_sql as rp
 from snowflake.connector.pandas_tools import write_pandas
-from fsutils import run_sf_sql as rp, config, email, adls_gen2, log
 
 conn, cur = rp.get_connection("notebook-medium")
 import pandas as pd
@@ -496,7 +469,7 @@ final_df["timestamp"] = final_df["timestamp"].apply(preprocess_timestamp)
 write_pandas(
     conn,
     final_df,
-    f"FINAL_ASSORTMENT_STORE_CLUSTERS_MERGED_MICHELLE_Apr_10_2025",
+    "FINAL_ASSORTMENT_STORE_CLUSTERS_MERGED_MICHELLE_Apr_10_2025",
     database="DL_FSCA_SLFSRV",
     schema="TWA07",
     overwrite=True,

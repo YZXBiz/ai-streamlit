@@ -26,4 +26,4 @@ echo "Converting '$NOTEBOOK_FILE' to Python script..."
 uv run -m jupyter nbconvert --to script --no-prompt "$NOTEBOOK_FILE" --output "$(basename "$OUTPUT_FILE" .py)"
 
 echo "Conversion complete: $(dirname "$NOTEBOOK_FILE")/$(basename "$OUTPUT_FILE")"
-echo "✅ Done!" 
+echo "✅ Done!"

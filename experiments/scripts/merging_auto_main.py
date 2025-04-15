@@ -1,11 +1,9 @@
 # =============================================================================
 # 1) Standard Library Imports
 # =============================================================================
-import sys
-import os
 import logging
-import re
-from datetime import datetime
+import os
+import sys
 
 # =============================================================================
 # 2) Third-Party Imports
@@ -24,25 +22,24 @@ if repo_root not in sys.path:
 # 4) Project-Specific Imports
 # =============================================================================
 from configs.internal_config import INTERNAL_CDTS
-
-# Merging functions from merging_centroid_utils
-from utils.merging_centroid_utils import (
-    load_datasets,
-    extract_granularities,
-    merge_cluster_labels,
-    build_feature_matrix,
-    merge_and_scale,
-    reassign_small_clusters,
-    build_final_df,
-    save_final_df,  # Updated with file_suffix
-)
-
 from utils.merging_auto_utils import (
     create_merged_output_folder,
+    create_merged_output_folder_all,
     get_clustered_file,
     get_latest_run_folder,
     sanitize_name,
-    create_merged_output_folder_all,
+)
+
+# Merging functions from merging_centroid_utils
+from utils.merging_centroid_utils import save_final_df  # Updated with file_suffix
+from utils.merging_centroid_utils import (
+    build_feature_matrix,
+    build_final_df,
+    extract_granularities,
+    load_datasets,
+    merge_and_scale,
+    merge_cluster_labels,
+    reassign_small_clusters,
 )
 
 # -----------------------------------------------------------------------------
@@ -67,7 +64,6 @@ def main():
         Merged_Clustering_Output_Run_All_{YYYYMMDD_HHMM} under merged_content_all,
         augmented with extra columns from df_all_external.
     """
-
     # --------------------------------------------------------------------------
     # (A) (Optional) Run external_main.py / internal_main.py automatically
     # --------------------------------------------------------------------------

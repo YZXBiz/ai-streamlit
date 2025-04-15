@@ -1,20 +1,21 @@
-import os
 import logging
-import pandas as pd
+import os
 
-# Import the internal pipeline configuration
-from configs.internal_config import DATA_DIR
+import pandas as pd
 
 # Import all needed column definitions from config
 # (Make sure you've added DROP_COLS, SPEND_COLS, etc. in your configs.config)
 from configs.config import (
-    DROP_COLS,
-    SPEND_COLS,
-    COTENANT_COLS,
-    COMP_COLS,
-    PLACER_COLS,
     COLUMNS_TO_DROP,
+    COMP_COLS,
+    COTENANT_COLS,
+    DROP_COLS,
+    PLACER_COLS,
+    SPEND_COLS,
 )
+
+# Import the internal pipeline configuration
+from configs.internal_config import DATA_DIR
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -1,9 +1,9 @@
 # =============================================================================
 # 1) Standard Library Imports
 # =============================================================================
-import sys
-import os
 import logging
+import os
+import sys
 from datetime import datetime
 
 # =============================================================================
@@ -24,30 +24,33 @@ if repo_root not in sys.path:
 # 3) Import Config Variables
 # =============================================================================
 from configs.config import (
+    FEATURE_RANKING_RESULTS_DIR,
     cat_onehot,
     cat_ordinal,
-    min_n_clusters_to_try,
-    max_n_clusters_to_try,
-    small_cluster_threshold,
-    pca_n_features_threshold,
-    max_n_pca_features,
     cumulative_variance_target,
-    random_state,
     max_iter,
-    FEATURE_RANKING_RESULTS_DIR,
+    max_n_clusters_to_try,
+    max_n_pca_features,
+    min_n_clusters_to_try,
+    pca_n_features_threshold,
+    random_state,
+    small_cluster_threshold,
 )
+from utils.externa_feature_ranking import (
+    get_latest_grouped_shap_file,
+    get_top_80pct_features,
+)
+from utils.external_data_all_prep import load_and_clean_data
 
 # =============================================================================
 # 4) Import Pipeline Utilities
 # =============================================================================
 from utils.pipeline_utils import (
-    preprocess_data,
-    drop_correlated_features,
     apply_pca,
+    drop_correlated_features,
+    preprocess_data,
     run_kmeans_and_evaluate,
 )
-from utils.external_data_all_prep import load_and_clean_data
-from utils.externa_feature_ranking import get_top_80pct_features, get_latest_grouped_shap_file
 
 # ------------------------------------------------------------------------------
 # Logging Configuration

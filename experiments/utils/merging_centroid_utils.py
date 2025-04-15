@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Utilities for merging and rebalancing cluster labels using centroids.
 
@@ -7,11 +6,12 @@ Place this file at:
   /Users/agrotisnicolas/Clustering_Repo_CVS/utils/merging_centroid_utils.py
 """
 
-import os
 import logging
+import os
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +28,7 @@ def load_datasets(internal_file: str, external_file: str):
     external_file : str
         Path to the external CSV file.
 
-    Returns
+    Returns:
     -------
     int_df : pd.DataFrame
         Loaded internal DataFrame.
@@ -53,7 +53,7 @@ def extract_granularities(internal_file: str, external_file: str):
     external_file : str
         Path to the external CSV file.
 
-    Returns
+    Returns:
     -------
     internal_granularity : str
         Granularity extracted from the internal file name.
@@ -88,7 +88,7 @@ def merge_cluster_labels(
     external_granularity : str
         Granularity extracted from external file name.
 
-    Returns
+    Returns:
     -------
     df_merged_clusters : pd.DataFrame
         DataFrame containing merged cluster labels, including:
@@ -145,7 +145,7 @@ def build_feature_matrix(int_df: pd.DataFrame, ext_df: pd.DataFrame) -> pd.DataF
     ext_df : pd.DataFrame
         External DataFrame (with 'STORE_NBR' and 'cluster_label' columns).
 
-    Returns
+    Returns:
     -------
     df_features : pd.DataFrame
         Merged feature DataFrame on 'store_nbr'.
@@ -177,7 +177,7 @@ def merge_and_scale(df_clusters: pd.DataFrame, df_features: pd.DataFrame) -> pd.
     df_features : pd.DataFrame
         DataFrame containing numeric features merged from internal and external data.
 
-    Returns
+    Returns:
     -------
     df_merged : pd.DataFrame
         DataFrame with numeric columns scaled (mean=0, std=1).
@@ -224,7 +224,7 @@ def reassign_small_clusters(df_scaled: pd.DataFrame, min_cluster_size=100) -> pd
     min_cluster_size : int, optional
         Clusters with fewer rows than this will be considered 'small' and reassigned.
 
-    Returns
+    Returns:
     -------
     df_scaled : pd.DataFrame
         DataFrame with a new column 'rebalanced_demand_cluster_labels' containing the updated clusters.
@@ -295,7 +295,7 @@ def build_final_df(
     ext_df : pd.DataFrame
         Original external DataFrame.
 
-    Returns
+    Returns:
     -------
     final_df : pd.DataFrame
         The final DataFrame containing all relevant columns and merged data.
@@ -351,7 +351,7 @@ def save_final_df(
     file_suffix : str, optional
         A suffix to append to the file name (e.g., "ALL").
 
-    Returns
+    Returns:
     -------
     output_path : str
         Full path to the saved CSV file.

@@ -6,24 +6,24 @@ PCA reduction, clustering, model training, and model explainability.
 """
 
 import logging
+
+import lightgbm as lgb
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from sklearn.metrics import (
-    silhouette_score,
-    calinski_harabasz_score,
-    davies_bouldin_score,
-    accuracy_score,
-    classification_report,
-)
-from sklearn.base import BaseEstimator, TransformerMixin
-import matplotlib.pyplot as plt
 import shap
-import lightgbm as lgb
+from sklearn.cluster import KMeans
+from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
+from sklearn.metrics import (
+    accuracy_score,
+    calinski_harabasz_score,
+    classification_report,
+    davies_bouldin_score,
+    silhouette_score,
+)
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
 
 def preprocess_data(df, cat_onehot, cat_ordinal, num):
@@ -68,11 +68,6 @@ def preprocess_data(df, cat_onehot, cat_ordinal, num):
     data = pd.DataFrame(pipe_fit.transform(df), columns=pipe_fit.get_feature_names_out().tolist())
 
     return data, pipe_fit
-
-
-import logging
-import numpy as np  # Make sure you have this import
-import pandas as pd
 
 
 def drop_correlated_features(data, corr_threshold=0.80, features_to_keep=None):

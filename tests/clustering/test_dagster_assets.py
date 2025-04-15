@@ -63,9 +63,9 @@ class TestDagsterAssets:
         ]
 
         for expected in expected_assets:
-            assert any(expected in key for key in asset_keys), (
-                f"Expected asset {expected} not found"
-            )
+            assert any(
+                expected in key for key in asset_keys
+            ), f"Expected asset {expected} not found"
 
     def test_materialize_to_memory(self, sample_sales_data, monkeypatch) -> None:
         """Test materializing assets to memory."""

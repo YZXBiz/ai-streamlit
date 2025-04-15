@@ -424,9 +424,9 @@ def test_preprocessing_pipeline() -> None:
         ]
 
         for expected in expected_assets:
-            assert any(expected in key for key in asset_keys), (
-                f"Expected asset {expected} not found"
-            )
+            assert any(
+                expected in key for key in asset_keys
+            ), f"Expected asset {expected} not found"
 
     except Exception as e:
         pytest.skip(f"Integration test failed: {str(e)}")

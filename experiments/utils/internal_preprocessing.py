@@ -8,10 +8,16 @@ where each value is a pivoted DataFrame of % of SALES by NEED_STATE.
 """
 
 import os
+
 import pandas as pd
 
 # Import the internal pipeline configuration
-from configs.internal_config import DATA_DIR, PLANOGRAM, PILOT_CATEGORIES, NEED_STATE_PARQUET
+from configs.internal_config import (
+    DATA_DIR,
+    NEED_STATE_PARQUET,
+    PILOT_CATEGORIES,
+    PLANOGRAM,
+)
 
 
 def load_internal_data():

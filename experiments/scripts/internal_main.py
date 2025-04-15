@@ -2,42 +2,45 @@
 # ------------------------------------------------------------------------------
 # Standard library imports
 # ------------------------------------------------------------------------------
-import os
 import logging
+import os
 from datetime import datetime
-from typing import Dict
+
 # ------------------------------------------------------------------------------
 # Third-party imports
 # ------------------------------------------------------------------------------
 import pandas as pd
-from sklearn.cluster import KMeans
 
 # ------------------------------------------------------------------------------
 # Project-specific / local imports
 # ------------------------------------------------------------------------------
 from configs.internal_config import (
-    DATA_DIR,
-    cat_onehot,
-    cat_ordinal,
-    min_n_clusters_to_try,
-    max_n_clusters_to_try,
-    small_cluster_threshold,
-    pca_n_features_threshold,
-    max_n_pca_features,
-    cumulative_variance_target,
-    random_state,
-    max_iter,
-    corr_threshold,
     INTERNAL_CDTS,
     INTERNAL_CLUSTERING_OUTPUT_DIR,
+    cat_onehot,
+    cat_ordinal,
+    corr_threshold,
+    cumulative_variance_target,
+    max_iter,
+    max_n_clusters_to_try,
+    max_n_pca_features,
+    min_n_clusters_to_try,
+    pca_n_features_threshold,
+    random_state,
+    small_cluster_threshold,
+)
+from sklearn.cluster import KMeans
+from utils.internal_preprocessing import (
+    create_cat_dict,
+    load_internal_data,
+    sanitize_name,
 )
 from utils.pipeline_utils import (
-    preprocess_data,
-    drop_correlated_features,
     apply_pca,
+    drop_correlated_features,
+    preprocess_data,
     run_kmeans_and_evaluate,
 )
-from utils.internal_preprocessing import load_internal_data, create_cat_dict, sanitize_name
 
 # ------------------------------------------------------------------------------
 # Logging configuration
@@ -45,21 +48,16 @@ from utils.internal_preprocessing import load_internal_data, create_cat_dict, sa
 logging.basicConfig(level=logging.INFO)
 
 
-def save_results_df(
-    results_df: pd.DataFrame, 
-    cat: str, 
-    output_dir: str, 
-    run_ts: str
-) -> str:
+def save_results_df(results_df: pd.DataFrame, cat: str, output_dir: str, run_ts: str) -> str:
     """
     Save clustering results DataFrame to disk.
-    
+
     Args:
         results_df: DataFrame containing clustering results
         cat: Category name
         output_dir: Directory to save results
         run_ts: Timestamp string
-        
+
     Returns:
         Path where the results were saved
     """
@@ -72,15 +70,15 @@ def save_results_df(
 
 
 def process_category(
-    cat: str, 
-    cat_dict: Dict[str, pd.DataFrame],
-    output_dir: str, 
+    cat: str,
+    cat_dict: dict[str, pd.DataFrame],
+    output_dir: str,
     run_ts: str,
-    retry_threshold: int = 10
+    retry_threshold: int = 10,
 ) -> None:
     """
     Process a single category through the clustering pipeline.
-    
+
     Args:
         cat: Category name to process
         cat_dict: Dictionary mapping categories to DataFrames

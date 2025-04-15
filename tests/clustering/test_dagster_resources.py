@@ -21,9 +21,9 @@ class TestDagsterResources:
         expected_resources = ["io_manager", "config", "logger"]
 
         for resource in expected_resources:
-            assert any(resource in key for key in resource_keys), (
-                f"Expected resource {resource} not found"
-            )
+            assert any(
+                resource in key for key in resource_keys
+            ), f"Expected resource {resource} not found"
 
     @pytest.mark.parametrize(
         "resource_key",

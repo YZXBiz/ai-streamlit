@@ -26,9 +26,9 @@ class TestDagsterJobs:
 
         # We're just checking that at least one of our expected jobs exists
         # rather than requiring all of them
-        assert any(job in job_names for job in expected_jobs), (
-            f"None of the expected jobs {expected_jobs} found in {job_names}"
-        )
+        assert any(
+            job in job_names for job in expected_jobs
+        ), f"None of the expected jobs {expected_jobs} found in {job_names}"
 
     @pytest.mark.skip(reason="Modify to use actual job names and configurations")
     def test_job_execution(self) -> None:

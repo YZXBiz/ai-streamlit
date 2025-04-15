@@ -5,7 +5,6 @@ Central configuration file for Clustering_Repo_CVS.
 Holds directory paths, lists of columns, numeric thresholds, etc.
 """
 
-import os
 
 # --------------------------------------------------------------------------------
 # Paths

@@ -1,12 +1,12 @@
 import logging
-import numpy as np
-import pandas as pd
 import os
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import lightgbm as lgb
+import numpy as np
+import pandas as pd
 import shap
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ def prepare_data_for_model(
     random_state : int
         Random seed for reproducibility.
 
-    Returns
+    Returns:
     -------
     X_train : pd.DataFrame
         Training features.
@@ -121,7 +121,7 @@ def train_lgbm_multiclass(
     """
     Train a LightGBM multi-class classifier and evaluate on the test data.
 
-    Returns
+    Returns:
     -------
     model : lgb.LGBMClassifier
         The trained LightGBM model.
@@ -204,7 +204,7 @@ def compute_shap_values(model, X_test: pd.DataFrame, top_n: int = None):
     top_n : int
         If not None, return only the top N features by mean absolute SHAP.
 
-    Returns
+    Returns:
     -------
     shap_df : pd.DataFrame
         Columns: [feature, mean_abs_shap, directionality]
@@ -296,7 +296,7 @@ def compute_shap_values_per_class(model, X_test: pd.DataFrame):
     X_test : pd.DataFrame
         The data to compute SHAP values for.
 
-    Returns
+    Returns:
     -------
     shap_df_long : pd.DataFrame
         Columns: [feature, cluster_label, avg_shap_value, directionality, mean_abs_shap]
@@ -345,8 +345,9 @@ def compute_shap_values_per_class(model, X_test: pd.DataFrame):
     return shap_df_long
 
 
-import pandas as pd
 import re
+
+import pandas as pd
 
 
 def standardize_text(s: str) -> str:

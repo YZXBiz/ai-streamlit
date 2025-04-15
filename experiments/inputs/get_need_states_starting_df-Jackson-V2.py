@@ -1,37 +1,13 @@
 # # Dependencies
 
 # %pip install fsutils --user
-import pandas as pd
-import numpy as np
-import time
-import logging
-import itertools as it
-import argparse
-import os
-import time
-from pathlib import Path
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import svds
-from scipy.spatial import distance
-from pandas.api.types import CategoricalDtype
-from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
-from fsutils import run_sf_sql as rp, config, email, adls_gen2, log
 
 # from utils.utils import worker_output_table_validation
-from multiprocessing import Pool, freeze_support
-from snowflake.connector.connection import SnowflakeConnection, SnowflakeCursor
-from snowflake.connector.pandas_tools import write_pandas
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
+
+import pandas as pd
+from fsutils import run_sf_sql as rp
 
 # from pandasql import sqldf
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from sklearn.metrics import calinski_harabasz_score, silhouette_score
-from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
 
 # Pandas Display Settings
 pd.set_option("display.max_rows", 100)  # Show all rows
@@ -442,18 +418,18 @@ wave_other_str = ", ".join(f"'{cat}'" for cat in wave_other)
 #   1) Use OR: AND (cat_dsc IN ({wave_1_cat_str}) OR cat_dsc IN ({wave_2_cat_str}))
 #   2) Combine the two lists into one wave_12_cat = wave_1_cat + wave_2_cat
 SQL_QUERY_TXN = f"""
-SELECT 
+SELECT
     S.SKU_NBR,
-    S.STORE_NBR, 
+    S.STORE_NBR,
     S.CAT_DSC,
     S.TOTAL_SALES,
     NS.NEED_STATE
-FROM 
+FROM
     DL_FSCA_SLFSRV.TWA07.c830557_localization_last_yr_sales AS S
-INNER JOIN 
+INNER JOIN
     DL_FSCA_SLFSRV.TWA07.NEED_STATES_20250414_AM AS NS
     ON S.SKU_NBR = NS."PRODUCT_ID"
-WHERE 
+WHERE
     state_cd NOT IN ('HI','PR')
     AND facility_typ_dsc = 'Retail CVS/pharmacy'
     AND str_actv_flg = 'ACTIVE'

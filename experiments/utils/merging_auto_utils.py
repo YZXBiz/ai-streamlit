@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 merging_auto_utils.py
@@ -11,13 +10,9 @@ Helper functions for the merging_auto_main pipeline, including:
   - Creating a time-stamped "Merged_Clustering_Output_Run_{YYYYMMDD_HHMM}" folder
 """
 
-import sys
 import os
-import logging
 import re
 from datetime import datetime
-
-import pandas as pd
 
 
 # ----------------------------------------------------------------------
@@ -36,8 +31,6 @@ def sanitize_name(name: str) -> str:
     We preserve the & symbol, replace spaces/slashes/dashes with underscores,
     and remove anything else non-alphanumeric (besides underscores and &).
     """
-    import re
-
     # Lowercase the input
     name = name.lower()
     # Replace slashes with underscores
