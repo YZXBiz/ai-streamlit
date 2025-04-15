@@ -24,7 +24,7 @@ __all__ = [
     "get_memory_usage",
     "get_project_root",
     "get_system_info",
-    "profile", 
+    "profile",
     "timer",
 ]
 

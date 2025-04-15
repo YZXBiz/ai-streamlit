@@ -697,10 +697,10 @@ def external_generate_cluster_visualizations(
 
 def get_pycaret_metrics(exp):
     """Get metrics from a PyCaret experiment.
-    
+
     Args:
         exp: PyCaret experiment
-        
+
     Returns:
         Dictionary of metrics
     """

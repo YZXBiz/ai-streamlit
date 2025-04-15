@@ -8,10 +8,7 @@ import pandas as pd
 import polars as pl
 import pytest
 import yaml
-from dagster import (
-    build_asset_context,
-    build_op_context,
-)
+from dagster import build_asset_context, build_op_context
 
 
 @pytest.fixture

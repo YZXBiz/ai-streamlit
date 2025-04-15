@@ -39,8 +39,8 @@ A data pipeline for clustering stores based on sales data and external data sour
 
 ## 👥 Project Information
 
-**Author**: Jackson Yang  
-**Email**: Jackson.Yang@cvshealth.com  
+**Author**: Jackson Yang
+**Email**: Jackson.Yang@cvshealth.com
 **Organization**: CVS Health
 **License**: Copyright © 2025 CVS Health. All rights reserved.
 
@@ -54,7 +54,7 @@ The primary goal is to identify meaningful store segments that can inform busine
 
 - **Modular Pipeline Design**: Separate jobs for internal data, external data, and cluster merging
 - **Flexible Configuration**: Environment-specific config files (dev, staging, prod)
-- **Advanced Feature Engineering**: 
+- **Advanced Feature Engineering**:
   - Normalization (robust scaling)
   - Missing value imputation
   - Outlier detection and removal
@@ -138,7 +138,7 @@ clustering completion fish > ~/.config/fish/completions/clustering.fish
 After installing the package with `uv add`, you'll need to create some configuration files before running the CLI:
 
 1. **Create Environment File**:
-   
+
    ```bash
    # Create a .env file for development
    cat > .env.dev << EOF
@@ -147,25 +147,25 @@ After installing the package with `uv add`, you'll need to create some configura
    INTERNAL_DATA_DIR=./data/internal
    EXTERNAL_DATA_DIR=./data/external
    MERGING_DATA_DIR=./data/merging
-   
+
    # Dagster configuration
    DAGSTER_HOME=~/.dagster
    EOF
    ```
 
 2. **Set Up Data Directories**:
-   
+
    ```bash
    # Create the required data directories
    mkdir -p data/internal data/external data/merging data/raw
    ```
 
 3. **Configure Dagster Home**:
-   
+
    ```bash
    # Create Dagster home directory
    mkdir -p ~/.dagster
-   
+
    # Create a basic dagster.yaml file
    cat > ~/.dagster/dagster.yaml << EOF
    telemetry:
@@ -177,11 +177,11 @@ After installing the package with `uv add`, you'll need to create some configura
    ```
 
 4. **Test the Installation**:
-   
+
    ```bash
    # List available jobs to verify the setup
    clustering list-jobs
-   
+
    # If you encounter any errors, check that:
    # - Your .env.dev file is in the correct directory
    # - The data directories exist
@@ -218,13 +218,13 @@ Each directory contains intermediate files produced by the pipeline, such as:
 
 1. **YAML Configuration Files**:
    The pipeline requires specific YAML configuration files:
-   
+
    ```bash
    mkdir -p configs/
    ```
-   
+
    Create the following configuration files:
-   
+
    ```bash
    # dev.yml example - copy this into configs/dev.yml
    cat << EOF > configs/dev.yml
@@ -233,12 +233,12 @@ Each directory contains intermediate files produced by the pipeline, such as:
      internal_data_dir: \${env:INTERNAL_DATA_DIR,./data/internal}
      external_data_dir: \${env:EXTERNAL_DATA_DIR,./data/external}
      merging_data_dir: \${env:MERGING_DATA_DIR,./data/merging}
-   
+
    preprocessing:
      normalize: true
      impute_missing: true
      outlier_removal: true
-     
+
    model:
      algorithm: kmeans
      min_clusters: 3
@@ -456,11 +456,11 @@ This CLI does not collect any telemetry or usage data by default. All data proce
 
 ## ❓ FAQ
 
-**Q: How do I determine the optimal number of clusters?**  
+**Q: How do I determine the optimal number of clusters?**
 A: The pipeline automatically evaluates different cluster counts based on silhouette scores, Calinski-Harabasz Index, and Davies-Bouldin Index. You can configure the range with `min_clusters` and `max_clusters` in the config file.
 
-**Q: Can I run the pipeline with limited memory?**  
+**Q: Can I run the pipeline with limited memory?**
 A: Yes, use `make run-memory-optimized JOB=job_name` to run with memory optimization enabled.
 
-**Q: How do I add a new data source?**  
+**Q: How do I add a new data source?**
 A: Add a new reader configuration in the environment config file and create a corresponding asset in the appropriate preprocessing module.

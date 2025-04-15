@@ -363,7 +363,7 @@ UV uses a comprehensive testing framework:
 2. **Snapshot testing**: UV uses `insta` for snapshot testing, with a custom `uv_snapshot!` macro for simplifying snapshot creation[11].
 3. **Local testing**: You can test your development version using:
    ```bash
-   cargo run -- 
+   cargo run --
    ```
 
 ### Docker-Based Testing
@@ -373,7 +373,7 @@ To ensure safety when testing with arbitrary Python packages (which might execut
 ```bash
 docker buildx build -t uv-builder -f builder.dockerfile --load .
 cargo build --target x86_64-unknown-linux-musl --profile profiling
-docker run --rm -it -v $(pwd):/app uv-builder /app/target/x86_64-unknown-linux-musl/profiling/uv 
+docker run --rm -it -v $(pwd):/app uv-builder /app/target/x86_64-unknown-linux-musl/profiling/uv
 ```
 
 This approach isolates potentially harmful code execution within the container[11].

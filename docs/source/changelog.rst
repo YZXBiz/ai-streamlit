@@ -22,4 +22,4 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Fixed method name in SnowflakeWriter class
-- Resolved dependency conflicts in pyproject.toml 
+- Resolved dependency conflicts in pyproject.toml

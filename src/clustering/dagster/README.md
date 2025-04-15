@@ -93,4 +93,4 @@ When extending the pipeline:
 1. Define new assets in the appropriate module under `assets/`
 2. Register assets in `definitions.py`
 3. Update configuration in `resources/configs/` as needed
-4. Test changes by running the affected pipeline components 
+4. Test changes by running the affected pipeline components

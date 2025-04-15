@@ -1,7 +1,7 @@
 """Utility functions for the clustering pipeline."""
 
 from clustering.utils.common import (
-    ensure_directory, 
+    ensure_directory,
     format_error,
     get_cpu_usage,
     get_memory_usage,

@@ -30,6 +30,6 @@ Here's a quick example of how to programmatically run an asset:
 
    # Materialize the asset
    result = materialize([sales_by_category])
-   
+
    # Check the result
-   assert result.success 
+   assert result.success

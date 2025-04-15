@@ -13,4 +13,4 @@ Submodules
    :maxdepth: 4
 
    clustering.infra.storage
-   clustering.infra.compute 
+   clustering.infra.compute

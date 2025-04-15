@@ -11,4 +11,4 @@ This page documents the Dagster assets in the project.
 .. automodule:: src.clustering.dagster.assets
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

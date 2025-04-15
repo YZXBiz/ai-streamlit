@@ -113,4 +113,4 @@ Contains automated tests. The specific frameworks (`pytest`, `unittest`) and cov
 *   **`.gitignore`**: Standard Git ignore file.
 *   **`.pre-commit-config.yaml`**: Configures pre-commit hooks (e.g., linters, formatters) to ensure code quality before commits.
 
-This overview provides a snapshot based on the file structure and the content of `src/clustering/dagster/definitions.py`. Deeper insights would require inspecting the code within assets, core logic, tests, and configuration files. 
+This overview provides a snapshot based on the file structure and the content of `src/clustering/dagster/definitions.py`. Deeper insights would require inspecting the code within assets, core logic, tests, and configuration files.

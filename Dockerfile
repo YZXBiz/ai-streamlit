@@ -31,4 +31,4 @@ ENV PYTHONPATH=/app
 
 # Command to run when the container starts
 ENTRYPOINT ["uv", "run", "-m", "clustering"]
-CMD ["--help"] 
+CMD ["--help"]

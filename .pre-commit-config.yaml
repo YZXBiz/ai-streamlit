@@ -1,3 +1,8 @@
+exclude: |
+  (?x)^(
+    dagster_home/.*
+  )$
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -7,12 +12,17 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-toml
+      - id: check-ast
+      - id: check-json
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.0
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --extend-select=I]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -20,15 +30,23 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          [pydantic>=2.0.0, types-requests, polars>=0.20.0]
-        exclude: ^(tests/|scripts/)
-        args: [--ignore-missing-imports]
+          [pydantic>=2.0.0, types-requests, polars>=0.20.0, pandas-stubs]
+        exclude: |
+          (?x)^(
+            tests/.*|
+            scripts/.*|
+            dagster_home/.*
+          )$
+        args: [--ignore-missing-imports, --disallow-untyped-defs, --disallow-incomplete-defs]
 
-  - repo: local
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
     hooks:
-      - id: pytest-check
-        name: pytest-check
-        entry: pytest
-        language: system
-        pass_filenames: false
-        args: [tests/]
+      - id: pyupgrade
+        args: [--py310-plus]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black]

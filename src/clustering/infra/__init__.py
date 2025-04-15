@@ -1,10 +1,10 @@
 """Infrastructure services for the clustering pipeline."""
 
 from clustering.infra.app_settings import (
-    CONFIG, 
-    AppConfig, 
+    CONFIG,
+    AppConfig,
     Environment,
-    JobSettings, 
+    JobSettings,
     LogLevel,
     SecretSettings,
     Validatable,
@@ -18,7 +18,7 @@ __all__ = [
     "CONFIG",
     "Environment",
     "JobSettings",
-    "LogLevel", 
+    "LogLevel",
     "SecretSettings",
     "Validatable",
     # Logging

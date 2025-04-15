@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, ClassVar
 
 import loguru
 import pydantic as pdt
@@ -33,8 +32,9 @@ class LoggerService(pdt.BaseModel):
     diagnose: bool = False
     catch: bool = True
 
-    class model_config:
+    class ModelConfig:
         """Pydantic model configuration."""
+
         extra = "forbid"
 
     def start(self) -> None:

@@ -14,4 +14,4 @@ Submodules
 
    clustering.core.schemas
    clustering.core.processors
-   clustering.core.transformers 
+   clustering.core.transformers

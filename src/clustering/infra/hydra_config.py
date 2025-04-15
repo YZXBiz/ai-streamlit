@@ -10,7 +10,7 @@ import yaml
 
 class OmegaConfLoader:
     """A simplified version of OmegaConf loader that handles environment variable interpolation.
-    
+
     A simplified version of OmegaConf loader that handles environment variable interpolation
     in YAML files using the ${env:VAR,default} syntax.
     """

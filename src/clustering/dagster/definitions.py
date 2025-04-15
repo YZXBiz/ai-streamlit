@@ -7,8 +7,6 @@ from typing import Any
 import dagster as dg
 import yaml
 
-from clustering.infra import Environment
-
 # -----------------------------------------------------------------------------
 # Asset imports
 # -----------------------------------------------------------------------------
@@ -65,6 +63,7 @@ from clustering.dagster.assets import (
 
 # Resources
 from clustering.dagster.resources import data_io, logger_service
+from clustering.infra import Environment
 
 # Import Hydra-style config loader from the new location in infra
 from clustering.infra.hydra_config import load_config as hydra_load_config
@@ -282,10 +281,10 @@ def load_config(env: str = "dev") -> dict[str, Any]:
 
 def _get_default_config(env: str) -> dict[str, Any]:
     """Get default configuration when config loading fails.
-    
+
     Args:
         env: Environment name (dev, staging, prod)
-        
+
     Returns:
         Default configuration dictionary
     """
@@ -302,7 +301,9 @@ def _get_default_config(env: str) -> dict[str, Any]:
 # -----------------------------------------------------------------------------
 
 
-def get_resources_by_env(env: str | Environment = Environment.DEV) -> dict[str, dg.ResourceDefinition]:
+def get_resources_by_env(
+    env: str | Environment = Environment.DEV,
+) -> dict[str, dg.ResourceDefinition]:
     """Get resource definitions based on environment.
 
     Args:
@@ -313,7 +314,7 @@ def get_resources_by_env(env: str | Environment = Environment.DEV) -> dict[str, 
     """
     # Convert Environment enum to string if needed
     env_str = env.value if isinstance(env, Environment) else env
-    
+
     # Load configuration
     config_data = load_config(env_str)
 

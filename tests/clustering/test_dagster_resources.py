@@ -21,9 +21,9 @@ class TestDagsterResources:
         expected_resources = ["io_manager", "config", "logger"]
 
         for resource in expected_resources:
-            assert any(resource in key for key in resource_keys), (
-                f"Expected resource {resource} not found"
-            )
+            assert any(
+                resource in key for key in resource_keys
+            ), f"Expected resource {resource} not found"
 
     @pytest.mark.parametrize(
         "resource_key",
@@ -48,7 +48,7 @@ class TestDagsterResources:
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Define resources to skip
                 skip_resources = ["__", "test_"]  # Skip builtin resources and test resources
-                
+
                 # Initialize resources with minimal config but don't assign to an unused variable
                 # Just evaluate the expression to ensure it doesn't raise errors
                 {

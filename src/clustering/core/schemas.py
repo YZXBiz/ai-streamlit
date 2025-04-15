@@ -5,7 +5,7 @@ across the pipeline. These schemas ensure data consistency and quality.
 """
 
 # %% IMPORTS
-from typing import ClassVar, TypeVar
+from typing import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -26,6 +26,7 @@ class Schema(pa.DataFrameModel):
 
     class Config:
         """Pandera schema configuration."""
+
         coerce = True
         strict = True
 

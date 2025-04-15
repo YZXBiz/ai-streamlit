@@ -6,20 +6,20 @@
 Welcome to CVS Dagster Project's Documentation
 =============================================
 
-This documentation provides a comprehensive guide to the CVS Dagster data pipeline project, 
+This documentation provides a comprehensive guide to the CVS Dagster data pipeline project,
 including detailed API references, conceptual explanations, and usage examples.
 
 .. toctree::
    :maxdepth: 2
    :caption: Getting Started:
-   
+
    installation
    quickstart
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference:
-   
+
    api/core
    api/io
    api/utils
@@ -32,7 +32,7 @@ including detailed API references, conceptual explanations, and usage examples.
 .. toctree::
    :maxdepth: 1
    :caption: Development:
-   
+
    contributing
    changelog
 
@@ -42,4 +42,3 @@ Indices and Search
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

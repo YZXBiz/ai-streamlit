@@ -13,4 +13,4 @@ Submodules
    :maxdepth: 4
 
    clustering.utils.logging
-   clustering.utils.config 
+   clustering.utils.config

@@ -19,4 +19,4 @@ This directory contains all external data sources used in the store clustering p
 
 ## Environment Variable
 
-This directory is referenced by the environment variable `EXTERNAL_DATA_DIR` with default value `/workspaces/testing-dagster/data/external` 
+This directory is referenced by the environment variable `EXTERNAL_DATA_DIR` with default value `/workspaces/testing-dagster/data/external`

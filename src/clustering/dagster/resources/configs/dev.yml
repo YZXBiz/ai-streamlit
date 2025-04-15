@@ -16,29 +16,29 @@ paths:
 job_params:
   ### --- Feature engineering parameters --- ###
   ignore_features: ["STORE_NBR"]
-  
+
   # Normalization settings
   normalize: true
   norm_method: "robust"
-  
+
   # Imputation settings
   imputation_type: "simple"
   numeric_imputation: "mean"
   categorical_imputation: "mode"
-  
+
   # Outlier detection
   outlier_detection: true
   outliers_method: "iforest"
   outlier_threshold: 0.05
-  
+
   # Dimensionality reduction
   pca_active: true
   pca_method: "linear"
   pca_components: 0.8
-  
+
   # Metadata generation
   feature_metadata_detail: "full"
-  
+
   ### --- Model training parameters --- ###
 
   # Optimal cluster count parameters
@@ -48,7 +48,7 @@ job_params:
 
   # Model training parameters
   algorithm: "kmeans"
-  
+
   # Random seed for reproducibility
   session_id: 42
 
@@ -67,7 +67,7 @@ readers:
     kind: "PickleReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
-  
+
   # External data sources
   external_placerai:
     kind: "CSVReader"
@@ -106,7 +106,7 @@ writers:
     kind: "PickleWriter"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/cluster_assignments.pkl
-  
+
   # External data writers
   external_data_output:
     kind: "PickleWriter"

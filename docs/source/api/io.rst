@@ -13,4 +13,4 @@ Submodules
    :maxdepth: 4
 
    clustering.io.readers
-   clustering.io.writers 
+   clustering.io.writers

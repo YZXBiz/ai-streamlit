@@ -175,6 +175,7 @@ def test_preprocessed_external_data_pandas(mock_external_data):
     assert mock_writer.written_data is not None
     assert isinstance(mock_writer.written_data, pd.DataFrame)  # Should be a pandas DataFrame
 
+
 # Mock preprocessed data - no need to create expected_merged variable that's unused
 preprocessed_data = pl.DataFrame(
     {

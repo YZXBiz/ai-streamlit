@@ -27,4 +27,4 @@ The merged clusters provide a comprehensive view of store segmentation based on 
 
 ## Environment Variable
 
-This directory is referenced by the environment variable `MERGING_DATA_DIR` with default value `/workspaces/testing-dagster/data/merging` 
+This directory is referenced by the environment variable `MERGING_DATA_DIR` with default value `/workspaces/testing-dagster/data/merging`

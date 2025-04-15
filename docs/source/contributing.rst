@@ -36,14 +36,14 @@ Example docstring:
 
    def my_function(param1: str, param2: int) -> bool:
        """Does something useful with the parameters.
-       
+
        Args:
            param1: A string parameter description
            param2: An integer parameter description
-           
+
        Returns:
            A boolean result
-           
+
        Raises:
            ValueError: If param1 is empty
        """
@@ -55,4 +55,4 @@ Run tests with:
 
 .. code-block:: bash
 
-   pytest 
+   pytest

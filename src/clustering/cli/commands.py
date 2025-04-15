@@ -6,9 +6,8 @@ clustering pipeline. It allows users to run jobs, manage sensors, and access the
 
 import os
 import sys
-import traceback
 from pathlib import Path
-from typing import NoReturn, Optional, cast
+from typing import NoReturn
 
 import click
 import dagster as dg
@@ -44,7 +43,7 @@ def load_env_file(env: str | Environment = Environment.DEV) -> bool:
     """
     # Convert Environment enum to string if needed
     env_str = env.value if isinstance(env, Environment) else env
-    
+
     # First try environment-specific .env file
     root_dir = Path(__file__).parent.parent.parent.parent  # Get to project root
     env_file = root_dir / f".env.{env_str}"
@@ -85,7 +84,7 @@ def run_job(
     """
     # Convert Environment enum to string if needed
     env_str = env.value if isinstance(env, Environment) else env
-    
+
     # Create definitions for the specified environment
     try:
         definitions = create_definitions(env_str)
@@ -124,7 +123,7 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
 
     Returns:
         Dictionary of tags with keys and values as strings
-        
+
     Examples:
         >>> parse_tags(["env=prod", "version=1.0"])
         {'env': 'prod', 'version': '1.0'}
@@ -144,7 +143,7 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
 
 def exit_with_error(message: str, exit_code: int = 1) -> NoReturn:
     """Exit the program with an error message.
-    
+
     Args:
         message: Error message to display
         exit_code: Exit code to use (default: 1)
@@ -155,13 +154,13 @@ def exit_with_error(message: str, exit_code: int = 1) -> NoReturn:
 
 def get_available_jobs(env: str | Environment = Environment.DEV) -> list[str]:
     """Get list of available jobs in the specified environment.
-    
+
     Args:
         env: Environment to use
-        
+
     Returns:
         List of job names
-        
+
     Raises:
         Exception: If jobs cannot be retrieved
     """
@@ -239,7 +238,9 @@ def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool, debug: bo
             for step_failure in result.all_node_events:
                 if step_failure.is_failure:
                     failure_count += 1
-                    error_msg = getattr(step_failure.event_specific_data.error, "message", "Unknown error")
+                    error_msg = getattr(
+                        step_failure.event_specific_data.error, "message", "Unknown error"
+                    )
                     click.secho(
                         f"  - Step '{step_failure.step_key}' failed: {error_msg}",
                         fg="red",

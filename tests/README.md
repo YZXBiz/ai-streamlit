@@ -42,4 +42,4 @@ Test data is generated using fixtures in `conftest.py`. If you need additional t
 
 ## Mocking
 
-Mock external dependencies (like Azure Blob Storage) using pytest fixtures. See the `mock_env_vars` fixture in `conftest.py` for an example. 
+Mock external dependencies (like Azure Blob Storage) using pytest fixtures. See the `mock_env_vars` fixture in `conftest.py` for an example.

@@ -38,4 +38,4 @@ Installation Steps
 
    .. code-block:: bash
 
-      python -m src.clustering --help 
+      python -m src.clustering --help

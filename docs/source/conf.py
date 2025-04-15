@@ -1,3 +1,8 @@
+"""Sphinx configuration file for the CVS Dagster Project documentation."""
+
+import os
+import sys
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -58,7 +63,4 @@ html_static_path = ["_static"]
 # so a file named "default.css" will overwrite the builtin "default.css".
 
 # Set up sys.path for autodoc to find your modules
-import os
-import sys
-
 sys.path.insert(0, os.path.abspath("../.."))

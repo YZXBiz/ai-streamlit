@@ -22,4 +22,4 @@ This directory contains all internal store data used for clustering analysis.
 
 ## Environment Variable
 
-This directory is referenced by the environment variable `INTERNAL_DATA_DIR` with default value `/workspaces/testing-dagster/data/internal` 
+This directory is referenced by the environment variable `INTERNAL_DATA_DIR` with default value `/workspaces/testing-dagster/data/internal`

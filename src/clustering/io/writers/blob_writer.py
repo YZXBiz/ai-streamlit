@@ -69,6 +69,6 @@ class BlobWriter(Writer):
         except AzureError as e:
             raise RuntimeError(f"Azure service error when uploading blob: {str(e)}") from e
         except ServiceRequestError as e:
-            raise RuntimeError(f"Network error when uploading blob: {str(e)}") from e 
+            raise RuntimeError(f"Network error when uploading blob: {str(e)}") from e
         except Exception as e:
             raise RuntimeError(f"Unexpected error when uploading blob: {str(e)}") from e

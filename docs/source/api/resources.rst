@@ -11,4 +11,4 @@ This page documents the Dagster resources used in the project.
 .. automodule:: src.clustering.infra
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:

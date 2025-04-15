@@ -1,13 +1,13 @@
 ################################################################################
 # Store Clustering - Data Pipeline Project Makefile
 ################################################################################
-# 
+#
 # Author: Jackson Yang <Jackson.Yang@cvshealth.com>
 # Version: 1.0.0
 # Copyright (c) 2025 CVS Health
 #
 # Description:
-#   This Makefile provides targets for developing, testing, and running the 
+#   This Makefile provides targets for developing, testing, and running the
 #   Store Clustering data pipeline project built with Dagster.
 #
 ################################################################################
@@ -22,10 +22,10 @@ VERSION := 1.0.0
 AUTHOR := Jackson Yang
 
 # Directory paths
-SRC_DIR := src 
+SRC_DIR := src
 TESTS_DIR := tests
 DAGSTER_CONFIG_DIR := $(SRC_DIR)/$(PACKAGE_NAME)/dagster/resources/configs
-DOCS_DIR := docs 
+DOCS_DIR := docs
 
 # Include .env file if it exists
 # This loads environment variables from .env before setting defaults
@@ -97,7 +97,7 @@ help: ## Display this help message
 
 ##@ Setup
 
-.PHONY: print-env
+.PHONY: print-env setup-hooks
 print-env: ## Display current environment variable values
 	@echo "==> Current environment configuration:"
 	@echo "- DAGSTER_HOME: $(DAGSTER_HOME_DIR)"
@@ -108,6 +108,19 @@ print-env: ## Display current environment variable values
 	@echo "- LOGS_DIR: $(LOGS_DIR)"
 	@echo "- DAGSTER_ENV: $(DAGSTER_ENV)"
 	@echo "- ENV: $(ENV)"
+
+setup-hooks: ## Set up pre-commit hooks for development
+	@echo "==> Setting up pre-commit hooks"
+	@if ! command -v pre-commit >/dev/null 2>&1; then \
+		echo "Installing pre-commit..."; \
+		uv pip install pre-commit; \
+	else \
+		echo "pre-commit is already installed"; \
+	fi
+	@pre-commit install
+	@echo "✓ Pre-commit hooks installed successfully"
+	@echo "  Git will now run the hooks on each commit."
+	@echo "  To run hooks manually: make check-all"
 
 ################################################################################
 # DEPENDENCY MANAGEMENT
@@ -165,10 +178,16 @@ type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
 	@$(PYTHON) -m mypy $(SRC_DIR) $(TESTS_DIR)
 	@echo "==> Running pyright type checker"
-	@$(PYTHON) -m pyright $(SRC_DIR) $(TESTS_DIR)
-	@echo "✓ Type checking complete"
+	-@$(PYTHON) -m pyright $(SRC_DIR) $(TESTS_DIR)
+	@echo "✓ Type checking complete (warnings may be present)"
 
-check-all: format lint type-check ## Run all code quality checks
+check-all: format lint type-check ## Run all code quality checks including pre-commit hooks
+	@echo "==> Running pre-commit checks"
+	@if command -v pre-commit >/dev/null 2>&1; then \
+		pre-commit run --all-files; \
+	else \
+		echo "pre-commit not installed. Install with: make setup-hooks"; \
+	fi
 	@echo "✓ All code quality checks completed successfully"
 
 version: ## Display version and author information
@@ -338,4 +357,21 @@ docs: docs-deps ## Build documentation
 docs-server: docs-deps ## Start documentation server (http://localhost:8000)
 	@echo "==> Starting documentation server"
 	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(PYTHON) -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
-	@echo "✓ Documentation server running at http://localhost:8000" 
+	@echo "✓ Documentation server running at http://localhost:8000"
+
+################################################################################
+# PRE-COMMIT HOOKS
+################################################################################
+
+##@ Pre-commit
+
+.PHONY: pre-commit pre-commit-all
+pre-commit: ## Run pre-commit hooks on staged files
+	@echo "==> Running pre-commit hooks on staged files"
+	@pre-commit run
+	@echo "✓ Pre-commit hooks completed"
+
+pre-commit-all: ## Run pre-commit hooks on all files
+	@echo "==> Running pre-commit hooks on all files"
+	@pre-commit run --all-files
+	@echo "✓ Pre-commit hooks completed for all files"

@@ -2,10 +2,7 @@
 
 # Preprocessing assets
 # Feature engineering, model training, cluster assignment and analysis assets
-from clustering.dagster.assets.clustering import (
-    # No longer importing assign_clusters directly as it doesn't exist
-    # assign_clusters,
-    # Import the prefixed versions instead
+from clustering.dagster.assets.clustering import (  # No longer importing assign_clusters directly as it doesn't exist; assign_clusters,; Import the prefixed versions instead
     external_assign_clusters,
     external_calculate_cluster_metrics,
     external_dimensionality_reduced_features,

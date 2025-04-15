@@ -26,4 +26,4 @@ These raw files serve as the starting point for the pipeline. They should not be
 - Data files should be placed here before running the pipeline
 - Files should be in the expected format (CSV with proper headers)
 - Make sure all required files are present before starting the pipeline
-- This directory is for initial data only; processed data will be saved elsewhere 
+- This directory is for initial data only; processed data will be saved elsewhere
