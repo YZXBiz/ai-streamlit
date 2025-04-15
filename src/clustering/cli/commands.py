@@ -1,6 +1,6 @@
 """Command-line interface for the clustering pipeline.
 
-This module provides a user-friendly CLI for interacting with the Dagster-based 
+This module provides a user-friendly CLI for interacting with the Dagster-based
 clustering pipeline. It allows users to run jobs, manage sensors, and access the web UI.
 """
 
@@ -13,6 +13,7 @@ from typing import Any, Callable, cast
 import click
 import dagster as dg
 from dagster._core.instance import DagsterInstance
+
 s
 from clustering.dagster import create_definitions
 from clustering.infra import CONFIG
@@ -26,9 +27,10 @@ except ImportError:
         """Fallback implementation if dotenv is not installed."""
         click.secho(
             "Warning: python-dotenv not installed. Environment variables from .env files will not be loaded.",
-            fg="yellow"
+            fg="yellow",
         )
         return False
+
 
 from clustering.dagster.sensors import (
     external_data_sensor,
@@ -128,7 +130,10 @@ def parse_tags(tag_strings: list[str]) -> dict[str, str]:
             key, value = tag.split("=", 1)
             tags[key] = value
         else:
-            click.secho(f"Warning: Ignoring invalid tag format: {tag}. Expected format: key=value", fg="yellow")
+            click.secho(
+                f"Warning: Ignoring invalid tag format: {tag}. Expected format: key=value",
+                fg="yellow",
+            )
     return tags
 
 
@@ -144,7 +149,7 @@ AVAILABLE_SENSORS = {
 @click.version_option(version="0.1.0")
 def main():
     """Clustering Pipeline CLI.
-    
+
     A command-line interface for managing the clustering pipeline, including
     running jobs, managing sensors, and accessing the web UI.
     """
@@ -154,7 +159,7 @@ def main():
 @main.group()
 def sensor():
     """Manage clustering pipeline sensors.
-    
+
     Sensors monitor for changes and trigger pipeline runs when needed.
     """
     pass
@@ -164,14 +169,17 @@ def sensor():
 @click.argument("sensor_name", required=False)
 def start(sensor_name: str | None):
     """Start a sensor by name or all sensors if no name is provided.
-    
+
     SENSOR_NAME: Optional name of the sensor to start
     """
     if sensor_name:
         if sensor_name not in AVAILABLE_SENSORS:
-            click.secho(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}", fg="red")
+            click.secho(
+                f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}",
+                fg="red",
+            )
             sys.exit(1)
-        
+
         # Start specific sensor
         click.secho(f"Starting sensor: {sensor_name}", fg="green")
         try:
@@ -199,14 +207,17 @@ def start(sensor_name: str | None):
 @click.argument("sensor_name", required=False)
 def stop(sensor_name: str | None):
     """Stop a sensor by name or all sensors if no name is provided.
-    
+
     SENSOR_NAME: Optional name of the sensor to stop
     """
     if sensor_name:
         if sensor_name not in AVAILABLE_SENSORS:
-            click.secho(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}", fg="red")
+            click.secho(
+                f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}",
+                fg="red",
+            )
             sys.exit(1)
-        
+
         # Stop specific sensor
         click.secho(f"Stopping sensor: {sensor_name}", fg="yellow")
         try:
@@ -233,7 +244,7 @@ def stop(sensor_name: str | None):
 def list_sensors():
     """List all sensors and their status."""
     click.secho("Listing sensors...", fg="blue")
-    
+
     instance = DagsterInstance.get()
     for name, sensor_def in AVAILABLE_SENSORS.items():
         try:
@@ -250,19 +261,22 @@ def list_sensors():
 @click.argument("sensor_name")
 def preview(sensor_name: str):
     """Preview a sensor execution without triggering runs.
-    
+
     SENSOR_NAME: Name of the sensor to preview
     """
     if sensor_name not in AVAILABLE_SENSORS:
-        click.secho(f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}", fg="red")
+        click.secho(
+            f"Error: Sensor '{sensor_name}' not found. Available sensors: {', '.join(AVAILABLE_SENSORS.keys())}",
+            fg="red",
+        )
         sys.exit(1)
-    
+
     click.secho(f"Previewing sensor: {sensor_name}", fg="blue")
-    
+
     # Use Dagster Python API instead of subprocess
     sensor_def = AVAILABLE_SENSORS[sensor_name]
     instance = DagsterInstance.get()
-    
+
     try:
         context = dg.SensorEvaluationContext(
             instance_ref=instance.get_ref(),
@@ -271,19 +285,19 @@ def preview(sensor_name: str):
             last_run_key=None,
             cursor=None,
         )
-        
+
         result = sensor_def.evaluate_tick(context)
-        
+
         if result.run_requests:
             click.secho(f"\nSensor would create {len(result.run_requests)} run(s):", fg="green")
             for i, request in enumerate(result.run_requests):
-                click.secho(f"\n--- Run {i+1} ---", fg="blue")
+                click.secho(f"\n--- Run {i + 1} ---", fg="blue")
                 click.secho(f"Job: {request.job_name}", fg="blue")
                 click.secho(f"Tags: {request.tags}", fg="blue")
                 click.secho(f"Run config: {request.run_config}", fg="blue")
         else:
             click.secho("\nSensor would not create any runs at this time.", fg="yellow")
-            
+
         if result.cursor:
             click.secho(f"\nSensor would update cursor to: {result.cursor}", fg="blue")
     except Exception as e:
@@ -297,22 +311,13 @@ def preview(sensor_name: str):
     "--env",
     type=click.Choice(["dev", "staging", "prod"]),
     default=CONFIG.env,
-    help="Environment to use (dev, staging, prod)"
+    help="Environment to use (dev, staging, prod)",
 )
-@click.option(
-    "--tags",
-    type=str,
-    multiple=True,
-    help="Tags in format key=value to add to the run"
-)
-@click.option(
-    "--verbose", "-v",
-    is_flag=True,
-    help="Show verbose output"
-)
+@click.option("--tags", type=str, multiple=True, help="Tags in format key=value to add to the run")
+@click.option("--verbose", "-v", is_flag=True, help="Show verbose output")
 def run(job_name: str, env: str, tags: Tuple[str, ...], verbose: bool):
     """Run a Dagster job.
-    
+
     JOB_NAME: Name of the job to run. Options include:
     - internal_preprocessing_job
     - internal_clustering_job
@@ -325,28 +330,28 @@ def run(job_name: str, env: str, tags: Tuple[str, ...], verbose: bool):
     os.environ["DAGSTER_ENV"] = env
     # Load environment variables from .env file
     load_env_file(env)
-    
+
     # Parse tags
     tag_dict = parse_tags(list(tags)) if tags else {}
-    
+
     # Run the job
     click.secho(f"Starting Dagster job '{job_name}' in {env.upper()} environment", fg="blue")
     if verbose:
         click.secho(f"Tags: {tag_dict}", fg="blue")
-    
+
     try:
         result = run_job(job_name, env, tag_dict)
-        
+
         # Check result
         if result.success:
             click.secho(f"✅ Job '{job_name}' completed successfully", fg="green")
-            
+
             if verbose:
                 click.secho("\nStep details:", fg="blue")
                 for step_event in result.all_node_events:
                     if step_event.is_successful_output:
                         click.secho(f"  - {step_event.step_key}: SUCCESS", fg="green")
-                        
+
             sys.exit(0)
         else:
             click.secho(f"❌ Job '{job_name}' failed:", fg="red")
@@ -355,7 +360,7 @@ def run(job_name: str, env: str, tags: Tuple[str, ...], verbose: bool):
                     click.secho(
                         f"  - Step '{step_failure.step_key}' failed: "
                         f"{step_failure.event_specific_data.error.message}",
-                        fg="red"
+                        fg="red",
                     )
             sys.exit(1)
     except ValueError as e:
@@ -367,40 +372,32 @@ def run(job_name: str, env: str, tags: Tuple[str, ...], verbose: bool):
 
 
 @main.command()
-@click.option(
-    "--host",
-    type=str,
-    default="localhost",
-    help="Host to bind to"
-)
-@click.option(
-    "--port",
-    type=int,
-    default=3000,
-    help="Port to bind to"
-)
+@click.option("--host", type=str, default="localhost", help="Host to bind to")
+@click.option("--port", type=int, default=3000, help="Port to bind to")
 @click.option(
     "--env",
     type=click.Choice(["dev", "staging", "prod"]),
     default=CONFIG.env,
-    help="Environment to use (dev, staging, prod)"
+    help="Environment to use (dev, staging, prod)",
 )
 def ui(host: str, port: int, env: str):
     """Launch the Dagster web UI.
-    
+
     This provides a web interface for monitoring and managing the clustering pipeline.
     """
     # Set environment variable
     os.environ["DAGSTER_ENV"] = env
     # Load environment variables from .env file
     load_env_file(env)
-    
+
     # Import here to avoid circular imports
     try:
         from clustering.dagster.app import run_app
-        
+
         # Run the UI
-        click.secho(f"Starting Dagster web UI in {env.upper()} environment on {host}:{port}", fg="blue")
+        click.secho(
+            f"Starting Dagster web UI in {env.upper()} environment on {host}:{port}", fg="blue"
+        )
         click.secho(f"Access the UI at http://{host}:{port}", fg="green")
         run_app(host=host, port=port, env=env)
     except ImportError as e:
@@ -412,26 +409,16 @@ def ui(host: str, port: int, env: str):
 
 
 @main.command()
-@click.option(
-    "--host",
-    type=str,
-    default="localhost",
-    help="Host to bind to"
-)
-@click.option(
-    "--port",
-    type=int,
-    default=3000,
-    help="Port to bind to"
-)
+@click.option("--host", type=str, default="localhost", help="Host to bind to")
+@click.option("--port", type=int, default=3000, help="Port to bind to")
 def minimal(host: str, port: int):
     """Run minimal example with SQL engine.
-    
+
     This launches a simplified version of the pipeline for demonstration purposes.
     """
     click.secho(f"Starting minimal Dagster example on {host}:{port}", fg="blue")
     click.secho(f"Access the UI at http://{host}:{port}", fg="green")
-    
+
     try:
         dg.webserver.run_webserver(
             host=host,
@@ -451,14 +438,14 @@ def minimal(host: str, port: int):
 def list_jobs():
     """List all available jobs in the Dagster repository."""
     click.secho("Listing available jobs:", fg="blue")
-    
+
     try:
         # Create definitions for the current environment
         definitions = create_definitions(CONFIG.env)
-        
+
         # Get all job definitions
         jobs = [job_def.name for job_def in definitions.get_all_job_defs()]
-        
+
         if jobs:
             for job in sorted(jobs):
                 click.secho(f"- {job}", fg="green")

@@ -146,9 +146,7 @@ def dagster_asset_context() -> object:
         A Dagster asset context.
     """
     return build_asset_context(
-        resources={
-            "io_manager": {"config": {"base_path": "/tmp/test_dagster"}}
-        }
+        resources={"io_manager": {"config": {"base_path": "/tmp/test_dagster"}}}
     )
 
 
@@ -160,9 +158,7 @@ def dagster_op_context() -> object:
         A Dagster op context.
     """
     return build_op_context(
-        resources={
-            "io_manager": {"config": {"base_path": "/tmp/test_dagster"}}
-        }
+        resources={"io_manager": {"config": {"base_path": "/tmp/test_dagster"}}}
     )
 
 
@@ -179,4 +175,4 @@ def mock_csv_file(temp_data_dir: Path, sample_sales_data: pd.DataFrame) -> Path:
     """
     csv_path = temp_data_dir / "test_data.csv"
     sample_sales_data.to_csv(csv_path, index=False)
-    return csv_path 
+    return csv_path

@@ -3,16 +3,20 @@
 import pytest
 import src.clustering.dagster.resources.logging as logging_mod
 
+
 def test_alerts_service_send_alert(monkeypatch):
     service = logging_mod.AlertsService(enabled=True, threshold="WARNING", slack_webhook=None)
     called = {}
+
     def fake_send(level, message):
         called["level"] = level
         called["message"] = message
+
     monkeypatch.setattr(service, "send_alert", fake_send)
     service.send_alert("ERROR", "Test message")
     assert called["level"] == "ERROR"
     assert called["message"] == "Test message"
+
 
 def test_alerts_service_disabled():
     service = logging_mod.AlertsService(enabled=False)

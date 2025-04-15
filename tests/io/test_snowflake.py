@@ -109,7 +109,12 @@ def test_snowflake_reader_read_with_cache(
 @patch("clustering.io.readers.snowflake_reader.os.path.exists")
 @patch("clustering.io.readers.snowflake_reader.SnowflakeReader._create_connection")
 def test_snowflake_reader_read_without_cache(
-    mock_create_conn, mock_exists, mock_duckdb_connect, mock_read_database, sample_data, mock_snowflake_connection
+    mock_create_conn,
+    mock_exists,
+    mock_duckdb_connect,
+    mock_read_database,
+    sample_data,
+    mock_snowflake_connection,
 ):
     """Test SnowflakeReader read method with cache miss."""
     # Setup mocks
@@ -137,7 +142,8 @@ def test_snowflake_reader_read_without_cache(
 
     # Verify the query was saved to cache
     mock_duckdb_connect.return_value.execute.assert_called_with(
-        "INSERT INTO cache VALUES (?, ?)", ("SELECT * FROM test_table", mock_read_database.return_value.write_parquet())
+        "INSERT INTO cache VALUES (?, ?)",
+        ("SELECT * FROM test_table", mock_read_database.return_value.write_parquet()),
     )
 
     # Verify result
@@ -168,7 +174,9 @@ def test_snowflake_writer_init():
 
 @patch("clustering.io.writers.snowflake_writer.snowflake.connector.pandas_tools.write_pandas")
 @patch("clustering.io.writers.snowflake_writer.SnowflakeWriter._create_connection")
-def test_snowflake_writer_write(mock_create_conn, mock_write_pandas, sample_data, mock_snowflake_connection):
+def test_snowflake_writer_write(
+    mock_create_conn, mock_write_pandas, sample_data, mock_snowflake_connection
+):
     """Test SnowflakeWriter write method."""
     # Setup mocks
     mock_create_conn.return_value = mock_snowflake_connection

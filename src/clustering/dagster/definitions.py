@@ -52,7 +52,7 @@ from clustering.dagster.assets import (
     internal_generate_cluster_visualizations,
 )
 
-# External ML assets - feature engineering 
+# External ML assets - feature engineering
 from clustering.dagster.assets import (
     external_fe_raw_data,
     external_filtered_features,
@@ -258,28 +258,29 @@ full_pipeline_job = dg.define_asset_job(
                 }
             }
         }
-    }
+    },
 )
 
 # -----------------------------------------------------------------------------
 # Configuration loading
 # -----------------------------------------------------------------------------
 
+
 def load_config(env: str = "dev") -> dict[str, Any]:
     """Load configuration from YAML file for the specified environment.
-    
+
     Args:
         env: Environment name (dev, staging, prod)
-        
+
     Returns:
         Dictionary containing configuration data with resolved environment variables
     """
     config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
-    
+
     try:
         # Use the Hydra-style config loader to resolve environment variables
         config_data = hydra_load_config(config_path)
-            
+
         if config_data is None:
             print(f"WARNING: Config file {config_path} parsed as None, using empty config")
             config_data = {}
@@ -290,14 +291,16 @@ def load_config(env: str = "dev") -> dict[str, Any]:
             "job_params": {},
             "logger": {"level": "INFO", "sink": f"logs/dagster_{env}.log"},
             "readers": {},
-            "writers": {}
+            "writers": {},
         }
 
     return config_data
 
+
 # -----------------------------------------------------------------------------
 # Resource definitions
 # -----------------------------------------------------------------------------
+
 
 def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
     """Get resource definitions based on environment.
@@ -330,17 +333,16 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "io_manager": dg.FilesystemIOManager(
             base_dir=os.environ.get("DAGSTER_STORAGE_DIR", "storage")
         ),
-        
         # Parameter resources (both names point to same resource)
         "job_params": params_resource,
         "config": params_resource,
-        
         # Logger
-        "logger": logger_service.configured({
-            "sink": logger_config.get("sink", f"logs/dagster_{env}.log"),
-            "level": logger_config.get("level", "INFO"),
-        }),
-        
+        "logger": logger_service.configured(
+            {
+                "sink": logger_config.get("sink", f"logs/dagster_{env}.log"),
+                "level": logger_config.get("level", "INFO"),
+            }
+        ),
         # Data readers
         "internal_ns_sales": data_io.data_reader.configured(
             readers_config.get("internal_ns_sales", {})
@@ -357,7 +359,6 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
         "input_external_placerai_reader": data_io.data_reader.configured(
             readers_config.get("external_placerai", {})
         ),
-        
         # Data writers
         "output_sales_writer": data_io.data_writer.configured(
             writers_config.get("internal_sales_output", {})
@@ -390,9 +391,11 @@ def get_resources_by_env(env: str = "dev") -> dict[str, dg.ResourceDefinition]:
 
     return resources
 
+
 # -----------------------------------------------------------------------------
 # Definitions creation
 # -----------------------------------------------------------------------------
+
 
 def create_definitions(env: str = "dev") -> dg.Definitions:
     """Create Dagster definitions for the specified environment.
@@ -432,8 +435,9 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
             external_ml_job,
             merging_job,
             full_pipeline_job,
-        ],        
+        ],
     )
+
 
 # -----------------------------------------------------------------------------
 # Default definitions
@@ -442,13 +446,15 @@ def create_definitions(env: str = "dev") -> dg.Definitions:
 # Create default definitions for dev environment
 defs = create_definitions(env="dev")
 
+
 def get_definitions():
     """Get the definitions object.
-    
+
     Returns:
         Dagster definitions object for the default (dev) environment
     """
     return defs
+
 
 # Export symbols
 __all__ = ["create_definitions", "get_definitions", "defs"]

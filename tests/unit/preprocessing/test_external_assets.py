@@ -191,6 +191,4 @@ def test_preprocessed_external_data_pandas(mock_external_data):
     # Check the result
     assert isinstance(result, pl.DataFrame)
     assert mock_writer.written_data is not None
-    assert isinstance(
-        mock_writer.written_data, pd.DataFrame
-    )  # Should be a pandas DataFrame
+    assert isinstance(mock_writer.written_data, pd.DataFrame)  # Should be a pandas DataFrame

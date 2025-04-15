@@ -491,20 +491,22 @@ def external_feature_metadata(
 
             # Add descriptive statistics as string columns
             stats_dict = {f"stats_{i}": str(v) for i, v in enumerate(df.describe().to_dicts())}
-            metadata_df = metadata_df.with_columns([
-                pl.lit(v).alias(k) for k, v in stats_dict.items()
-            ])
+            metadata_df = metadata_df.with_columns(
+                [pl.lit(v).alias(k) for k, v in stats_dict.items()]
+            )
 
             # Add sample data
             sample_dict = {f"sample_{i}": str(v) for i, v in enumerate(df.head(5).to_dicts())}
-            metadata_df = metadata_df.with_columns([
-                pl.lit(v).alias(k) for k, v in sample_dict.items()
-            ])
+            metadata_df = metadata_df.with_columns(
+                [pl.lit(v).alias(k) for k, v in sample_dict.items()]
+            )
 
             # Add correlation matrix for numeric columns
             numeric_cols = df.select(pl.col(pl.NUMERIC_DTYPES)).columns
             if numeric_cols:
-                context.log.info(f"Calculating correlation matrix for {len(numeric_cols)} numeric columns")
+                context.log.info(
+                    f"Calculating correlation matrix for {len(numeric_cols)} numeric columns"
+                )
                 corr_matrix = df.select(numeric_cols).to_pandas().corr().to_dict()
                 metadata_df = metadata_df.with_column(
                     pl.lit(str(corr_matrix)).alias("correlations")
@@ -519,17 +521,13 @@ def external_feature_metadata(
             config_info = {
                 "algorithm": getattr(context.resources.config, "algorithm", Defaults.ALGORITHM),
                 "normalization": {
-                    "enabled": getattr(
-                        context.resources.config, "normalize", Defaults.NORMALIZE
-                    ),
+                    "enabled": getattr(context.resources.config, "normalize", Defaults.NORMALIZE),
                     "method": getattr(
                         context.resources.config, "norm_method", Defaults.NORM_METHOD
                     ),
                 },
                 "pca": {
-                    "enabled": getattr(
-                        context.resources.config, "pca_active", Defaults.PCA_ACTIVE
-                    ),
+                    "enabled": getattr(context.resources.config, "pca_active", Defaults.PCA_ACTIVE),
                     "variance": pca_components,
                 },
                 "outlier_detection": {
@@ -545,10 +543,8 @@ def external_feature_metadata(
                     ),
                 },
             }
-            
-            metadata_df = metadata_df.with_column(
-                pl.lit(str(config_info)).alias("config")
-            )
+
+            metadata_df = metadata_df.with_column(pl.lit(str(config_info)).alias("config"))
 
         except Exception as e:
             context.log.warning(f"Error calculating detailed stats: {str(e)}")

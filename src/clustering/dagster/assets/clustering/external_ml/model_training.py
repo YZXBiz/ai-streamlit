@@ -136,18 +136,14 @@ def external_optimal_cluster_counts(
 
     # Determine optimal clusters based on silhouette score (higher is better)
     if "silhouette" in metrics and cluster_metrics:
-        best_k = max(
-            cluster_metrics.keys(), key=lambda k: cluster_metrics[k].get("silhouette", 0)
-        )
+        best_k = max(cluster_metrics.keys(), key=lambda k: cluster_metrics[k].get("silhouette", 0))
         context.log.info(f"Optimal clusters for external data based on silhouette: {best_k}")
     # Fallback to Calinski-Harabasz (higher is better)
     elif "calinski_harabasz" in metrics and cluster_metrics:
         best_k = max(
             cluster_metrics.keys(), key=lambda k: cluster_metrics[k].get("calinski_harabasz", 0)
         )
-        context.log.info(
-            f"Optimal clusters for external data based on calinski_harabasz: {best_k}"
-        )
+        context.log.info(f"Optimal clusters for external data based on calinski_harabasz: {best_k}")
     # Fallback to Davies-Bouldin (lower is better)
     elif "davies_bouldin" in metrics and cluster_metrics:
         best_k = min(
@@ -157,7 +153,9 @@ def external_optimal_cluster_counts(
         context.log.info(f"Optimal clusters for external data based on davies_bouldin: {best_k}")
     else:
         # Default if no metrics match or no clusters were evaluated
-        best_k = min(min_clusters, sample_count - 1) if sample_count > 1 else 2  # Changed from 1 to 2
+        best_k = (
+            min(min_clusters, sample_count - 1) if sample_count > 1 else 2
+        )  # Changed from 1 to 2
         context.log.warning(
             f"Could not determine optimal clusters for external data, using default: {best_k}"
         )
@@ -195,7 +193,7 @@ def external_train_clustering_models(
 
     Args:
         context: Dagster asset execution context
-        external_dimensionality_reduced_features: DataFrame with reduced dimensions 
+        external_dimensionality_reduced_features: DataFrame with reduced dimensions
         external_optimal_cluster_counts: Dictionary mapping category ('default') to optimal cluster count
 
     Returns:
@@ -213,7 +211,7 @@ def external_train_clustering_models(
     df = external_dimensionality_reduced_features
     # Get optimal cluster count for this category
     cluster_count = external_optimal_cluster_counts.get(category, 2)
-    
+
     # Ensure cluster_count is at least 2 as required by PyCaret
     if cluster_count < 2:
         context.log.warning(
@@ -221,7 +219,7 @@ def external_train_clustering_models(
             f"Adjusting to 2 clusters."
         )
         cluster_count = 2
-        
+
     # Ensure we have enough samples for the requested number of clusters
     sample_count = len(df)
     if sample_count <= cluster_count:
@@ -231,7 +229,7 @@ def external_train_clustering_models(
             f"Adjusting to {adjusted_cluster_count} clusters."
         )
         cluster_count = adjusted_cluster_count
-        
+
     # Final validation to ensure we meet PyCaret's requirements
     if sample_count <= 2:
         context.log.error(
@@ -239,7 +237,7 @@ def external_train_clustering_models(
             f"Skipping model training."
         )
         return {}
-        
+
     context.log.info(f"Training {algorithm} with {cluster_count} clusters for external data")
 
     # Convert Polars DataFrame to Pandas for PyCaret
@@ -276,9 +274,9 @@ def external_train_clustering_models(
         {
             "algorithm": algorithm,
             "categories": list(trained_models.keys()),
-            "cluster_counts": dg.MetadataValue.json({
-                category: data["num_clusters"] for category, data in trained_models.items()
-            }),
+            "cluster_counts": dg.MetadataValue.json(
+                {category: data["num_clusters"] for category, data in trained_models.items()}
+            ),
         }
     )
 
@@ -351,11 +349,13 @@ def external_assign_clusters(
 
     # Check if we have any trained models
     if not external_train_clustering_models:
-        context.log.warning("No trained models available for cluster assignment, returning empty DataFrame")
+        context.log.warning(
+            "No trained models available for cluster assignment, returning empty DataFrame"
+        )
         # Create an empty DataFrame with the expected schema
         # Include the original data but add an empty Cluster column
         result_df = external_fe_raw_data.with_columns(pl.lit(None).cast(pl.Int64).alias("Cluster"))
-        
+
         # Add metadata about the assignment
         context.add_output_metadata(
             {
@@ -364,23 +364,23 @@ def external_assign_clusters(
                 "cluster_assigned": False,
             }
         )
-        
+
         return result_df
-    
+
     # Convert Polars DataFrame to Pandas
     pandas_df = external_fe_raw_data.to_pandas()
-    
+
     # Use the default category model if available
     category = "default"
     if category not in external_train_clustering_models:
         context.log.warning("No 'default' model found, using first available model")
         category = next(iter(external_train_clustering_models.keys()))
-    
+
     # Get the model info
     model_info = external_train_clustering_models[category]
     exp = model_info["experiment"]
     model = model_info["model"]
-    
+
     context.log.info(f"Using model to assign clusters")
 
     # Get predictions using the trained model
@@ -391,10 +391,7 @@ def external_assign_clusters(
 
     # Log cluster distribution
     cluster_counts = (
-        assigned_data
-        .group_by("Cluster")
-        .agg(pl.count().alias("count"))
-        .sort("Cluster")
+        assigned_data.group_by("Cluster").agg(pl.count().alias("count")).sort("Cluster")
     )
     context.log.info(f"Cluster distribution:\n{cluster_counts}")
 
@@ -438,12 +435,12 @@ def external_save_cluster_assignments(
     # Check if the DataFrame contains valid cluster assignments
     # Look for non-null values in the Cluster column
     has_clusters = external_assign_clusters.filter(~pl.col("Cluster").is_null()).height > 0
-    
+
     if not has_clusters:
         context.log.warning("No valid clusters to save, skipping storage")
         context.add_output_metadata({"status": "skipped", "reason": "No valid clusters assigned"})
         return
-    
+
     # Use the configured output resource
     assignments_output = context.resources.external_cluster_assignments
 
@@ -453,7 +450,9 @@ def external_save_cluster_assignments(
     assignments_output.save(category, external_assign_clusters)
 
     context.log.info("Successfully saved external cluster assignments")
-    context.add_output_metadata({"status": "success", "records_saved": external_assign_clusters.height})
+    context.add_output_metadata(
+        {"status": "success", "records_saved": external_assign_clusters.height}
+    )
 
 
 @dg.asset(
@@ -484,47 +483,57 @@ def external_calculate_cluster_metrics(
     """
     # Check if there are any trained models
     if not external_train_clustering_models:
-        context.log.warning("No trained models available for metrics calculation, returning empty metrics")
-        empty_metrics = pl.DataFrame([{
-            "category": "default",
-            "num_clusters": None,
-            "silhouette": None,
-            "calinski_harabasz": None,
-            "davies_bouldin": None,
-            "cluster_distribution": "{}",
-            "status": "no_models_available",
-        }])
-        
+        context.log.warning(
+            "No trained models available for metrics calculation, returning empty metrics"
+        )
+        empty_metrics = pl.DataFrame(
+            [
+                {
+                    "category": "default",
+                    "num_clusters": None,
+                    "silhouette": None,
+                    "calinski_harabasz": None,
+                    "davies_bouldin": None,
+                    "cluster_distribution": "{}",
+                    "status": "no_models_available",
+                }
+            ]
+        )
+
         # Store summary in context metadata
         context.add_output_metadata({"status": "no_models_available"})
-        
+
         return empty_metrics
-    
+
     # Check if the DataFrame contains valid cluster assignments
     has_clusters = external_assign_clusters.filter(~pl.col("Cluster").is_null()).height > 0
     if not has_clusters:
         context.log.warning("No valid clusters assigned, returning empty metrics")
-        empty_metrics = pl.DataFrame([{
-            "category": "default",
-            "num_clusters": None,
-            "silhouette": None,
-            "calinski_harabasz": None,
-            "davies_bouldin": None,
-            "cluster_distribution": "{}",
-            "status": "no_clusters_assigned",
-        }])
-        
+        empty_metrics = pl.DataFrame(
+            [
+                {
+                    "category": "default",
+                    "num_clusters": None,
+                    "silhouette": None,
+                    "calinski_harabasz": None,
+                    "davies_bouldin": None,
+                    "cluster_distribution": "{}",
+                    "status": "no_clusters_assigned",
+                }
+            ]
+        )
+
         # Store summary in context metadata
         context.add_output_metadata({"status": "no_clusters_assigned"})
-        
+
         return empty_metrics
-    
+
     # Use the default category if available
     category = "default"
     if category not in external_train_clustering_models:
         context.log.warning("No 'default' model found, using first available model")
         category = next(iter(external_train_clustering_models.keys()))
-    
+
     context.log.info(f"Calculating evaluation metrics for external data")
 
     # Get model info
@@ -556,15 +565,19 @@ def external_calculate_cluster_metrics(
     )
 
     # Create DataFrame from metrics
-    metrics_df = pl.DataFrame([{
-        "category": category,
-        "num_clusters": model_info["num_clusters"],
-        "silhouette": pycaret_metrics.get("silhouette", None),
-        "calinski_harabasz": pycaret_metrics.get("calinski_harabasz", None),
-        "davies_bouldin": pycaret_metrics.get("davies_bouldin", None),
-        "cluster_distribution": str(cluster_distribution),
-        "status": "success",
-    }])
+    metrics_df = pl.DataFrame(
+        [
+            {
+                "category": category,
+                "num_clusters": model_info["num_clusters"],
+                "silhouette": pycaret_metrics.get("silhouette", None),
+                "calinski_harabasz": pycaret_metrics.get("calinski_harabasz", None),
+                "davies_bouldin": pycaret_metrics.get("davies_bouldin", None),
+                "cluster_distribution": str(cluster_distribution),
+                "status": "success",
+            }
+        ]
+    )
 
     # Store summary in context metadata
     context.add_output_metadata(
@@ -608,35 +621,45 @@ def external_generate_cluster_visualizations(
     """
     # Check if there are any trained models
     if not external_train_clustering_models:
-        context.log.warning("No trained models available for visualizations, returning empty visualization data")
-        empty_vis = pl.DataFrame([{
-            "category": "default",
-            "type": "none",
-            "path": "none",
-            "status": "no_models_available",
-        }])
-        
+        context.log.warning(
+            "No trained models available for visualizations, returning empty visualization data"
+        )
+        empty_vis = pl.DataFrame(
+            [
+                {
+                    "category": "default",
+                    "type": "none",
+                    "path": "none",
+                    "status": "no_models_available",
+                }
+            ]
+        )
+
         # Store summary in context metadata
         context.add_output_metadata({"status": "no_models_available"})
-        
+
         return empty_vis
-    
+
     # Check if the DataFrame contains valid cluster assignments
     has_clusters = external_assign_clusters.filter(~pl.col("Cluster").is_null()).height > 0
     if not has_clusters:
         context.log.warning("No valid clusters assigned, returning empty visualization data")
-        empty_vis = pl.DataFrame([{
-            "category": "default",
-            "type": "none",
-            "path": "none",
-            "status": "no_clusters_assigned",
-        }])
-        
+        empty_vis = pl.DataFrame(
+            [
+                {
+                    "category": "default",
+                    "type": "none",
+                    "path": "none",
+                    "status": "no_clusters_assigned",
+                }
+            ]
+        )
+
         # Store summary in context metadata
         context.add_output_metadata({"status": "no_clusters_assigned"})
-        
+
         return empty_vis
-    
+
     visualizations = []
 
     # Use the default category if available
@@ -656,12 +679,14 @@ def external_generate_cluster_visualizations(
     ]
 
     for viz_type in visualization_types:
-        visualizations.append({
-            "category": category,
-            "type": viz_type,
-            "path": f"plots/external_{category}_{viz_type}.png",
-            "status": "success",
-        })
+        visualizations.append(
+            {
+                "category": category,
+                "type": viz_type,
+                "path": f"plots/external_{category}_{viz_type}.png",
+                "status": "success",
+            }
+        )
 
     context.log.info(f"Generated {len(visualizations)} visualizations for external data")
 

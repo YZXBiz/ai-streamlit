@@ -5,23 +5,28 @@ from dagster import build_init_resource_context
 
 import src.clustering.dagster.resources.data_io as data_io
 
+
 def test_data_reader_resource_minimal(monkeypatch):
     class DummyReader:
         pass
+
     monkeypatch.setattr(data_io.io_module, "Reader", DummyReader)
     context = build_init_resource_context(config={"kind": "DummyReader", "config": {}})
     # Should not raise
     result = data_io.data_reader(context)
     assert isinstance(result, DummyReader)
 
+
 def test_data_writer_resource_minimal(monkeypatch):
     class DummyWriter:
         pass
+
     monkeypatch.setattr(data_io.io_module, "Writer", DummyWriter)
     context = build_init_resource_context(config={"kind": "DummyWriter", "config": {}})
     # Should not raise
     result = data_io.data_writer(context)
     assert isinstance(result, DummyWriter)
+
 
 def test_data_reader_invalid_kind(monkeypatch):
     # Simulate missing reader kind

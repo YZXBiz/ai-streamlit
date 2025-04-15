@@ -211,7 +211,7 @@ def internal_train_clustering_models(
     for category, df in internal_dimensionality_reduced_features.items():
         # Get optimal cluster count for this category
         cluster_count = internal_optimal_cluster_counts.get(category, 2)
-        
+
         # Ensure cluster_count is at least 2 as required by PyCaret
         if cluster_count < 2:
             context.log.warning(
@@ -219,7 +219,7 @@ def internal_train_clustering_models(
                 f"Adjusting to 2 clusters."
             )
             cluster_count = 2
-            
+
         # Ensure we have enough samples for the requested number of clusters
         sample_count = len(df)
         if sample_count <= cluster_count:
@@ -229,7 +229,7 @@ def internal_train_clustering_models(
                 f"Adjusting to {adjusted_cluster_count} clusters."
             )
             cluster_count = adjusted_cluster_count
-            
+
         # Final validation to ensure we meet PyCaret's requirements
         if sample_count <= 2:
             context.log.error(
@@ -237,7 +237,7 @@ def internal_train_clustering_models(
                 f"Skipping this category."
             )
             continue
-            
+
         context.log.info(f"Training {algorithm} with {cluster_count} clusters for {category}")
 
         # Convert Polars DataFrame to Pandas for PyCaret
@@ -274,9 +274,9 @@ def internal_train_clustering_models(
         {
             "algorithm": algorithm,
             "categories": list(trained_models.keys()),
-            "cluster_counts": dg.MetadataValue.json({
-                category: data["num_clusters"] for category, data in trained_models.items()
-            }),
+            "cluster_counts": dg.MetadataValue.json(
+                {category: data["num_clusters"] for category, data in trained_models.items()}
+            ),
         }
     )
 

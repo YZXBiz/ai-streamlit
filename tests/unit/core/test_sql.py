@@ -31,7 +31,9 @@ def test_execute_duckdb_query_pandas_output():
     query = "SELECT * FROM test_data WHERE col1 > 1"
 
     # Execute query
-    result = sql.execute_duckdb_query(query=query, dataframes={"test_data": test_df}, output_format="pandas")
+    result = sql.execute_duckdb_query(
+        query=query, dataframes={"test_data": test_df}, output_format="pandas"
+    )
 
     # Check results
     assert not isinstance(result, pl.DataFrame)
@@ -71,7 +73,9 @@ def test_clean_need_state_query():
 def test_merge_sales_ns_query():
     """Test the merge sales and need state query."""
     # Create test sales data
-    sales_df = pl.DataFrame({"SKU_NBR": [1, 2, 3], "STORE_NBR": [101, 102, 103], "TOTAL_SALES": [1000, 2000, 3000]})
+    sales_df = pl.DataFrame(
+        {"SKU_NBR": [1, 2, 3], "STORE_NBR": [101, 102, 103], "TOTAL_SALES": [1000, 2000, 3000]}
+    )
 
     # Create test need state data
     ns_df = pl.DataFrame(
@@ -86,7 +90,9 @@ def test_merge_sales_ns_query():
         sales_table="sales", ns_table="need_state", sku_col="SKU_NBR", product_col="PRODUCT_ID"
     )
 
-    result = sql.execute_duckdb_query(query=query, dataframes={"sales": sales_df, "need_state": ns_df})
+    result = sql.execute_duckdb_query(
+        query=query, dataframes={"sales": sales_df, "need_state": ns_df}
+    )
 
     # Check results
     assert len(result) == 2  # Only 2 rows should match

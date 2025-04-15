@@ -451,7 +451,9 @@ def internal_dimensionality_reduced_features(
 
         # Report feature reduction
         new_features = processed_data[category].width
-        context.log.info(f"PCA reduced features for {category} from {original_features} to {new_features}")
+        context.log.info(
+            f"PCA reduced features for {category} from {original_features} to {new_features}"
+        )
 
     return processed_data
 

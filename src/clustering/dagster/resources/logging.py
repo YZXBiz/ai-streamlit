@@ -46,10 +46,12 @@ def logger_service(context):
 
 class AlertsService:
     """Alert service for Dagster pipelines."""
-    
-    def __init__(self, enabled: bool = True, threshold: str = "WARNING", slack_webhook: Optional[str] = None):
+
+    def __init__(
+        self, enabled: bool = True, threshold: str = "WARNING", slack_webhook: Optional[str] = None
+    ):
         """Initialize alerts service.
-        
+
         Args:
             enabled: Whether alerts are enabled
             threshold: Minimum severity level to trigger alerts (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -59,24 +61,24 @@ class AlertsService:
         self.threshold = getattr(logging, threshold)
         self.slack_webhook = slack_webhook
         self.logger = logging.getLogger("clustering_alerts")
-        
+
     def send_alert(self, level: str, message: str):
         """Send an alert if the level meets the threshold.
-        
+
         Args:
             level: Alert level (debug, info, warning, error, critical)
             message: Alert message
         """
         if not self.enabled:
             return
-            
+
         level_num = getattr(logging, level.upper())
         if level_num < self.threshold:
             return
-            
+
         # Log the alert
         self.logger.log(level_num, f"ALERT: {message}")
-        
+
         # Send to Slack if configured
         if self.slack_webhook and level_num >= logging.ERROR:
             # In a real implementation, this would send to Slack
@@ -87,10 +89,10 @@ class AlertsService:
 @dg.resource
 def alerts_service(context):
     """Create an alerts service.
-    
+
     Args:
         context: Resource initialization context
-        
+
     Returns:
         Alerts service instance
     """

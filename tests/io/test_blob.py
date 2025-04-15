@@ -58,7 +58,9 @@ def test_blob_reader_init():
 
 
 @patch("clustering.io.readers.blob_reader.BlobClient")
-def test_blob_reader_read_parquet(mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data):
+def test_blob_reader_read_parquet(
+    mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data
+):
     """Test BlobReader read method with Parquet files."""
     # Configure mocks
     mock_blob_client_class.return_value = mock_blob_client
@@ -80,7 +82,9 @@ def test_blob_reader_read_parquet(mock_blob_client_class, mock_blob_client, mock
 
 
 @patch("clustering.io.readers.blob_reader.BlobClient")
-def test_blob_reader_read_csv(mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data):
+def test_blob_reader_read_csv(
+    mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data
+):
     """Test BlobReader read method with CSV files."""
     # Configure mocks
     mock_blob_client_class.return_value = mock_blob_client
@@ -102,7 +106,9 @@ def test_blob_reader_read_csv(mock_blob_client_class, mock_blob_client, mock_blo
 
 
 @patch("clustering.io.readers.blob_reader.BlobClient")
-def test_blob_reader_read_pickle(mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data):
+def test_blob_reader_read_pickle(
+    mock_blob_client_class, mock_blob_client, mock_blob_download_stream, sample_data
+):
     """Test BlobReader read method with Pickle files."""
     # Configure mocks
     mock_blob_client_class.return_value = mock_blob_client
@@ -124,7 +130,9 @@ def test_blob_reader_read_pickle(mock_blob_client_class, mock_blob_client, mock_
 
 
 @patch("clustering.io.readers.blob_reader.BlobClient")
-def test_blob_reader_invalid_extension(mock_blob_client_class, mock_blob_client, mock_blob_download_stream):
+def test_blob_reader_invalid_extension(
+    mock_blob_client_class, mock_blob_client, mock_blob_download_stream
+):
     """Test BlobReader with an invalid file extension."""
     # Configure mocks
     mock_blob_client_class.return_value = mock_blob_client
