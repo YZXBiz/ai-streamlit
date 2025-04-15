@@ -117,7 +117,7 @@ To remove the package:
 
 ```bash
 # Remove the package
-uv pip uninstall clustering-pipeline
+uv remove clustering-pipeline
 
 # Remove all related configuration (optional)
 rm -rf ~/.clustering
