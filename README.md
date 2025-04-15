@@ -6,6 +6,16 @@
 
 A data pipeline for clustering stores based on sales data and external data sources, built with Dagster.
 
+## 👥 Project Ownership
+
+**Author**: Jackson Yang  
+**Email**: Jackson.Yang@cvshealth.com  
+**Organization**: CVS Health
+
+## 📄 License
+
+Copyright © 2025 CVS Health. All rights reserved.
+
 ## 🎯 Project Purpose
 
 This project implements a comprehensive data processing and clustering pipeline for store analysis. It processes both internal sales data and external data sources, applies feature engineering, trains clustering models, and provides tools for analyzing the resulting clusters.
@@ -15,6 +25,8 @@ The primary goal is to identify meaningful store segments that can inform busine
 ## 📋 Table of Contents
 
 - [Store Clustering Data Pipeline](#store-clustering-data-pipeline)
+  - [Project Ownership](#-project-ownership)
+  - [License](#-license)
   - [Project Purpose](#-project-purpose)
   - [Table of Contents](#-table-of-contents)
   - [Features](#-features)
@@ -31,13 +43,12 @@ The primary goal is to identify meaningful store segments that can inform busine
     - [Testing](#testing)
   - [Documentation](#-documentation)
   - [FAQ](#-faq)
-  - [Project Ownership](#-project-ownership)
-  - [License](#-license)
   - [Environment Configuration](#environment-configuration)
     - [Environment Variables](#environment-variables)
     - [Configuration Files](#configuration-files)
     - [Data Directory Structure](#data-directory-structure)
     - [Running with Environment Configuration](#running-with-environment-configuration)
+    - [How the Configuration System Works](#how-the-configuration-system-works)
 
 ## ✨ Features
 
@@ -200,16 +211,6 @@ A: Yes, use `make run-memory-optimized JOB=job_name` to run with memory optimiza
 
 **Q: How do I add a new data source?**  
 A: Add a new reader configuration in the environment config file and create a corresponding asset in the appropriate preprocessing module.
-
-## 👥 Project Ownership
-
-**Author**: Jackson Yang  
-**Email**: Jackson.Yang@cvshealth.com  
-**Organization**: CVS Health
-
-## 📄 License
-
-Copyright © 2025 CVS Health. All rights reserved.
 
 ## Environment Configuration
 
