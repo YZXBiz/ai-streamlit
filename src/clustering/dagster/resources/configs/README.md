@@ -1,147 +1,82 @@
 # Configuration Files
 
-This directory contains the configuration files for various environments in the clustering pipeline.
+This directory contains the YAML configuration files used by the Dagster pipeline for different environments.
 
-## Structure
+## Available Configurations
 
-The system uses a simplified configuration approach with a single file per environment:
-
-- `dev.yml` - Development environment configuration
-- `staging.yml` - Staging environment configuration
-- `prod.yml` - Production environment configuration
+- `dev.yml`: Development environment configuration
+- `staging.yml`: Staging environment configuration
+- `prod.yml`: Production environment configuration
 
 ## Configuration Structure
 
-Each configuration file has the following sections:
+Each configuration file follows the same structure:
 
-1. **Logger** - Configuration for the logger service
+```yaml
+# Alerts and logging configuration
+alerts:
+  enabled: true
+  threshold: WARNING
+logger:
+  level: DEBUG
+  sink: logs/dagster_dev.log
 
-   ```yaml
-   logger:
-     level: INFO
-     sink: logs/dagster_dev.log
-   ```
+# Paths configuration with environment variable substitution
+paths:
+  base_data_dir: ${env:DATA_DIR,/workspaces/testing-dagster/data}
+  internal_data_dir: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}
+  external_data_dir: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}
+  merging_data_dir: ${env:MERGING_DATA_DIR,/workspaces/testing-dagster/data/merging}
 
-2. **Alerts** - Configuration for the alerts service
+# Job parameters for feature engineering and model training
+job_params:
+  # Feature engineering parameters
+  normalize: true
+  norm_method: "robust"
+  # ... other parameters ...
 
-   ```yaml
-   alerts:
-     enabled: true
-     threshold: WARNING
-   ```
+# Data sources (readers) configuration
+readers:
+  internal_ns_map:
+    kind: "CSVReader"
+    config:
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_map.csv
+  # ... other readers ...
 
-3. **Job Parameters** - Parameters for all job types
-
-   ```yaml
-   job_params:
-     # Common parameters
-     algorithm: "kmeans"
-     normalize: true
-
-     # Algorithm specific parameters
-     kmeans:
-       n_clusters: 5
-       random_state: 42
-
-     # Evaluation parameters
-     evaluation:
-       metrics:
-         - "silhouette_score"
-   ```
-
-4. **Readers/Writers** - Configuration for data sources and destinations
-
-   ```yaml
-   readers:
-     external_sales:
-       kind: "SnowflakeReader"
-       config:
-         query: SELECT * FROM DEV_CLUSTERING_DB.RAW.EXTERNAL_SALES
-
-   writers:
-     internal_clusters_output:
-       kind: "SnowflakeWriter"
-       config:
-         table: DEV_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
-         database: DEV_CLUSTERING_DB
-         schema: PROCESSED
-   ```
-
-## Available Reader/Writer Parameters
-
-### Readers
-
-#### SnowflakeReader
-
-- **Required Parameters:**
-  - `query`: SQL query to execute
-- **Optional Parameters:**
-  - `use_cache`: Whether to cache query results (default: `true`)
-  - `cache_file`: Path to the cache file (default: `"cache/snowflake_cache.duckdb"`)
-  - `pkb_path`: Path to the private key file (default: `"creds/pkb.pkl"`)
-  - `creds_path`: Path to the credentials JSON file (default: `"creds/sf_creds.json"`)
-  - `limit`: Maximum number of rows to read (default: `None`)
-
-#### BlobReader
-
-- **Required Parameters:**
-  - `blob_name`: Path to the blob in storage
-- **Optional Parameters:**
-  - `max_concurrency`: Maximum concurrency for downloads (default: `8`)
-  - `limit`: Maximum number of rows to read (default: `None`)
-
-#### Other Available Readers
-
-- **CSVReader**: Reads from CSV files (requires `path` parameter)
-- **ParquetReader**: Reads from Parquet files (requires `path` parameter)
-- **ExcelReader**: Reads from Excel files (requires `path` parameter)
-- **PickleReader**: Reads from Pickle files (requires `path` parameter)
-
-### Writers
-
-#### SnowflakeWriter
-
-- **Required Parameters:**
-  - `table`: Target table name
-  - `database`: Target database
-  - `schema`: Target schema
-- **Optional Parameters:**
-  - `auto_create_table`: Create table if it doesn't exist (default: `true`)
-  - `overwrite`: Overwrite existing data (default: `true`)
-  - `pkb_path`: Path to the private key file (default: `"creds/pkb.pkl"`)
-  - `creds_path`: Path to the credentials JSON file (default: `"creds/sf_creds.json"`)
-
-#### BlobWriter
-
-- **Required Parameters:**
-  - `blob_name`: Target blob path
-- **Optional Parameters:**
-  - `overwrite`: Overwrite existing data (default: `true`)
-  - `max_concurrency`: Maximum concurrency for uploads (default: `8`)
-
-#### Other Available Writers
-
-- **CSVWriter**: Writes to CSV files (requires `path` parameter)
-- **ParquetWriter**: Writes to Parquet files (requires `path` parameter)
-- **ExcelWriter**: Writes to Excel files (requires `path` parameter)
-- **PickleWriter**: Writes to Pickle files (requires `path` parameter)
-
-## Using the Configuration
-
-The configuration files are loaded by the Dagster pipeline at startup. The environment to use is
-specified when creating resources:
-
-```python
-resources = get_resources_by_env("dev")  # Use dev.yml
+# Data destinations (writers) configuration
+writers:
+  internal_sales_output:
+    kind: "PickleWriter"
+    config:
+      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
+  # ... other writers ...
 ```
 
-Within assets, you can access configuration values through the `config` resource:
+## Environment Variable Substitution
 
-```python
-# Get config from resources
-config = context.resources.config
+The configuration files support environment variable substitution with fallback values:
 
-# Access parameters directly from job_params
-job_params = config.job_params
-algorithm = getattr(job_params, "algorithm", "kmeans")
+```yaml
+path: ${env:VARIABLE_NAME,default_value}
 ```
+
+This allows for flexible deployment across different environments while maintaining a consistent configuration structure.
+
+## Usage
+
+The configuration files are loaded by the Dagster pipeline based on the environment specified when running the pipeline:
+
+```bash
+make run-full ENV=prod  # Uses prod.yml
+```
+
+If no environment is specified, the default is `dev`.
+
+## Extending Configuration
+
+When adding new components to the pipeline:
+
+1. Add corresponding configuration entries to all environment files
+2. Use environment variables with sensible defaults for paths
+3. Document new configuration parameters in comments
+4. Keep the structure consistent across all environment files

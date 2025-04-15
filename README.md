@@ -36,6 +36,7 @@ The primary goal is to identify meaningful store segments that can inform busine
   - [Environment Configuration](#environment-configuration)
     - [Environment Variables](#environment-variables)
     - [Configuration Files](#configuration-files)
+    - [Data Directory Structure](#data-directory-structure)
     - [Running with Environment Configuration](#running-with-environment-configuration)
 
 ## ✨ Features
@@ -219,9 +220,9 @@ The application uses a Hydra-inspired configuration system for flexible environm
 The following environment variables can be set to override default paths:
 
 - `DATA_DIR`: Base directory for all data files (default: `/workspaces/testing-dagster/data`)
-- `INTERNAL_DATA_DIR`: Directory for internal data (defaults to `${paths.base_data_dir}/internal`)
-- `EXTERNAL_DATA_DIR`: Directory for external data (defaults to `${paths.base_data_dir}/external`)
-- `MERGING_DATA_DIR`: Directory for merged data (defaults to `${paths.base_data_dir}/merging`)
+- `INTERNAL_DATA_DIR`: Directory for internal data (default: `/workspaces/testing-dagster/data/internal`)
+- `EXTERNAL_DATA_DIR`: Directory for external data (default: `/workspaces/testing-dagster/data/external`)
+- `MERGING_DATA_DIR`: Directory for merged data (default: `/workspaces/testing-dagster/data/merging`)
 - `DAGSTER_HOME`: Directory for Dagster configuration and storage
 
 ### Configuration Files
@@ -232,16 +233,34 @@ Configuration is managed through YAML files located in `src/clustering/dagster/r
 - `staging.yml`: Staging environment config
 - `prod.yml`: Production environment config
 
-These files support Hydra-style variable substitution:
+These files support variable substitution for environment variables:
 
 ```yaml
 # Environment variables with defaults
 paths:
-  base_data_dir: ${env:DATA_DIR,/default/path}
-  
-# Nested references
-internal_data_dir: ${paths.base_data_dir}/internal
+  base_data_dir: ${env:DATA_DIR,/workspaces/testing-dagster/data}
+  internal_data_dir: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}
+  external_data_dir: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}
+  merging_data_dir: ${env:MERGING_DATA_DIR,/workspaces/testing-dagster/data/merging}
 ```
+
+### Data Directory Structure
+
+The project expects the following data directory structure:
+
+```
+data/
+├── internal/       # Internal sales and product data
+├── external/       # External data sources
+├── merging/        # Output from cluster merging process
+└── raw/            # Raw data files before processing
+```
+
+Each directory contains intermediate files produced by the pipeline, such as:
+- Processed sales data
+- Feature engineered datasets
+- Trained models
+- Cluster assignments
 
 ### Running with Environment Configuration
 

@@ -43,13 +43,13 @@ The pipeline is organized into several key jobs:
 
 ```bash
 # Start the Dagster UI
-python -m clustering ui
+make dev
 
 # Run a specific job
-python -m clustering run internal_preprocessing_job --env dev
+make run-internal-preprocessing
 
 # Run the full pipeline
-python -m clustering run full_pipeline_job --env prod
+make run-full ENV=prod
 ```
 
 ### Using Dagster UI
@@ -65,7 +65,7 @@ Access the Dagster UI at http://localhost:3000 to:
 Configuration is environment-based and loaded from YAML files:
 
 ```
-dagster/resources/configs/
+src/clustering/dagster/resources/configs/
 ├── dev.yml
 ├── staging.yml
 └── prod.yml
@@ -75,6 +75,14 @@ Each file configures:
 - Job parameters
 - Logging configuration
 - Data reader/writer settings
+- Path configuration (with environment variable support)
+
+The configuration uses environment variable substitution pattern:
+```yaml
+paths:
+  base_data_dir: ${env:DATA_DIR,/workspaces/testing-dagster/data}
+  internal_data_dir: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}
+```
 
 ## Assets
 
@@ -111,18 +119,16 @@ The pipeline is built around these main asset categories:
 ### Prerequisites
 
 - Python 3.10+
-- Dependencies in requirements.txt
+- uv package manager (for dependency management)
 
 ### Installation
 
 ```bash
-# Create a virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-.venv\Scripts\activate     # Windows
-
 # Install dependencies
-pip install -r requirements.txt
+make install
+
+# Verify installation
+make version
 
 # Install in development mode
 pip install -e .
@@ -132,10 +138,10 @@ pip install -e .
 
 ```bash
 # Run all tests
-pytest
+make test
 
 # Run specific test category
-pytest tests/unit
+make dagster-test
 ```
 
 ## License
