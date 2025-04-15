@@ -168,7 +168,7 @@ def timer(func: Callable[..., T]) -> Callable[..., T]:
     return cast(Callable[..., T], wrapper)
 
 
-def profile(logger_instance: loguru.Logger = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def profile(logger_instance: Any = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Create a profiling decorator with an optional custom logger.
     
     This decorator extends the timer decorator with more detailed profiling,
