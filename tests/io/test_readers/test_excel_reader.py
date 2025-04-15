@@ -2,6 +2,7 @@
 
 import polars as pl
 import pytest
+
 from clustering.io.readers.excel_reader import ExcelReader
 
 
@@ -53,5 +54,5 @@ def test_excel_reader_nonexistent_file():
     reader = ExcelReader(path="/path/to/nonexistent.xlsx")
 
     # Reading a nonexistent file should raise an exception
-    with pytest.raises(Exception):
+    with pytest.raises((FileNotFoundError, OSError)):
         reader.read()

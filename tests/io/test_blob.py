@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 import pytest
 from azure.storage.blob import BlobClient
+
 from clustering.io.readers.blob_reader import BlobReader
 from clustering.io.writers.blob_writer import BlobWriter
 

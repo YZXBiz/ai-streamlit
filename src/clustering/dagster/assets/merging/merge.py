@@ -1,10 +1,11 @@
 """Cluster merging assets for the clustering pipeline."""
 
+import os
+
 import dagster as dg
 import numpy as np
 import polars as pl
 from sklearn.metrics import pairwise_distances
-import os
 
 
 @dg.asset(
@@ -67,7 +68,7 @@ def merged_clusters(
             )
     except Exception as e:
         context.log.error(f"Error reading internal cluster assignments: {str(e)}")
-        raise ValueError(f"Could not read internal cluster assignments: {str(e)}")
+        raise ValueError(f"Could not read internal cluster assignments: {str(e)}") from e
 
     try:
         external_clusters = external_reader.read()
@@ -97,7 +98,7 @@ def merged_clusters(
             )
     except Exception as e:
         context.log.error(f"Error reading external cluster assignments: {str(e)}")
-        raise ValueError(f"Could not read external cluster assignments: {str(e)}")
+        raise ValueError(f"Could not read external cluster assignments: {str(e)}") from e
 
     # If reading returned dictionaries (multiple categories), merge them
     if isinstance(internal_clusters, dict):
@@ -177,7 +178,6 @@ def merged_clusters(
                 context.log.warning("Creating synthetic data for testing")
 
                 # Create test DataFrames
-                import numpy as np
 
                 synthetic_store_id = 999
                 synthetic_internal = pl.DataFrame(

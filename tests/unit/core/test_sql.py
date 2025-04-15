@@ -1,6 +1,7 @@
 """Unit tests for SQL module functions and queries."""
 
 import polars as pl
+
 from clustering.core import sql
 
 

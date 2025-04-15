@@ -1,6 +1,5 @@
 """Tests for Dagster jobs in clustering pipeline."""
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -84,7 +83,8 @@ class TestDagsterJobs:
 
         Args:
             job_name: Name of the job to test
-            mock_inputs: Dictionary mapping input names to mock file paths
+            mock_inputs: Dictionary of mock input files
+            monkeypatch: Pytest fixture for patching
         """
         # Find the job by name
         job = next((j for j in defs.get_all_jobs() if j.name == job_name), None)
@@ -95,7 +95,7 @@ class TestDagsterJobs:
         temp_dir = tempfile.mkdtemp()
         try:
             # Create mock input files as needed
-            for input_name, file_path in mock_inputs.items():
+            for _input_name, file_path in mock_inputs.items():
                 mock_file_path = Path(temp_dir) / file_path
                 mock_file_path.parent.mkdir(parents=True, exist_ok=True)
 

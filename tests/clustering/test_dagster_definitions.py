@@ -1,7 +1,7 @@
 """Tests for clustering's Dagster implementation."""
 
 import pytest
-from dagster import build_op_context, build_asset_context, materialize
+from dagster import materialize
 from dagster.test import run_op
 
 from clustering.dagster.definitions import create_definitions, defs
@@ -72,10 +72,11 @@ def test_materialize_assets():
 
 
 @pytest.mark.skip(reason="Implement with actual op names from your Dagster implementation")
-def test_specific_op():
+def test_op():
     """Test a specific Dagster op in isolation."""
     # Replace with an actual op from your implementation
-    op_name = "process_data_op"
+    # Remove unused variable
+    # op_name = "process_data_op"
 
     try:
         from clustering.dagster.definitions import process_data_op

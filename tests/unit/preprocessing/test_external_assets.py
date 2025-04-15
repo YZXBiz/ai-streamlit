@@ -1,17 +1,9 @@
 """Tests for external preprocessing assets."""
 
-import sys
-from pathlib import Path
-
-import dagster as dg
 import pandas as pd
 import polars as pl
 import pytest
-
-# Add package directory to path if not already installed
-project_root = Path(__file__).parent.parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+from dagster import build_asset_context
 
 from clustering.dagster.assets.preprocessing.external import (
     external_features_data,
@@ -72,7 +64,7 @@ def test_external_features_data_single(mock_external_data):
         mock_external_data: Sample external data
     """
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "input_external_sales_reader": MockReader(mock_external_data),
         }
@@ -100,16 +92,6 @@ def test_external_features_data_multiple(mock_external_data_list, monkeypatch):
     # Create mock readers
     mock_readers = [MockReader(df) for df in mock_external_data_list]
 
-    # Expected merged result
-    expected_merged = pl.DataFrame(
-        {
-            "store_id": ["S001", "S002", "S003"],
-            "feature1": [10.0, 15.0, 12.0],
-            "feature2": [100, 150, 120],
-            "feature3": ["A", "B", "C"],
-        }
-    )
-
     # Mock the merge_dataframes function
     def mock_merge_dataframes(df_list):
         # Simple mock that combines all columns
@@ -126,7 +108,7 @@ def test_external_features_data_multiple(mock_external_data_list, monkeypatch):
     monkeypatch.setattr(helpers, "merge_dataframes", mock_merge_dataframes)
 
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "input_external_sales_reader": mock_readers,
         }
@@ -154,7 +136,7 @@ def test_preprocessed_external_data(mock_external_data):
     mock_writer = MockWriter()
 
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "output_external_data_writer": mock_writer,
         }
@@ -179,7 +161,7 @@ def test_preprocessed_external_data_pandas(mock_external_data):
     mock_writer = MockWriter(requires_pandas=True)
 
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "output_external_data_writer": mock_writer,
         }
@@ -192,3 +174,12 @@ def test_preprocessed_external_data_pandas(mock_external_data):
     assert isinstance(result, pl.DataFrame)
     assert mock_writer.written_data is not None
     assert isinstance(mock_writer.written_data, pd.DataFrame)  # Should be a pandas DataFrame
+
+# Mock preprocessed data - no need to create expected_merged variable that's unused
+preprocessed_data = pl.DataFrame(
+    {
+        "store_id": ["S001", "S002", "S003"],
+        "demographic_feature_1": [10.0, 15.0, 20.0],
+        "demographic_feature_2": [2.5, 3.5, 4.5],
+    }
+)

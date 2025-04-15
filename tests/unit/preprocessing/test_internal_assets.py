@@ -1,16 +1,8 @@
 """Tests for internal preprocessing assets."""
 
-import sys
-from pathlib import Path
-
-import dagster as dg
 import polars as pl
 import pytest
-
-# Add package directory to path if not already installed
-project_root = Path(__file__).parent.parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+from dagster import build_asset_context
 
 from clustering.dagster.assets.preprocessing.internal import (
     internal_category_data,
@@ -107,7 +99,7 @@ def test_internal_sales_data_asset(mock_sales_data):
         mock_sales_data: Sample sales data
     """
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "input_sales_reader": MockReader(mock_sales_data),
             "config": {},
@@ -133,7 +125,7 @@ def test_internal_need_state_data_asset(mock_need_state_data):
         mock_need_state_data: Sample need state data
     """
     # Create mock context with resources
-    context = dg.build_op_context(
+    context = build_asset_context(
         resources={
             "input_need_state_reader": MockReader(mock_need_state_data),
             "config": {},
@@ -158,7 +150,7 @@ def test_merged_internal_data_asset(mock_sales_data, mock_need_state_data):
         mock_need_state_data: Sample need state data
     """
     # Create mock context
-    context = dg.build_op_context()
+    context = build_asset_context()
 
     # Run the asset
     result = merged_internal_data(context, mock_sales_data, mock_need_state_data)
@@ -187,7 +179,7 @@ def test_internal_category_data_asset(mock_merged_data):
     expected_categories = ["Grocery", "Produce", "Bakery"]
 
     # Create mock context
-    context = dg.build_op_context()
+    context = build_asset_context()
 
     # Run the asset
     result = internal_category_data(context, mock_merged_data)

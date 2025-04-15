@@ -10,7 +10,6 @@ import pytest
 import yaml
 from dagster import (
     build_asset_context,
-    build_init_resource_context,
     build_op_context,
 )
 

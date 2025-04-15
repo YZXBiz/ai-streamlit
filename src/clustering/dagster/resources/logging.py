@@ -1,7 +1,6 @@
 """Logging resources for Dagster pipelines."""
 
 import logging
-from typing import Any, Optional
 
 import dagster as dg
 
@@ -48,7 +47,7 @@ class AlertsService:
     """Alert service for Dagster pipelines."""
 
     def __init__(
-        self, enabled: bool = True, threshold: str = "WARNING", slack_webhook: Optional[str] = None
+        self, enabled: bool = True, threshold: str = "WARNING", slack_webhook: str | None = None
     ):
         """Initialize alerts service.
 

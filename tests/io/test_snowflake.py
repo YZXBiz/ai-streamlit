@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 import pytest
 import snowflake.connector
+
 from clustering.io.readers.snowflake_reader import SnowflakeReader
 from clustering.io.writers.snowflake_writer import SnowflakeWriter
 

@@ -2,11 +2,9 @@
 
 import os
 import tempfile
-from pathlib import Path
 
 import polars as pl
 import pytest
-from pydantic import ValidationError
 
 from clustering.io.readers.base import FileReader, Reader
 

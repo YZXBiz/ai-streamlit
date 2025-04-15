@@ -67,7 +67,7 @@ def external_optimal_cluster_counts(
         f"with metrics: {metrics}"
     )
 
-    context.log.info(f"Determining optimal cluster count for external data")
+    context.log.info("Determining optimal cluster count for external data")
 
     df = external_dimensionality_reduced_features
     sample_count = len(df)
@@ -267,7 +267,7 @@ def external_train_clustering_models(
         "num_samples": len(df),
     }
 
-    context.log.info(f"Completed training for external data")
+    context.log.info("Completed training for external data")
 
     # Add useful metadata to the context
     context.add_output_metadata(
@@ -379,12 +379,11 @@ def external_assign_clusters(
     # Get the model info
     model_info = external_train_clustering_models[category]
     exp = model_info["experiment"]
-    model = model_info["model"]
 
-    context.log.info(f"Using model to assign clusters")
+    context.log.info("Using model to assign clusters")
 
     # Get predictions using the trained model
-    predictions = exp.predict_model(model, data=pandas_df)
+    predictions = exp.predict_model(model_info["model"], data=pandas_df)
 
     # Convert back to Polars
     assigned_data = pl.from_pandas(predictions)
@@ -446,7 +445,7 @@ def external_save_cluster_assignments(
 
     # Save with default category name
     category = "default"
-    context.log.info(f"Saving cluster assignments for external data")
+    context.log.info("Saving cluster assignments for external data")
     assignments_output.save(category, external_assign_clusters)
 
     context.log.info("Successfully saved external cluster assignments")
@@ -534,34 +533,27 @@ def external_calculate_cluster_metrics(
         context.log.warning("No 'default' model found, using first available model")
         category = next(iter(external_train_clustering_models.keys()))
 
-    context.log.info(f"Calculating evaluation metrics for external data")
+    context.log.info("Calculating evaluation metrics for external data")
 
     # Get model info
     model_info = external_train_clustering_models[category]
     exp = model_info["experiment"]
-    model = model_info["model"]
 
     # Get PyCaret metrics
-    pycaret_metrics = exp.pull().to_dict("records")[0]
+    pycaret_metrics = get_pycaret_metrics(exp)
 
     # Get cluster distribution from assignments
     cluster_distribution = (
         external_assign_clusters.group_by("Cluster").agg(pl.count().alias("count")).to_dicts()
     )
 
-    # Combine all metrics
-    metrics = {
-        "pycaret_metrics": pycaret_metrics,
-        "num_clusters": model_info["num_clusters"],
-        "num_samples": model_info["num_samples"],
-        "cluster_distribution": cluster_distribution,
-    }
-
-    # Log some key metrics
+    # Define metrics for logging but don't assign to a variable
+    # Log some key metrics directly
     context.log.info(
         f"Metrics for external data: "
         f"silhouette={pycaret_metrics.get('silhouette', 'N/A')}, "
-        f"clusters={model_info['num_clusters']}"
+        f"num_clusters={model_info['num_clusters']}, "
+        f"num_samples={model_info['num_samples']}"
     )
 
     # Create DataFrame from metrics
@@ -668,7 +660,7 @@ def external_generate_cluster_visualizations(
         context.log.warning("No 'default' model found, using first available model")
         category = next(iter(external_train_clustering_models.keys()))
 
-    context.log.info(f"Generating visualizations for external data")
+    context.log.info("Generating visualizations for external data")
 
     # In a real implementation, plots would be generated and saved
     # Here we're just creating placeholder file paths
@@ -701,3 +693,15 @@ def external_generate_cluster_visualizations(
     )
 
     return pl.DataFrame(visualizations)
+
+
+def get_pycaret_metrics(exp):
+    """Get metrics from a PyCaret experiment.
+    
+    Args:
+        exp: PyCaret experiment
+        
+    Returns:
+        Dictionary of metrics
+    """
+    return exp.pull().to_dict("records")[0]

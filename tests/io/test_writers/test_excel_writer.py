@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import polars as pl
+
 from clustering.io.readers.excel_reader import ExcelReader
 from clustering.io.writers.excel_writer import ExcelWriter
 

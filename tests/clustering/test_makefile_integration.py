@@ -1,6 +1,5 @@
 """Tests for Dagster integration with the Makefile."""
 
-import os
 import subprocess
 from pathlib import Path
 

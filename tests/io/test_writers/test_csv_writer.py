@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import polars as pl
+
 from clustering.io.readers.csv_reader import CSVReader
 from clustering.io.writers.csv_writer import CSVWriter
 

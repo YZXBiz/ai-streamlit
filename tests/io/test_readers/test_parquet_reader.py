@@ -2,6 +2,7 @@
 
 import polars as pl
 import pytest
+
 from clustering.io.readers.parquet_reader import ParquetReader
 
 
@@ -43,5 +44,5 @@ def test_parquet_reader_nonexistent_file():
     reader = ParquetReader(path="/path/to/nonexistent.parquet")
 
     # Reading a nonexistent file should raise an exception
-    with pytest.raises(Exception):
+    with pytest.raises((FileNotFoundError, OSError)):
         reader.read()

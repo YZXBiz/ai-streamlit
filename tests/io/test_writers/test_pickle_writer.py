@@ -5,6 +5,7 @@ import pickle
 from pathlib import Path
 
 import polars as pl
+
 from clustering.io.readers.pickle_reader import PickleReader
 from clustering.io.writers.pickle_writer import PickleWriter
 

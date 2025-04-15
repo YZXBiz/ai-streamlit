@@ -1,6 +1,5 @@
 """Tests for Dagster resources in clustering pipeline."""
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -47,11 +46,15 @@ class TestDagsterResources:
         try:
             # Create a temporary directory for any file resources
             with tempfile.TemporaryDirectory() as temp_dir:
-                # Initialize resources with minimal config
-                resource_defs = {
+                # Define resources to skip
+                skip_resources = ["__", "test_"]  # Skip builtin resources and test resources
+                
+                # Initialize resources with minimal config but don't assign to an unused variable
+                # Just evaluate the expression to ensure it doesn't raise errors
+                {
                     k: v
                     for k, v in defs.get_resource_defs().items()
-                    if k == resource_key or k.startswith("__")  # Include target and builtins
+                    if not any(skip in k for skip in skip_resources)
                 }
 
                 # Customize config based on resource type

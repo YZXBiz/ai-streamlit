@@ -360,13 +360,12 @@ def internal_assign_clusters(
         # Get the model info
         model_info = internal_train_clustering_models[category]
         exp = model_info["experiment"]
-        model = model_info["model"]
 
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
 
         # Get predictions using the trained model
-        predictions = exp.predict_model(model, data=pandas_df)
+        predictions = exp.predict_model(model_info["model"], data=pandas_df)
 
         # Convert back to Polars and store
         assigned_data[category] = pl.from_pandas(predictions)
@@ -465,7 +464,6 @@ def internal_calculate_cluster_metrics(
 
         # Get experiment and model
         exp = model_info["experiment"]
-        model = model_info["model"]
 
         # Get PyCaret metrics
         pycaret_metrics = exp.pull().to_dict("records")[0]

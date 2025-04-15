@@ -6,7 +6,7 @@ from datetime import datetime
 
 import dagster as dg
 
-from clustering.dagster.definitions import defs, get_definitions
+from clustering.dagster.definitions import defs
 
 
 def get_dagster_home() -> str:

@@ -1,6 +1,5 @@
 """Feature engineering assets for external data using PyCaret with Dagster config system."""
 
-from typing import Any
 
 import dagster as dg
 import polars as pl
@@ -106,7 +105,7 @@ def external_filtered_features(
     features_to_ignore = [col for col in ignore_features if col in external_fe_raw_data.columns]
 
     if not features_to_ignore:
-        context.log.info(f"No features to ignore")
+        context.log.info("No features to ignore")
         return external_fe_raw_data
 
     context.log.info(f"Ignoring features via PyCaret setup: {features_to_ignore}")
@@ -176,7 +175,7 @@ def external_imputed_features(
         context.resources.config, "categorical_imputation", Defaults.CATEGORICAL_IMPUTATION
     )
 
-    context.log.info(f"Imputing missing values")
+    context.log.info("Imputing missing values")
 
     # Store original data
     original_data = external_filtered_features
@@ -201,7 +200,7 @@ def external_imputed_features(
     # Get the imputed data
     processed_data = pl.from_pandas(exp.X_train_transformed)
 
-    context.log.info(f"Missing value imputation completed")
+    context.log.info("Missing value imputation completed")
 
     # Store original data in context for potential restoration of ignored features
     # Properly wrap the tuple with MetadataValue.json
@@ -250,7 +249,7 @@ def external_normalized_data(
     # Get normalization method
     norm_method = getattr(context.resources.config, "norm_method", Defaults.NORM_METHOD)
 
-    context.log.info(f"Normalizing features")
+    context.log.info("Normalizing features")
 
     # Convert Polars DataFrame to Pandas
     pandas_df = external_imputed_features.to_pandas()
@@ -270,7 +269,7 @@ def external_normalized_data(
 
     processed_data = pl.from_pandas(exp.X_train_transformed)
 
-    context.log.info(f"Normalization completed")
+    context.log.info("Normalization completed")
 
     return processed_data
 
@@ -324,7 +323,7 @@ def external_outlier_removed_features(
     )
     outliers_method = getattr(context.resources.config, "outliers_method", Defaults.OUTLIER_METHOD)
 
-    context.log.info(f"Removing outliers")
+    context.log.info("Removing outliers")
 
     # Convert Polars DataFrame to Pandas
     pandas_df = external_normalized_data.to_pandas()
@@ -398,7 +397,7 @@ def external_dimensionality_reduced_features(
     pca_components = getattr(context.resources.config, "pca_components", Defaults.PCA_COMPONENTS)
     pca_method = getattr(context.resources.config, "pca_method", Defaults.PCA_METHOD)
 
-    context.log.info(f"Applying PCA")
+    context.log.info("Applying PCA")
 
     # Track original feature count
     original_features = external_outlier_removed_features.width
@@ -472,7 +471,7 @@ def external_feature_metadata(
     context.log.info(f"Generating feature metadata with detail level: {detail_level}")
 
     df = external_dimensionality_reduced_features
-    context.log.info(f"Creating metadata")
+    context.log.info("Creating metadata")
 
     # Basic metadata for all detail levels
     base_metadata = {
@@ -487,7 +486,7 @@ def external_feature_metadata(
     # Add detailed stats if requested
     if detail_level == "full":
         try:
-            context.log.info(f"Adding detailed statistics")
+            context.log.info("Adding detailed statistics")
 
             # Add descriptive statistics as string columns
             stats_dict = {f"stats_{i}": str(v) for i, v in enumerate(df.describe().to_dicts())}
@@ -551,6 +550,6 @@ def external_feature_metadata(
             # Log the traceback for easier debugging
             context.log.exception("Detailed exception information:")
 
-    context.log.info(f"Completed metadata generation")
+    context.log.info("Completed metadata generation")
 
     return metadata_df

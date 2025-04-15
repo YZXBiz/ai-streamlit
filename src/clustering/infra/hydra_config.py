@@ -3,12 +3,14 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
+
 import yaml
 
 
 class OmegaConfLoader:
-    """
+    """A simplified version of OmegaConf loader that handles environment variable interpolation.
+    
     A simplified version of OmegaConf loader that handles environment variable interpolation
     in YAML files using the ${env:VAR,default} syntax.
     """
@@ -17,7 +19,7 @@ class OmegaConfLoader:
     NESTED_VAR_PATTERN = re.compile(r"\${([^:{}]+(?:\.[^:{}]+)*)}")
 
     @classmethod
-    def load(cls, config_path: Union[str, Path]) -> Dict[str, Any]:
+    def load(cls, config_path: str | Path) -> dict[str, Any]:
         """
         Load a YAML configuration file with Hydra-style environment variable interpolation.
 
@@ -27,7 +29,7 @@ class OmegaConfLoader:
         Returns:
             Dict containing the configuration with resolved variables
         """
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             # Load the raw YAML
             config = yaml.safe_load(f)
 
@@ -38,7 +40,7 @@ class OmegaConfLoader:
         return cls._resolve_config(config)
 
     @classmethod
-    def _resolve_config(cls, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_config(cls, config: dict[str, Any]) -> dict[str, Any]:
         """
         Recursively resolve environment variables and references in a configuration dict.
 
@@ -67,7 +69,7 @@ class OmegaConfLoader:
         return result
 
     @classmethod
-    def _resolve_value(cls, value: Any, config: Dict[str, Any]) -> Any:
+    def _resolve_value(cls, value: Any, config: dict[str, Any]) -> Any:
         """
         Resolve a single value, handling environment variables and nested references.
 
@@ -114,7 +116,7 @@ class OmegaConfLoader:
         return cls.ENV_VAR_PATTERN.sub(_replace_env_var, value)
 
     @classmethod
-    def _resolve_nested_vars(cls, value: str, config: Dict[str, Any]) -> str:
+    def _resolve_nested_vars(cls, value: str, config: dict[str, Any]) -> str:
         """
         Resolve nested variable references (${paths.base_dir}).
 
@@ -150,7 +152,7 @@ class OmegaConfLoader:
         return cls.NESTED_VAR_PATTERN.sub(_replace_nested_var, value)
 
 
-def load_config(config_path: Union[str, Path]) -> Dict[str, Any]:
+def load_config(config_path: str | Path) -> dict[str, Any]:
     """
     Load a configuration file with Hydra-style environment variable interpolation.
 

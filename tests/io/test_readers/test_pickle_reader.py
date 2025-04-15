@@ -4,6 +4,7 @@ import pickle
 
 import polars as pl
 import pytest
+
 from clustering.io.readers.pickle_reader import PickleReader
 
 
@@ -53,7 +54,7 @@ def test_pickle_reader_nonexistent_file():
     reader = PickleReader(path="/path/to/nonexistent.pkl")
 
     # Reading a nonexistent file should raise an exception
-    with pytest.raises(Exception):
+    with pytest.raises((FileNotFoundError, OSError)):
         reader.read()
 
 

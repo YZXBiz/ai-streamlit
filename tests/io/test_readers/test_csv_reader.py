@@ -1,6 +1,7 @@
 """Tests for CSVReader class."""
 
 import polars as pl
+
 from clustering.io.readers.csv_reader import CSVReader
 
 

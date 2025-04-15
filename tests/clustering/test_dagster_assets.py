@@ -1,13 +1,9 @@
 """Tests for Dagster assets in clustering pipeline."""
 
-import os
-from pathlib import Path
 
 import pandas as pd
 import pytest
 from dagster import (
-    AssetKey,
-    AssetMaterialization,
     build_asset_context,
     materialize_to_memory,
 )
@@ -145,6 +141,7 @@ def test_asset_schema(asset_name: str, expected_columns: list[str], monkeypatch)
     Args:
         asset_name: Name of the asset to test
         expected_columns: List of column names expected in the output
+        monkeypatch: Pytest fixture for patching
     """
     # Find the asset by name
     assets = list(defs.get_all_assets())

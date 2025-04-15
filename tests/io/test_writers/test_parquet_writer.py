@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import polars as pl
+
 from clustering.io.readers.parquet_reader import ParquetReader
 from clustering.io.writers.parquet_writer import ParquetWriter
 

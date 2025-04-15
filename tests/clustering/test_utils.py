@@ -1,11 +1,8 @@
 """Tests for clustering.utils.common module."""
 
-import os
 import tempfile
 import time
 from pathlib import Path
-
-import pytest
 
 from clustering.utils.common import ensure_directory, get_project_root, timer
 
