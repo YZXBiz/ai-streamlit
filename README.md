@@ -135,53 +135,60 @@ clustering completion fish > ~/.config/fish/completions/clustering.fish
 
 ### Environment Setup
 
-After installing the package, you'll need to set up your environment:
+After installing the package with `uv add`, you'll need to create some configuration files before running the CLI:
 
-1. **Create Environment Files**:
+1. **Create Environment File**:
    
    ```bash
-   # Initialize the configuration (this uses the built-in command)
-   clustering init-config
-   
-   # This will create:
-   # - .env.dev (or .env.prod if --env=prod is specified)
-   # - Required directory structure
-   # - Example configuration files
-   ```
-
-   If you prefer manual setup, create the following files:
-
-   ```bash
-   # Create a .env file for your environment
-   echo "DATA_DIR=./data
+   # Create a .env file for development
+   cat > .env.dev << EOF
+   # Base directories
+   DATA_DIR=./data
    INTERNAL_DATA_DIR=./data/internal
    EXTERNAL_DATA_DIR=./data/external
    MERGING_DATA_DIR=./data/merging
-   DAGSTER_HOME=~/.dagster" > .env.dev
+   
+   # Dagster configuration
+   DAGSTER_HOME=~/.dagster
+   EOF
    ```
 
-2. **Configure Dagster Home**:
-   The package needs a Dagster home directory:
+2. **Set Up Data Directories**:
+   
+   ```bash
+   # Create the required data directories
+   mkdir -p data/internal data/external data/merging data/raw
+   ```
 
+3. **Configure Dagster Home**:
+   
    ```bash
    # Create Dagster home directory
    mkdir -p ~/.dagster
    
    # Create a basic dagster.yaml file
-   echo "telemetry:
+   cat > ~/.dagster/dagster.yaml << EOF
+   telemetry:
      enabled: false
    storage:
      sqlite:
-       base_dir: ~/.dagster" > ~/.dagster/dagster.yaml
+       base_dir: ~/.dagster
+   EOF
    ```
 
-3. **Verify Configuration**:
-   Ensure your setup is correct:
-
+4. **Test the Installation**:
+   
    ```bash
-   # Verify the configuration
-   clustering verify-config
+   # List available jobs to verify the setup
+   clustering list-jobs
+   
+   # If you encounter any errors, check that:
+   # - Your .env.dev file is in the correct directory
+   # - The data directories exist
+   # - DAGSTER_HOME is set correctly
    ```
+
+These steps ensure your environment is properly configured to run the clustering pipeline CLI.
 
 ### Data Directory Structure
 
