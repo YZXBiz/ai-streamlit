@@ -98,7 +98,7 @@ def format_error(e: Exception) -> str:
     Returns:
         Formatted error message with traceback
     """
-    tb = traceback.format_exception(type(e), e, e.__o __)
+    tb = traceback.format_exception(type(e), e, e.__traceback__)
     return "".join(tb)
 
 
