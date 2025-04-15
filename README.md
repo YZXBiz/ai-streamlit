@@ -6,56 +6,49 @@
 
 A data pipeline for clustering stores based on sales data and external data sources, built with Dagster.
 
-## 👥 Project Ownership
-
-**Author**: Jackson Yang  
-**Email**: Jackson.Yang@cvshealth.com  
-**Organization**: CVS Health
-
-## 📄 License
-
-Copyright © 2025 CVS Health. All rights reserved.
-
-## 🎯 Project Purpose
-
-This project implements a comprehensive data processing and clustering pipeline for store analysis. It processes both internal sales data and external data sources, applies feature engineering, trains clustering models, and provides tools for analyzing the resulting clusters.
-
-The primary goal is to identify meaningful store segments that can inform business strategy, merchandising decisions, and marketing initiatives.
-
 ## 📋 Table of Contents
 
 - [Store Clustering Data Pipeline](#store-clustering-data-pipeline)
-  - [Project Ownership](#-project-ownership)
-  - [License](#-license)
+  - [Project Information](#-project-information)
   - [Project Purpose](#-project-purpose)
-  - [Table of Contents](#-table-of-contents)
   - [Features](#-features)
-  - [Getting Started](#-getting-started)
+  - [Installation](#-installation)
     - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
+    - [Developer Installation](#developer-installation)
     - [Installing as a Package](#installing-as-a-package)
     - [Uninstallation](#uninstallation)
     - [Shell Completion](#shell-completion)
-    - [Running the Pipeline](#running-the-pipeline)
+  - [Configuration](#-configuration)
+    - [Environment Setup](#environment-setup)
+    - [Data Directory Structure](#data-directory-structure)
+    - [Configuration Files](#configuration-files)
+  - [Usage](#-usage)
     - [Using the CLI](#using-the-cli)
+    - [Running the Pipeline](#running-the-pipeline)
     - [Common Workflows](#common-workflows)
     - [Error Handling](#error-handling)
   - [Architecture](#-architecture)
     - [Pipeline Structure](#pipeline-structure)
     - [Data Flow](#data-flow)
-  - [Configuration](#-configuration)
   - [Development](#-development)
     - [Code Quality](#code-quality)
     - [Testing](#testing)
   - [Documentation](#-documentation)
   - [Security & Privacy](#-security--privacy)
   - [FAQ](#-faq)
-  - [Environment Configuration](#environment-configuration)
-    - [Environment Variables](#environment-variables)
-    - [Configuration Files](#configuration-files)
-    - [Data Directory Structure](#data-directory-structure)
-    - [Running with Environment Configuration](#running-with-environment-configuration)
-    - [How the Configuration System Works](#how-the-configuration-system-works)
+
+## 👥 Project Information
+
+**Author**: Jackson Yang  
+**Email**: Jackson.Yang@cvshealth.com  
+**Organization**: CVS Health
+**License**: Copyright © 2025 CVS Health. All rights reserved.
+
+## 🎯 Project Purpose
+
+This project implements a comprehensive data processing and clustering pipeline for store analysis. It processes both internal sales data and external data sources, applies feature engineering, trains clustering models, and provides tools for analyzing the resulting clusters.
+
+The primary goal is to identify meaningful store segments that can inform business strategy, merchandising decisions, and marketing initiatives.
 
 ## ✨ Features
 
@@ -71,14 +64,14 @@ The primary goal is to identify meaningful store segments that can inform busine
 - **Cluster Analysis**: Metrics calculation and visualization generation
 - **Memory Optimization**: Support for memory-optimized processing of large datasets
 
-## 🚀 Getting Started
+## 🚀 Installation
 
 ### Prerequisites
 
 - Python 3.10+
 - [uv](https://astral.sh/uv) package manager
 
-### Installation
+### Developer Installation
 
 1. Clone the repository:
    ```bash
@@ -138,35 +131,115 @@ clustering completion zsh > "${fpath[1]}/_clustering"
 clustering completion fish > ~/.config/fish/completions/clustering.fish
 ```
 
-### Running the Pipeline
+## ⚙️ Configuration
 
-The project includes several run configurations:
+### Environment Setup
 
-1. **Development Server**:
+1. **Environment Variables**:
+   Create the necessary environment files:
+
    ```bash
-   make dev
-   ```
-   This launches the Dagster UI at http://localhost:3000
-
-2. **Full Pipeline**:
-   ```bash
-   make run-full
-   ```
-   This runs the complete pipeline including internal preprocessing, model training, external data integration, and cluster merging.
-
-3. **Individual Pipeline Components**:
-   ```bash
-   make run-internal-preprocessing  # Run internal data preprocessing
-   make run-internal-ml             # Run internal ML pipeline
-   make run-external-preprocessing  # Run external data preprocessing
-   make run-external-ml             # Run external ML pipeline
-   make run-merging                 # Run cluster merging
+   # For development environment
+   touch .env.dev
+   
+   # For production environment (optional)
+   touch .env.prod
+   
+   # Example .env.dev content
+   DATA_DIR=/path/to/your/data
+   INTERNAL_DATA_DIR=/path/to/your/data/internal
+   EXTERNAL_DATA_DIR=/path/to/your/data/external
+   MERGING_DATA_DIR=/path/to/your/data/merging
    ```
 
-4. **Memory-Optimized Mode**:
+2. **Dagster Home Setup**:
    ```bash
-   make run-memory-optimized JOB=full_pipeline_job
+   # Create Dagster home directory
+   export DAGSTER_HOME=~/dagster_home
+   mkdir -p $DAGSTER_HOME
+   
+   # Create a basic dagster.yaml file
+   cat << EOF > $DAGSTER_HOME/dagster.yaml
+   telemetry:
+     enabled: false
+   
+   storage:
+     sqlite:
+       base_dir: $DAGSTER_HOME
+   EOF
    ```
+
+### Data Directory Structure
+
+Create the required data directory structure:
+
+```bash
+mkdir -p data/internal data/external data/merging data/raw
+```
+
+The project expects the following data directory structure:
+
+```
+data/
+├── internal/       # Internal sales and product data
+├── external/       # External data sources
+├── merging/        # Output from cluster merging process
+└── raw/            # Raw data files before processing
+```
+
+Each directory contains intermediate files produced by the pipeline, such as:
+- Processed sales data
+- Feature engineered datasets
+- Trained models
+- Cluster assignments
+
+### Configuration Files
+
+1. **YAML Configuration Files**:
+   The pipeline requires specific YAML configuration files:
+   
+   ```bash
+   mkdir -p configs/
+   ```
+   
+   Create the following configuration files:
+   
+   ```bash
+   # dev.yml example - copy this into configs/dev.yml
+   cat << EOF > configs/dev.yml
+   paths:
+     base_data_dir: \${env:DATA_DIR,./data}
+     internal_data_dir: \${env:INTERNAL_DATA_DIR,./data/internal}
+     external_data_dir: \${env:EXTERNAL_DATA_DIR,./data/external}
+     merging_data_dir: \${env:MERGING_DATA_DIR,./data/merging}
+   
+   preprocessing:
+     normalize: true
+     impute_missing: true
+     outlier_removal: true
+     
+   model:
+     algorithm: kmeans
+     min_clusters: 3
+     max_clusters: 10
+   EOF
+   ```
+
+2. **Configuration Parameters**:
+   Key configuration parameters include:
+
+   - Feature engineering settings (normalization, imputation, outlier detection)
+   - Model training parameters (algorithm, min/max clusters)
+   - Data source and destination paths
+   - Logging configuration
+
+   To use a specific environment:
+
+   ```bash
+   make full-pipeline ENV=prod
+   ```
+
+## 📊 Usage
 
 ### Using the CLI
 
@@ -203,7 +276,37 @@ Commands:
   minimal     Run a minimal demo
 ```
 
-#### Common Workflows
+### Running the Pipeline
+
+The project includes several run configurations:
+
+1. **Development Server**:
+   ```bash
+   make dev
+   ```
+   This launches the Dagster UI at http://localhost:3000
+
+2. **Full Pipeline**:
+   ```bash
+   make run-full
+   ```
+   This runs the complete pipeline including internal preprocessing, model training, external data integration, and cluster merging.
+
+3. **Individual Pipeline Components**:
+   ```bash
+   make run-internal-preprocessing  # Run internal data preprocessing
+   make run-internal-ml             # Run internal ML pipeline
+   make run-external-preprocessing  # Run external data preprocessing
+   make run-external-ml             # Run external ML pipeline
+   make run-merging                 # Run cluster merging
+   ```
+
+4. **Memory-Optimized Mode**:
+   ```bash
+   make run-memory-optimized JOB=full_pipeline_job
+   ```
+
+### Common Workflows
 
 Here are some common task examples combining multiple commands:
 
@@ -221,7 +324,7 @@ clustering ui --host 0.0.0.0 --port 8080
 clustering minimal
 ```
 
-#### Error Handling
+### Error Handling
 
 The CLI provides detailed error messages and exit codes:
 
@@ -251,24 +354,6 @@ Common error scenarios and solutions:
    Solution: Verify permissions and paths in config
    ```
 
-## 🔒 Security & Privacy
-
-### Package Verification
-
-Verify package integrity during installation:
-
-```bash
-# Download and verify package signature
-uv add clustering-pipeline --require-hashes
-
-# View package metadata
-uv pip show clustering-pipeline
-```
-
-### Data Collection
-
-This CLI does not collect any telemetry or usage data by default. All data processing happens locally within your infrastructure.
-
 ## 🏗️ Architecture
 
 ### Pipeline Structure
@@ -290,27 +375,6 @@ Raw Sales Data → Normalization → Feature Engineering → Model Training → 
 External Data → Preprocessing → Feature Engineering → Model Training
      ↓                                                       ↓
                         Merged Cluster Analysis & Assignment
-```
-
-## ⚙️ Configuration
-
-Configuration is managed through YAML files located in `src/clustering/dagster/resources/configs/`:
-
-- `dev.yml`: Development environment config
-- `staging.yml`: Staging environment config
-- `prod.yml`: Production environment config
-
-Key configuration parameters include:
-
-- Feature engineering settings (normalization, imputation, outlier detection)
-- Model training parameters (algorithm, min/max clusters)
-- Data source and destination paths
-- Logging configuration
-
-To use a specific environment:
-
-```bash
-make full-pipeline ENV=prod
 ```
 
 ## 💻 Development
@@ -351,6 +415,24 @@ Or start the documentation server:
 make docs-server    # Start documentation server at http://localhost:8000
 ```
 
+## 🔒 Security & Privacy
+
+### Package Verification
+
+Verify package integrity during installation:
+
+```bash
+# Download and verify package signature
+uv add clustering-pipeline --require-hashes
+
+# View package metadata
+uv pip show clustering-pipeline
+```
+
+### Data Collection
+
+This CLI does not collect any telemetry or usage data by default. All data processing happens locally within your infrastructure.
+
 ## ❓ FAQ
 
 **Q: How do I determine the optimal number of clusters?**  
@@ -361,78 +443,3 @@ A: Yes, use `make run-memory-optimized JOB=job_name` to run with memory optimiza
 
 **Q: How do I add a new data source?**  
 A: Add a new reader configuration in the environment config file and create a corresponding asset in the appropriate preprocessing module.
-
-## Environment Configuration
-
-The application uses a Hydra-inspired configuration system for flexible environment-based configuration.
-
-### Environment Variables
-
-The following environment variables can be set to override default paths:
-
-- `DATA_DIR`: Base directory for all data files (default: `/workspaces/testing-dagster/data`)
-- `INTERNAL_DATA_DIR`: Directory for internal data (default: `/workspaces/testing-dagster/data/internal`)
-- `EXTERNAL_DATA_DIR`: Directory for external data (default: `/workspaces/testing-dagster/data/external`)
-- `MERGING_DATA_DIR`: Directory for merged data (default: `/workspaces/testing-dagster/data/merging`)
-- `DAGSTER_HOME`: Directory for Dagster configuration and storage
-
-### Configuration Files
-
-Configuration is managed through YAML files located in `src/clustering/dagster/resources/configs/`:
-
-- `dev.yml`: Development environment config
-- `staging.yml`: Staging environment config
-- `prod.yml`: Production environment config
-
-These files support variable substitution for environment variables:
-
-```yaml
-# Environment variables with defaults
-paths:
-  base_data_dir: ${env:DATA_DIR,/workspaces/testing-dagster/data}
-  internal_data_dir: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}
-  external_data_dir: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}
-  merging_data_dir: ${env:MERGING_DATA_DIR,/workspaces/testing-dagster/data/merging}
-```
-
-### Data Directory Structure
-
-The project expects the following data directory structure:
-
-```
-data/
-├── internal/       # Internal sales and product data
-├── external/       # External data sources
-├── merging/        # Output from cluster merging process
-└── raw/            # Raw data files before processing
-```
-
-Each directory contains intermediate files produced by the pipeline, such as:
-- Processed sales data
-- Feature engineered datasets
-- Trained models
-- Cluster assignments
-
-### Running with Environment Configuration
-
-To run the application with the configured environment:
-
-1. Set up the environment:
-   ```bash
-   source setup_env.sh
-   ```
-
-2. Run Dagster:
-   ```bash
-   ./run_dagster.sh
-   ```
-
-### How the Configuration System Works
-
-The configuration system emulates Hydra's functionality:
-
-1. **Environment variable interpolation**: `${env:VAR,default}` syntax resolves to environment variables with fallback values
-2. **Nested references**: `${paths.base_data_dir}` syntax enables referencing other configuration values
-3. **Automatic resolution**: All variables are resolved before the configuration is used
-
-This approach allows for portable configurations across different environments without hardcoded paths.
