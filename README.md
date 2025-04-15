@@ -33,7 +33,13 @@ The primary goal is to identify meaningful store segments that can inform busine
   - [Getting Started](#-getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
+    - [Installing as a Package](#installing-as-a-package)
+    - [Uninstallation](#uninstallation)
+    - [Shell Completion](#shell-completion)
     - [Running the Pipeline](#running-the-pipeline)
+    - [Using the CLI](#using-the-cli)
+    - [Common Workflows](#common-workflows)
+    - [Error Handling](#error-handling)
   - [Architecture](#-architecture)
     - [Pipeline Structure](#pipeline-structure)
     - [Data Flow](#data-flow)
@@ -42,6 +48,7 @@ The primary goal is to identify meaningful store segments that can inform busine
     - [Code Quality](#code-quality)
     - [Testing](#testing)
   - [Documentation](#-documentation)
+  - [Security & Privacy](#-security--privacy)
   - [FAQ](#-faq)
   - [Environment Configuration](#environment-configuration)
     - [Environment Variables](#environment-variables)
@@ -89,6 +96,48 @@ The primary goal is to identify meaningful store segments that can inform busine
    make version
    ```
 
+### Installing as a Package
+
+To install this project as a Python package:
+
+```bash
+# Install specific version (recommended)
+uv pip install clustering-pipeline==1.0.0
+
+# Install from the local directory
+uv pip install -e .
+
+# Or install directly from GitHub
+uv pip install git+https://github.com/yourusername/testing-dagster.git@v1.0.0
+```
+
+### Uninstallation
+
+To remove the package:
+
+```bash
+# Remove the package
+uv pip uninstall clustering-pipeline
+
+# Remove all related configuration (optional)
+rm -rf ~/.clustering
+```
+
+### Shell Completion
+
+Enable shell completion for easier CLI usage:
+
+```bash
+# For Bash
+clustering completion bash > ~/.bash_completion.d/clustering
+
+# For Zsh
+clustering completion zsh > "${fpath[1]}/_clustering"
+
+# For Fish
+clustering completion fish > ~/.config/fish/completions/clustering.fish
+```
+
 ### Running the Pipeline
 
 The project includes several run configurations:
@@ -118,6 +167,107 @@ The project includes several run configurations:
    ```bash
    make run-memory-optimized JOB=full_pipeline_job
    ```
+
+### Using the CLI
+
+The project includes a command-line interface for interacting with the Dagster-based clustering pipeline.
+
+#### Getting Help
+
+View all available commands:
+
+```bash
+clustering --help
+
+# View help for a specific command
+clustering run --help
+
+# Access man pages (if installed)
+man clustering
+```
+
+Example output:
+```
+Usage: clustering [OPTIONS] COMMAND [ARGS]...
+
+  Clustering Pipeline CLI - Process and analyze store data
+
+Options:
+  --version  Show version information
+  --help     Show this message and exit
+
+Commands:
+  run         Run a specific pipeline job
+  ui          Launch the Dagster web UI
+  list-jobs   List available pipeline jobs
+  minimal     Run a minimal demo
+```
+
+#### Common Workflows
+
+Here are some common task examples combining multiple commands:
+
+```bash
+# 1. Full development workflow
+clustering list-jobs && \
+clustering run internal_preprocessing_job --env dev && \
+clustering ui
+
+# 2. Production deployment with monitoring
+clustering run full_pipeline_job --env prod --tags version=2.0 && \
+clustering ui --host 0.0.0.0 --port 8080
+
+# 3. Quick test with minimal setup
+clustering minimal
+```
+
+#### Error Handling
+
+The CLI provides detailed error messages and exit codes:
+
+- Exit code 0: Success
+- Exit code 1: General error
+- Exit code 2: Invalid arguments
+- Exit code 3: Environment configuration error
+- Exit code 4: Pipeline execution error
+
+Common error scenarios and solutions:
+
+1. **Configuration Errors**:
+   ```bash
+   Error: No configuration found for environment 'prod'
+   Solution: Ensure .env.prod exists or use --env dev
+   ```
+
+2. **Pipeline Failures**:
+   ```bash
+   Error: Job 'internal_preprocessing_job' failed
+   Solution: Check logs at ~/.clustering/logs/
+   ```
+
+3. **Permission Issues**:
+   ```bash
+   Error: Unable to access data directory
+   Solution: Verify permissions and paths in config
+   ```
+
+## 🔒 Security & Privacy
+
+### Package Verification
+
+Verify package integrity during installation:
+
+```bash
+# Download and verify package signature
+uv pip install clustering-pipeline --require-hashes
+
+# View package metadata
+uv pip show clustering-pipeline
+```
+
+### Data Collection
+
+This CLI does not collect any telemetry or usage data by default. All data processing happens locally within your infrastructure.
 
 ## 🏗️ Architecture
 
