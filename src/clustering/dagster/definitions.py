@@ -353,14 +353,10 @@ def get_resources_by_env(
             }
         ),
         # Data readers
-        "internal_ns_sales": data_io.data_reader.configured(
-            readers_config.get("internal_ns_sales", {})
-        ),
-        "internal_ns_map": data_io.data_reader.configured(
-            readers_config.get("internal_ns_map", {})
-        ),
-        "output_sales_reader": data_io.data_reader.configured(
-            readers_config.get("output_sales", {})
+        "internal_ns_sales": data_io.data_reader.configured(readers_config.get("ns_sales", {})),
+        "internal_ns_map": data_io.data_reader.configured(readers_config.get("ns_map", {})),
+        "sales_by_category_reader": data_io.data_reader.configured(
+            readers_config.get("sales_by_category", {})
         ),
         "external_data_reader": data_io.data_reader.configured(
             readers_config.get("external_data_source", {})
@@ -369,11 +365,8 @@ def get_resources_by_env(
             readers_config.get("external_placerai", {})
         ),
         # Data writers
-        "output_sales_writer": data_io.data_writer.configured(
-            writers_config.get("internal_sales_output", {})
-        ),
-        "output_sales_percent_writer": data_io.data_writer.configured(
-            writers_config.get("internal_sales_percent_output", {})
+        "sales_by_category_writer": data_io.data_writer.configured(
+            writers_config.get("sales_by_category", {})
         ),
         "output_clusters_writer": data_io.data_writer.configured(
             writers_config.get("internal_clusters_output", {})

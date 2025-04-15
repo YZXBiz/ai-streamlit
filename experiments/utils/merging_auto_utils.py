@@ -11,7 +11,6 @@ Helper functions for the merging_auto_main pipeline, including:
   - Creating a time-stamped "Merged_Clustering_Output_Run_{YYYYMMDD_HHMM}" folder
 """
 
-
 import sys
 import os
 import logging
@@ -19,6 +18,7 @@ import re
 from datetime import datetime
 
 import pandas as pd
+
 
 # ----------------------------------------------------------------------
 # Helper function to sanitize category names (to match filenames)
@@ -71,6 +71,7 @@ def get_latest_run_folder(base_path: str, run_prefix: str) -> str:
     folders_sorted = sorted(folders, reverse=True)
     return folders_sorted[0]  # the latest
 
+
 def get_clustered_file(folder_path: str, sanitized_keyword: str) -> str:
     """
     Given a folder_path and a sanitized keyword (e.g. "VITAMINS"),
@@ -94,6 +95,7 @@ def get_clustered_file(folder_path: str, sanitized_keyword: str) -> str:
     matches_sorted = sorted(matches, reverse=True)
     chosen = matches_sorted[0]
     return os.path.join(folder_path, chosen)
+
 
 def create_merged_output_folder(base_merged_path: str):
     """

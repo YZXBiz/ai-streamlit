@@ -55,15 +55,15 @@ job_params:
 # Data sources and destinations
 readers:
   # Internal data sources
-  internal_ns_map:
+  ns_map:
     kind: "CSVReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_map.csv
-  internal_ns_sales:
+  ns_sales:
     kind: "CSVReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_sales.csv
-  output_sales:
+  sales_by_category:
     kind: "PickleReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
@@ -80,14 +80,10 @@ readers:
 
 writers:
   # Internal data writers
-  internal_sales_output:
+  sales_by_category:
     kind: "PickleWriter"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
-  internal_sales_percent_output:
-    kind: "PickleWriter"
-    config:
-      path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category_percent.pkl
   internal_clusters_output:
     kind: "SnowflakeWriter"
     config:

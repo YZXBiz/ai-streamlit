@@ -34,7 +34,7 @@ from configs.config import (
     cumulative_variance_target,
     random_state,
     max_iter,
-    FEATURE_RANKING_RESULTS_DIR
+    FEATURE_RANKING_RESULTS_DIR,
 )
 
 # =============================================================================
@@ -44,13 +44,10 @@ from utils.pipeline_utils import (
     preprocess_data,
     drop_correlated_features,
     apply_pca,
-    run_kmeans_and_evaluate
+    run_kmeans_and_evaluate,
 )
 from utils.external_data_all_prep import load_and_clean_data
-from utils.externa_feature_ranking import (
-    get_top_80pct_features,
-    get_latest_grouped_shap_file
-)
+from utils.externa_feature_ranking import get_top_80pct_features, get_latest_grouped_shap_file
 
 # ------------------------------------------------------------------------------
 # Logging Configuration
@@ -61,12 +58,15 @@ logging.basicConfig(level=logging.INFO)
 # Category-Specific Keep Features
 # ------------------------------------------------------------------------------
 CATEGORY_SPECIFIC_KEEP_FEATURES = {
-    "ORAL HYGIENE": ["WHITE_PCT_PZ_PG",
-                     "BLACK_PCT_PZ_PG",
-                     "ASIAN_PCT_PZ_PG",
-                     "HISP_PCT_PZ_PG",
-                     "OTHER_RACE_PCT_PZ_PG"]
+    "ORAL HYGIENE": [
+        "WHITE_PCT_PZ_PG",
+        "BLACK_PCT_PZ_PG",
+        "ASIAN_PCT_PZ_PG",
+        "HISP_PCT_PZ_PG",
+        "OTHER_RACE_PCT_PZ_PG",
+    ]
 }
+
 
 # =============================================================================
 # main() - Orchestrates the entire external clustering process
@@ -92,16 +92,14 @@ def main():
     # (C) Get top 80% SHAP features **within each CATEGORY**
     # -------------------------------------------------------------------------
     external_granularity_features_df = (
-        df_raw
-        .groupby("CATEGORY", group_keys=False)
+        df_raw.groupby("CATEGORY", group_keys=False)
         .apply(get_top_80pct_features)
         .reset_index(drop=True)
     )
 
     # Sanity check: each CATEGORY slice should sum to ~0.8
     check_sums = (
-        external_granularity_features_df
-        .groupby("CATEGORY")["normalized_mean_abs_shap"]
+        external_granularity_features_df.groupby("CATEGORY")["normalized_mean_abs_shap"]
         .sum()
         .reset_index(name="sum_shap")
     )
@@ -118,8 +116,7 @@ def main():
     for cat in unique_categories:
         # Fetch the top 80% SHAP features for this category
         features_for_cat = external_granularity_features_df.loc[
-            external_granularity_features_df["CATEGORY"] == cat,
-            "feature"
+            external_granularity_features_df["CATEGORY"] == cat, "feature"
         ].unique()
 
         # Check if we have category-specific keep features
@@ -130,10 +127,10 @@ def main():
 
         # Filter the main df to keep only these features + 'STORE_NBR'
         cols_to_keep = [c for c in df.columns if c in final_feature_list]
-        
+
         # Ensure 'STORE_NBR' is always included
-        if 'STORE_NBR' not in cols_to_keep:
-            cols_to_keep.append('STORE_NBR')
+        if "STORE_NBR" not in cols_to_keep:
+            cols_to_keep.append("STORE_NBR")
 
         # Create the subset DataFrame for this category
         grouped_dfs[cat] = df[cols_to_keep].copy()
@@ -155,22 +152,15 @@ def main():
 
         # Identify the subset columns
         subset_cols = df_subset.columns
-        
+
         # (F.1) Preprocess data
-        data, pipeline = preprocess_data(
-            df_subset,
-            cat_onehot,
-            cat_ordinal,
-            subset_cols
-        )
+        data, pipeline = preprocess_data(df_subset, cat_onehot, cat_ordinal, subset_cols)
 
         # (F.2) Drop correlated features
         # Pass in the category-specific keep features so they won't get dropped
         cat_keep_features = CATEGORY_SPECIFIC_KEEP_FEATURES.get(category_name, [])
         data_reduced = drop_correlated_features(
-            data,
-            corr_threshold=0.8,
-            features_to_keep=cat_keep_features
+            data, corr_threshold=0.8, features_to_keep=cat_keep_features
         )
 
         # (F.3) Apply PCA if needed
@@ -179,7 +169,7 @@ def main():
             pca_n_features_threshold=pca_n_features_threshold,
             max_n_pca_features=max_n_pca_features,
             cumulative_variance_target=cumulative_variance_target,
-            random_state=random_state
+            random_state=random_state,
         )
 
         # (F.4) Run K-Means to find best_k
@@ -189,7 +179,7 @@ def main():
             max_n_clusters_to_try=max_n_clusters_to_try,
             small_cluster_threshold=small_cluster_threshold,
             random_state=random_state,
-            max_iter=max_iter
+            max_iter=max_iter,
         )
 
         # Implement the retry logic
@@ -206,7 +196,7 @@ def main():
                 max_n_clusters_to_try=max_n_clusters_to_try,
                 small_cluster_threshold=retry_threshold,
                 random_state=random_state,
-                max_iter=max_iter
+                max_iter=max_iter,
             )
             if best_k_val is None:
                 logging.warning(
@@ -238,10 +228,7 @@ def main():
 
         # (F.7) Fit K-Means ONCE on the same data used to pick best_k
         kmeans_model = KMeans(
-            n_clusters=best_k_val,
-            random_state=random_state,
-            max_iter=max_iter,
-            n_init="auto"
+            n_clusters=best_k_val, random_state=random_state, max_iter=max_iter, n_init="auto"
         )
         labels = kmeans_model.fit_predict(data_pca)
 
@@ -266,9 +253,6 @@ def main():
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
-
-
-
 
 
 # # =============================================================================
@@ -515,5 +499,3 @@ if __name__ == "__main__":
 # # ------------------------------------------------------------------------------
 # if __name__ == "__main__":
 #     main()
-
-

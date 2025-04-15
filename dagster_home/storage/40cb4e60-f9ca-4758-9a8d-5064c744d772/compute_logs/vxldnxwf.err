@@ -1,0 +1,71 @@
+[32m2025-04-15 21:32:32 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 40cb4e60-f9ca-4758-9a8d-5064c744d772 - 53524 - LOGS_CAPTURED - Started capturing logs in process (pid: 53524).
+Exception while writing logger call to event log: (sqlite3.OperationalError) database is locked
+[SQL: INSERT INTO event_logs (run_id, event, dagster_event_type, timestamp, step_key, asset_key, partition) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('40cb4e60-f9ca-4758-9a8d-5064c744d772', '{"__class__": "EventLogEntry", "dagster_event": {"__class__": "DagsterEvent", "event_specific_data": null, "event_type_value": "STEP_START", "logging ... (939 characters truncated) ... nal_product_category_mapping", "timestamp": 1744752752.6302006, "user_message": "Started execution of step \\"internal_product_category_mapping\\"."}', 'STEP_START', '2025-04-15 21:32:32.630201', 'internal_product_category_mapping', None, None)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+[32m2025-04-15 21:32:42 +0000[0m - dagster - [34mERROR[0m - [31minternal_preprocessing_job - 40cb4e60-f9ca-4758-9a8d-5064c744d772 - 53524 - internal_product_category_mapping - STEP_FAILURE - Execution of step "internal_product_category_mapping" failed.
+
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked
+[SQL: INSERT INTO event_logs (run_id, event, dagster_event_type, timestamp, step_key, asset_key, partition) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('40cb4e60-f9ca-4758-9a8d-5064c744d772', '{"__class__": "EventLogEntry", "dagster_event": {"__class__": "DagsterEvent", "event_specific_data": null, "event_type_value": "STEP_START", "logging ... (939 characters truncated) ... nal_product_category_mapping", "timestamp": 1744752752.6302006, "user_message": "Started execution of step \\"internal_product_category_mapping\\"."}', 'STEP_START', '2025-04-15 21:32:32.630201', 'internal_product_category_mapping', None, None)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 245, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_step.py", line 449, in core_dagster_event_sequence_for_step
+    yield DagsterEvent.step_start_event(step_context)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 1011, in step_start_event
+    return DagsterEvent.from_step(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 493, in from_step
+    log_step_event(step_context, event, batch_metadata)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 365, in log_step_event
+    step_context.log.log_dagster_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 394, in log_dagster_event
+    self.log(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 424, in log
+    self._log(level, msg, args, **kwargs)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1624, in _log
+    self.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1634, in handle
+    self.callHandlers(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1696, in callHandlers
+    hdlr.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 268, in emit
+    handler.handle(dagster_record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 262, in emit
+    self._instance.handle_new_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 2541, in handle_new_event
+    self._event_storage.store_event(events[0])
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 258, in store_event
+    conn.execute(insert_event_statement)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1385, in execute
+    return meth(self, multiparams, params, _EMPTY_EXECUTION_OPTS)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/sql/elements.py", line 334, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1577, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1953, in _execute_context
+    self._handle_dbapi_exception(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+
+The above exception was caused by the following exception:
+sqlite3.OperationalError: database is locked
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+[0m

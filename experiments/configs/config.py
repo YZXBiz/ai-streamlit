@@ -44,7 +44,7 @@ DROP_COLS = [
     # "HISP_PCT_PZ_PG",
     # "OTHER_RACE_PCT_PZ_PG",
     "WALM_CNT_MEAN",
-    "TRGT_CNT_MEAN"
+    "TRGT_CNT_MEAN",
 ]
 
 # --------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ MERCH_GROUP_INSCOPE = [
     "EDIBLES",
     "BEAUTY CARE",
     "PERSONAL CARE",
-    "GENERAL MERCHANDISE"
+    "GENERAL MERCHANDISE",
 ]
 
 # --------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ COMP_DRIVE_COLS = [
     "mins_kroger_nearest_1",
     "mins_publix_nearest_1",
     "mins_riteaid_nearest_1",
-    "mins_target_nearest_1"
+    "mins_target_nearest_1",
 ]
 
 # --------------------------------------------------------------------------------
@@ -98,16 +98,13 @@ SPEND_COLS = [
     "2024 Average Personal insurance and pensions",
     "2024 Average Reading",
     "2024 Average Tobacco products and smoking supplies",
-    "2024 Average Transportation"
+    "2024 Average Transportation",
 ]
 
 # --------------------------------------------------------------------------------
 # Co-Tenant Columns
 # --------------------------------------------------------------------------------
-COTENANT_COLS = [
-    "STORE_NBR",
-    "tenant_cnt"
-]
+COTENANT_COLS = ["STORE_NBR", "tenant_cnt"]
 
 # --------------------------------------------------------------------------------
 # Competitor Columns (Totals)
@@ -129,7 +126,7 @@ COMP_COLS = [
     "Total Weis Markets",
     "Total DollarTree",
     "Total Walmart",
-    "Total Wegmans"
+    "Total Wegmans",
 ]
 
 # --------------------------------------------------------------------------------
@@ -143,14 +140,12 @@ PLACER_COLS = [
     "median_dwell_time",
     "median_visits_per_day",
     # "census_captured_avg_hhi",
-
     # Education distribution
     "census_captured_by_education_elementary",
     "census_captured_by_education_high_school",
     "census_captured_by_education_college_or_associates_degree",
     "census_captured_by_education_bachelors_degree",
     "census_captured_by_education_advanced_degree",
-
     # Household Income distribution
     "census_captured_by_hhi_less_than_10K",
     "census_captured_by_hhi_10K_to_15K",
@@ -168,21 +163,16 @@ PLACER_COLS = [
     "census_captured_by_hhi_125K_to_150K",
     "census_captured_by_hhi_150K_to_200K",
     "census_captured_by_hhi_more_than_200K",
-
     # Foot traffic
     "foottraffic",
     "foottraffic_per_sqft",
-    "unique_visitors"
+    "unique_visitors",
 ]
 
 # --------------------------------------------------------------------------------
 # Additional Columns
 # --------------------------------------------------------------------------------
-ADDITIONAL_COLS = [
-    "STORE_NBR",
-    "DAYTIME_POP_CNT",
-    "DAYNITE_RATIO_FCTR_NBR"
-]
+ADDITIONAL_COLS = ["STORE_NBR", "DAYTIME_POP_CNT", "DAYNITE_RATIO_FCTR_NBR"]
 
 # --------------------------------------------------------------------------------
 # Core Columns for Clustering
@@ -226,7 +216,6 @@ core_cols = [
     "HOME_VALUE_300000_TO_399999_PCT_MEAN",
     "HOME_VALUE_400000_TO_499999_PCT_MEAN",
     "HOME_VALUE_500000_OR_MORE_PCT_MEAN",
-
     # From Placer.ai data
     "avg_dwell_time",
     "census_captured_by_education_elementary",
@@ -267,7 +256,7 @@ BEAUTY = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 ACUTE_HEALTHCARE = [
@@ -293,7 +282,7 @@ ACUTE_HEALTHCARE = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 WELLNESS = [
@@ -321,7 +310,7 @@ WELLNESS = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 EMPOWERED_AGING = [
@@ -351,7 +340,7 @@ EMPOWERED_AGING = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 CONSUMABLES = [
@@ -379,7 +368,7 @@ CONSUMABLES = [
     "Total Rite Aid",
     "2024 Average Food",
     "2024 Average Miscellaneous",
-    "2024 Average Alcoholic beverages"
+    "2024 Average Alcoholic beverages",
 ]
 
 HOUSEHOLD = [
@@ -405,7 +394,7 @@ HOUSEHOLD = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 SEASONAL_AND_GIFTING = [
@@ -432,7 +421,7 @@ SEASONAL_AND_GIFTING = [
     "Total Trader Joes",
     "Total Wegmans",
     "Total Weis Markets",
-    "Total Whole Foods"
+    "Total Whole Foods",
 ]
 
 PERSONAL_CARE = [
@@ -450,46 +439,43 @@ PERSONAL_CARE = [
     "Total Kroger",
     "Total Publix",
     "Total Albertsons",
-    "Total Costco"
+    "Total Costco",
 ]
 
 COLUMNS_TO_DROP = [
     "TRAFFIC_CNT",
-    'EDUC_0_TO_9TH_PCT_MEAN',
-    'EDUC_SOME_HS_PCT_MEAN',
-    'EDUC_HS_GRAD_PCT_MEAN',
-    'EDUC_SOME_COLLEGE_PCT_MEAN',
-    'EDUC_ASSOCIATE_DEGREE_PCT_MEAN',
-    'EDUC_BACHELOR_DEGREE_PCT_MEAN',
-    'EDUC_GRAD_OR_PROF_DEGREE_PCT_MEAN',
-    
-    'HOME_VALUE_MEDIAN_AMT_MEAN',
- 
-    'AVERAGE_INCOME_PER_PERSON',
-    'AVERAGE_AGE',
-    'AVERAGE_PERSONS_PER_HH',
-     
-    'median_dwell_time',
-    'median_visits_per_day',
-    'foottraffic_per_sqft',
-    'census_captured_by_hhi_less_than_10K',
-    'census_captured_by_hhi_10K_to_15K',
-    'census_captured_by_hhi_15K_to_20K',
-    'census_captured_by_hhi_20K_to_25K',
-    'census_captured_by_hhi_25K_to_30K',
-    'census_captured_by_hhi_30K_to_35K',
-    'census_captured_by_hhi_35K_to_40K',
-    'census_captured_by_hhi_40K_to_45K',
-    'census_captured_by_hhi_45K_to_50K',
-    'census_captured_by_hhi_50K_to_60K',
-    'census_captured_by_hhi_60K_to_75K',
-    'census_captured_by_hhi_75K_to_100K',
-    'census_captured_by_hhi_100K_to_125K',
-    'census_captured_by_hhi_125K_to_150K',
-    'census_captured_by_hhi_150K_to_200K',
-    'census_captured_by_hhi_more_than_200K',
-    
-    "2024 Average Tobacco products and smoking supplies"]
+    "EDUC_0_TO_9TH_PCT_MEAN",
+    "EDUC_SOME_HS_PCT_MEAN",
+    "EDUC_HS_GRAD_PCT_MEAN",
+    "EDUC_SOME_COLLEGE_PCT_MEAN",
+    "EDUC_ASSOCIATE_DEGREE_PCT_MEAN",
+    "EDUC_BACHELOR_DEGREE_PCT_MEAN",
+    "EDUC_GRAD_OR_PROF_DEGREE_PCT_MEAN",
+    "HOME_VALUE_MEDIAN_AMT_MEAN",
+    "AVERAGE_INCOME_PER_PERSON",
+    "AVERAGE_AGE",
+    "AVERAGE_PERSONS_PER_HH",
+    "median_dwell_time",
+    "median_visits_per_day",
+    "foottraffic_per_sqft",
+    "census_captured_by_hhi_less_than_10K",
+    "census_captured_by_hhi_10K_to_15K",
+    "census_captured_by_hhi_15K_to_20K",
+    "census_captured_by_hhi_20K_to_25K",
+    "census_captured_by_hhi_25K_to_30K",
+    "census_captured_by_hhi_30K_to_35K",
+    "census_captured_by_hhi_35K_to_40K",
+    "census_captured_by_hhi_40K_to_45K",
+    "census_captured_by_hhi_45K_to_50K",
+    "census_captured_by_hhi_50K_to_60K",
+    "census_captured_by_hhi_60K_to_75K",
+    "census_captured_by_hhi_75K_to_100K",
+    "census_captured_by_hhi_100K_to_125K",
+    "census_captured_by_hhi_125K_to_150K",
+    "census_captured_by_hhi_150K_to_200K",
+    "census_captured_by_hhi_more_than_200K",
+    "2024 Average Tobacco products and smoking supplies",
+]
 
 # Ranking
 
@@ -631,7 +617,7 @@ RENAME_DICT = {
     "census_captured_by_hhi_more_than_200K": "HHI 200k+",
     "foottraffic": "Foot Traffic",
     "foottraffic_per_sqft": "Foot Traffic/sqft",
-    "unique_visitors": "Unique Visitors"
+    "unique_visitors": "Unique Visitors",
 }
 
 # Add a config variable for the base feature_ranking_results directory:

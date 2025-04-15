@@ -49,11 +49,11 @@ readers:
     kind: "SnowflakeReader"
     config:
       query: SELECT * FROM PROD_CLUSTERING_DB.RAW.EXTERNAL_SALES
-  internal_need_state:
+  need_state:
     kind: "BlobReader"
     config:
       blob_name: internal/need_state.csv
-  internal_sales:
+  sales:
     kind: "BlobReader"
     config:
       blob_name: internal/sales.parquet
@@ -70,11 +70,11 @@ writers:
       table: PROD_CLUSTERING_DB.PROCESSED.INTERNAL_CLUSTERS
       database: PROD_CLUSTERING_DB
       schema: PROCESSED
-  internal_sales_output:
+  sales_by_category:
     kind: "BlobWriter"
     config:
       blob_name: internal/sales_processed.parquet
-  internal_sales_percent_output:
+  sales_percent:
     kind: "BlobWriter"
     config:
       blob_name: internal/sales_percent.parquet

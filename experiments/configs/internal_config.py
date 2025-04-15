@@ -1,7 +1,7 @@
 """
 internal_config.py
 
-Configuration file for the internal data processing pipeline. 
+Configuration file for the internal data processing pipeline.
 Holds directory paths, clustering hyperparameters, categorical encoding details,
 and any other relevant constants.
 """
@@ -65,31 +65,31 @@ INTERNAL_CDTS = [
     # "FACIAL CARE",
     # "HAIR CARE"
     # "EXTERNAL PAIN"
-# "GROCERY",
-# "HAIR CARE",
-"CANDY",
-# "TRIAL TRAVEL",
-# "FEMININE CARE",
-# "EXTERNAL PAIN", 
-# "SNACKS",
-# "GROCERY"
-# "FEMININE CARE",
-# "TRIAL TRAVEL",
-# "ORAL HYGIENE",
-# "HAIR COLOR"
-# "HOUSEHOLD PAPER",
-# "ADULT CARE",
-# "COLD REMEDIES",
-# "HAIR COLOR",
-# "DEODORANTS",
-# "TEXTURED HAIR",
-# "STATIONERY", 
-# "SNACKS"
-# "BEVERAGES"  
-# "EXTERNAL PAIN"
-# "DIGESTIVE HEALTH",
-# "TRIAL TRAVEL",
-# "FIRST AID",
+    # "GROCERY",
+    # "HAIR CARE",
+    "CANDY",
+    # "TRIAL TRAVEL",
+    # "FEMININE CARE",
+    # "EXTERNAL PAIN",
+    # "SNACKS",
+    # "GROCERY"
+    # "FEMININE CARE",
+    # "TRIAL TRAVEL",
+    # "ORAL HYGIENE",
+    # "HAIR COLOR"
+    # "HOUSEHOLD PAPER",
+    # "ADULT CARE",
+    # "COLD REMEDIES",
+    # "HAIR COLOR",
+    # "DEODORANTS",
+    # "TEXTURED HAIR",
+    # "STATIONERY",
+    # "SNACKS"
+    # "BEVERAGES"
+    # "EXTERNAL PAIN"
+    # "DIGESTIVE HEALTH",
+    # "TRIAL TRAVEL",
+    # "FIRST AID",
 ]
 
 

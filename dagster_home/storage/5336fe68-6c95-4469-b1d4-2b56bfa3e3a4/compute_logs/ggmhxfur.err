@@ -1,0 +1,88 @@
+Exception while writing logger call to event log: (sqlite3.OperationalError) database is locked
+[SQL: INSERT INTO event_logs (run_id, event, dagster_event_type, timestamp, step_key, asset_key, partition) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('5336fe68-6c95-4469-b1d4-2b56bfa3e3a4', '{"__class__": "EventLogEntry", "dagster_event": {"__class__": "DagsterEvent", "event_specific_data": {"__class__": "ComputeLogsCaptureData", "externa ... (516 characters truncated) ... 8-6c95-4469-b1d4-2b56bfa3e3a4", "step_key": null, "timestamp": 1744755285.1972618, "user_message": "Started capturing logs in process (pid: 86853)."}', 'LOGS_CAPTURED', '2025-04-15 22:14:45.197262', None, None, None)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - ENGINE_EVENT - Exception while setting up compute log capture
+
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked
+[SQL: INSERT INTO event_logs (run_id, event, dagster_event_type, timestamp, step_key, asset_key, partition) VALUES (?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('5336fe68-6c95-4469-b1d4-2b56bfa3e3a4', '{"__class__": "EventLogEntry", "dagster_event": {"__class__": "DagsterEvent", "event_specific_data": {"__class__": "ComputeLogsCaptureData", "externa ... (516 characters truncated) ... 8-6c95-4469-b1d4-2b56bfa3e3a4", "step_key": null, "timestamp": 1744755285.1972618, "user_message": "Started capturing logs in process (pid: 86853)."}', 'LOGS_CAPTURED', '2025-04-15 22:14:45.197262', None, None, None)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 51, in inner_plan_execution_iterator
+    yield DagsterEvent.capture_logs(job_context, step_keys, log_key, log_context)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 1556, in capture_logs
+    return DagsterEvent.from_job(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 518, in from_job
+    log_job_event(job_context, event)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 377, in log_job_event
+    job_context.log.log_dagster_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 394, in log_dagster_event
+    self.log(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 424, in log
+    self._log(level, msg, args, **kwargs)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1624, in _log
+    self.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1634, in handle
+    self.callHandlers(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1696, in callHandlers
+    hdlr.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 268, in emit
+    handler.handle(dagster_record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 262, in emit
+    self._instance.handle_new_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 2541, in handle_new_event
+    self._event_storage.store_event(events[0])
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 258, in store_event
+    conn.execute(insert_event_statement)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1385, in execute
+    return meth(self, multiparams, params, _EMPTY_EXECUTION_OPTS)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/sql/elements.py", line 334, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1577, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1953, in _execute_context
+    self._handle_dbapi_exception(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+
+The above exception was caused by the following exception:
+sqlite3.OperationalError: database is locked
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - STEP_START - Started execution of step "internal_assign_clusters".
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - Loading file from: storage/internal_fe_raw_data using PickledObjectFilesystemIOManager...
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - LOADED_INPUT - Loaded input "internal_fe_raw_data" using input manager "io_manager", from output "result" of step "internal_fe_raw_data"
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - Loading file from: storage/internal_train_clustering_models using PickledObjectFilesystemIOManager...
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - LOADED_INPUT - Loaded input "internal_train_clustering_models" using input manager "io_manager", from output "result" of step "internal_train_clustering_models"
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - STEP_INPUT - Got input "internal_fe_raw_data" of type "Dict[String,DataFrame]". (Type check passed).
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - STEP_INPUT - Got input "internal_train_clustering_models" of type "Dict[String,Any]". (Type check passed).
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mINFO[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - Assigning clusters to data points from raw features
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: PERSONAL CARE
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: BABY CARE
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: HOME CARE
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: ADULT CARE
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: MEDICATION
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: NUTRITION
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mWARNING[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - No trained model found for category: BEAUTY
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - STEP_OUTPUT - Yielded output "result" of type "Dict[String,DataFrame]". (Type check passed).
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - internal_assign_clusters - Writing file at: storage/internal_assign_clusters using PickledObjectFilesystemIOManager...
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - ASSET_MATERIALIZATION - Materialized value internal_assign_clusters.
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-15 22:14:55 +0000[0m - dagster - [34mDEBUG[0m - internal_ml_job - 5336fe68-6c95-4469-b1d4-2b56bfa3e3a4 - 86853 - internal_assign_clusters - STEP_SUCCESS - Finished execution of step "internal_assign_clusters" in 238ms.

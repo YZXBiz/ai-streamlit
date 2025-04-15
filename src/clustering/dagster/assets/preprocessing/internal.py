@@ -221,7 +221,7 @@ def internal_sales_by_category(
     deps=["internal_sales_by_category"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"output_sales_writer"},
+    required_resource_keys={"sales_by_category_writer"},
 )
 def internal_output_sales_table(
     context: dg.AssetExecutionContext,
@@ -234,4 +234,17 @@ def internal_output_sales_table(
         internal_sales_by_category: Sales data with categories
     """
     context.log.info("Saving preprocessed sales data")
-    context.resources.output_sales_writer.write(data=internal_sales_by_category)
+    context.resources.sales_by_category_writer.write(data=internal_sales_by_category)
+
+    # Collect all unique store numbers across all categories
+    all_stores = set()
+    for category_df in internal_sales_by_category.values():
+        stores = category_df.select("STORE_NBR").unique().to_series().to_list()
+        all_stores.update(stores)
+
+    context.add_output_metadata(
+        metadata={
+            "num_categories": len(internal_sales_by_category),
+            "num_stores": len(all_stores),
+        }
+    )

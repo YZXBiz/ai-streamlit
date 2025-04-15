@@ -45,7 +45,7 @@ class Defaults:
     group_name="feature_engineering",
     compute_kind="internal_feature_engineering",
     deps=["internal_output_sales_table"],
-    required_resource_keys={"output_sales_reader"},
+    required_resource_keys={"sales_by_category_reader"},
 )
 def internal_fe_raw_data(
     context: dg.AssetExecutionContext,
@@ -62,7 +62,7 @@ def internal_fe_raw_data(
         Dictionary mapping category names to their respective dataframes
     """
     context.log.info("Loading sales data by category")
-    return context.resources.output_sales_reader.read()
+    return context.resources.sales_by_category_reader.read()
 
 
 @dg.asset(

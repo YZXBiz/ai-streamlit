@@ -60,15 +60,20 @@ def extract_granularities(internal_file: str, external_file: str):
     external_granularity : str
         Granularity extracted from the external file name.
     """
-    internal_granularity = os.path.splitext(os.path.basename(internal_file))[0].replace("df_clustered_", "")
-    external_granularity = os.path.splitext(os.path.basename(external_file))[0].replace("df_clustered_", "")
+    internal_granularity = os.path.splitext(os.path.basename(internal_file))[0].replace(
+        "df_clustered_", ""
+    )
+    external_granularity = os.path.splitext(os.path.basename(external_file))[0].replace(
+        "df_clustered_", ""
+    )
     logging.info(f"Internal granularity: {internal_granularity}")
     logging.info(f"External granularity: {external_granularity}")
     return internal_granularity, external_granularity
 
 
-def merge_cluster_labels(int_df: pd.DataFrame, ext_df: pd.DataFrame,
-                         internal_granularity: str, external_granularity: str) -> pd.DataFrame:
+def merge_cluster_labels(
+    int_df: pd.DataFrame, ext_df: pd.DataFrame, internal_granularity: str, external_granularity: str
+) -> pd.DataFrame:
     """
     Merge internal and external cluster labels on 'STORE_NBR' and create 'demand_cluster_labels'.
 
@@ -97,25 +102,29 @@ def merge_cluster_labels(int_df: pd.DataFrame, ext_df: pd.DataFrame,
     # Internal
     df_int_clusters = int_df[["STORE_NBR", "cluster_label"]].copy()
     df_int_clusters.rename(
-        columns={"STORE_NBR": "store_nbr", "cluster_label": "internal_cluster_labels"},
-        inplace=True
+        columns={"STORE_NBR": "store_nbr", "cluster_label": "internal_cluster_labels"}, inplace=True
     )
-    df_int_clusters["internal_cluster_labels"] = df_int_clusters["internal_cluster_labels"].astype(str)
+    df_int_clusters["internal_cluster_labels"] = df_int_clusters["internal_cluster_labels"].astype(
+        str
+    )
 
     # External
     df_ext_clusters = ext_df[["STORE_NBR", "cluster_label"]].copy()
     df_ext_clusters.rename(
-        columns={"STORE_NBR": "store_nbr", "cluster_label": "external_cluster_labels"},
-        inplace=True
+        columns={"STORE_NBR": "store_nbr", "cluster_label": "external_cluster_labels"}, inplace=True
     )
-    df_ext_clusters["external_cluster_labels"] = df_ext_clusters["external_cluster_labels"].astype(str)
+    df_ext_clusters["external_cluster_labels"] = df_ext_clusters["external_cluster_labels"].astype(
+        str
+    )
 
     # Merge on 'store_nbr'
     df_merged_clusters = pd.merge(df_ext_clusters, df_int_clusters, on="store_nbr", how="inner")
 
     # Create 'demand_cluster_labels'
     df_merged_clusters["demand_cluster_labels"] = (
-        df_merged_clusters["external_cluster_labels"] + "_" + df_merged_clusters["internal_cluster_labels"]
+        df_merged_clusters["external_cluster_labels"]
+        + "_"
+        + df_merged_clusters["internal_cluster_labels"]
     )
 
     # Add granularity columns
@@ -171,7 +180,7 @@ def merge_and_scale(df_clusters: pd.DataFrame, df_features: pd.DataFrame) -> pd.
     Returns
     -------
     df_merged : pd.DataFrame
-        DataFrame with numeric columns scaled (mean=0, std=1). 
+        DataFrame with numeric columns scaled (mean=0, std=1).
         Also includes 'demand_cluster_labels', 'external_cluster_labels', 'internal_cluster_labels',
         'external_granularity', 'internal_granularity'.
     """
@@ -185,12 +194,13 @@ def merge_and_scale(df_clusters: pd.DataFrame, df_features: pd.DataFrame) -> pd.
         "internal_cluster_labels",
         "demand_cluster_labels",
         "external_granularity",
-        "internal_granularity"
+        "internal_granularity",
     }
 
     # Identify numeric columns to scale
     numeric_cols = [
-        col for col in df_merged.columns 
+        col
+        for col in df_merged.columns
         if (col not in exclude_cols and df_merged[col].dtype.kind in ("i", "f"))
     ]
 
@@ -226,10 +236,11 @@ def reassign_small_clusters(df_scaled: pd.DataFrame, min_cluster_size=100) -> pd
         "internal_cluster_labels",
         "demand_cluster_labels",
         "external_granularity",
-        "internal_granularity"
+        "internal_granularity",
     }
     numeric_cols = [
-        col for col in df_scaled.columns
+        col
+        for col in df_scaled.columns
         if (col not in exclude_cols and df_scaled[col].dtype.kind in ("i", "f"))
     ]
 
@@ -269,7 +280,9 @@ def reassign_small_clusters(df_scaled: pd.DataFrame, min_cluster_size=100) -> pd
     return df_scaled
 
 
-def build_final_df(df_rebalanced: pd.DataFrame, int_df: pd.DataFrame, ext_df: pd.DataFrame) -> pd.DataFrame:
+def build_final_df(
+    df_rebalanced: pd.DataFrame, int_df: pd.DataFrame, ext_df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Build the final merged DataFrame, attaching original data from internal & external sources.
 
@@ -302,7 +315,7 @@ def build_final_df(df_rebalanced: pd.DataFrame, int_df: pd.DataFrame, ext_df: pd
         "demand_cluster_labels",
         "rebalanced_demand_cluster_labels",
         "external_granularity",
-        "internal_granularity"
+        "internal_granularity",
     ]
     final_df_m1 = df_rebalanced[final_cols].copy()
 
@@ -315,11 +328,13 @@ def build_final_df(df_rebalanced: pd.DataFrame, int_df: pd.DataFrame, ext_df: pd
     return final_df
 
 
-def save_final_df(final_df: pd.DataFrame,
-                  internal_granularity: str,
-                  external_granularity: str,
-                  output_dir: str,
-                  file_suffix: str = "") -> str:
+def save_final_df(
+    final_df: pd.DataFrame,
+    internal_granularity: str,
+    external_granularity: str,
+    output_dir: str,
+    file_suffix: str = "",
+) -> str:
     """
     Save the final DataFrame as a CSV in the specified output directory.
 

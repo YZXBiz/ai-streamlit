@@ -163,7 +163,7 @@ class TestInternalPreprocessingAssets:
         # Create context with resources
         context = build_asset_context(
             resources={
-                "output_sales_writer": mock_writer,
+                "sales_by_category_writer": mock_writer,
                 "logger": lambda: None,
             }
         )
@@ -400,7 +400,7 @@ def test_preprocessing_pipeline() -> None:
         resources = {
             "internal_ns_sales": lambda: sales_data,
             "internal_ns_map": lambda: mapping_data,
-            "output_sales_writer": lambda df, *args, **kwargs: len(df),
+            "sales_by_category_writer": lambda df, *args, **kwargs: len(df),
             "logger": lambda: None,
         }
 
@@ -424,9 +424,9 @@ def test_preprocessing_pipeline() -> None:
         ]
 
         for expected in expected_assets:
-            assert any(
-                expected in key for key in asset_keys
-            ), f"Expected asset {expected} not found"
+            assert any(expected in key for key in asset_keys), (
+                f"Expected asset {expected} not found"
+            )
 
     except Exception as e:
         pytest.skip(f"Integration test failed: {str(e)}")

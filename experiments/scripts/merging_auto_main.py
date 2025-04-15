@@ -6,6 +6,7 @@ import os
 import logging
 import re
 from datetime import datetime
+
 # =============================================================================
 # 2) Third-Party Imports
 # =============================================================================
@@ -41,13 +42,14 @@ from utils.merging_auto_utils import (
     get_clustered_file,
     get_latest_run_folder,
     sanitize_name,
-    create_merged_output_folder_all
+    create_merged_output_folder_all,
 )
 
 # -----------------------------------------------------------------------------
 # Logging Setup
 # -----------------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO)
+
 
 # =============================================================================
 # main() - Orchestrates the merging of internal + external cluster-labeled CSVs
@@ -61,7 +63,7 @@ def main():
         with centroid-based rebalancing, and save the merged output.
 
       Additionally:
-      - Create a second set of merged outputs (the "All" set) in 
+      - Create a second set of merged outputs (the "All" set) in
         Merged_Clustering_Output_Run_All_{YYYYMMDD_HHMM} under merged_content_all,
         augmented with extra columns from df_all_external.
     """
@@ -87,7 +89,9 @@ def main():
         return
     latest_external_folder = os.path.join(content_dir, latest_external_dirname)
 
-    latest_internal_dirname = get_latest_run_folder(internal_content_dir, "Internal_Clustering_Run_")
+    latest_internal_dirname = get_latest_run_folder(
+        internal_content_dir, "Internal_Clustering_Run_"
+    )
     if not latest_internal_dirname:
         logging.error("No Internal_Clustering_Run_ folder found in 'internal_content/'. Exiting.")
         return
@@ -107,17 +111,21 @@ def main():
     # (C.1) Prepare a second time-stamped folder for the 'All' merged outputs
     # --------------------------------------------------------------------------
     merged_content_all_dir = os.path.join(repo_root, "merged_content_all")
-    merged_output_dir_all, merged_run_ts_all = create_merged_output_folder_all(merged_content_all_dir)
+    merged_output_dir_all, merged_run_ts_all = create_merged_output_folder_all(
+        merged_content_all_dir
+    )
     logging.info(f"Will also save 'All' merged outputs to: {merged_output_dir_all}")
 
     # --------------------------------------------------------------------------
     # (D) Load the big external dataset containing extra columns
     # --------------------------------------------------------------------------
-    df_all_external = pd.read_csv("/home/jovyan/fsassortment/store_clustering/data/clustering_features_plus_night_traffic_07022025.csv")
+    df_all_external = pd.read_csv(
+        "/home/jovyan/fsassortment/store_clustering/data/clustering_features_plus_night_traffic_07022025.csv"
+    )
 
     # --------------------------------------------------------------------------
     # (E) For each category in INTERNAL_CDTS, find matching CSVs, then merge
-    # --------------------------------------------------------------------------                                
+    # --------------------------------------------------------------------------
     for cat in INTERNAL_CDTS:
         cat_sanitized = sanitize_name(cat)
         logging.info(f"Processing category '{cat}' (sanitized: '{cat_sanitized}') ...")
@@ -128,10 +136,14 @@ def main():
 
         # Skip if missing either internal or external file
         if not internal_csv:
-            logging.warning(f"[SKIP] No internal CSV found for '{cat}' (sanitized '{cat_sanitized}')")
+            logging.warning(
+                f"[SKIP] No internal CSV found for '{cat}' (sanitized '{cat_sanitized}')"
+            )
             continue
         if not external_csv:
-            logging.warning(f"[SKIP] No external CSV found for '{cat}' (sanitized '{cat_sanitized}')")
+            logging.warning(
+                f"[SKIP] No external CSV found for '{cat}' (sanitized '{cat_sanitized}')"
+            )
             continue
 
         logging.info(f"Found internal CSV: {internal_csv}")
@@ -144,10 +156,14 @@ def main():
         int_df, ext_df = load_datasets(internal_csv, external_csv)
 
         # (F.2) Extract "granularity" from filenames
-        internal_granularity, external_granularity = extract_granularities(internal_csv, external_csv)
+        internal_granularity, external_granularity = extract_granularities(
+            internal_csv, external_csv
+        )
 
         # (F.3) Merge cluster labels
-        df_merged_clusters = merge_cluster_labels(int_df, ext_df, internal_granularity, external_granularity)
+        df_merged_clusters = merge_cluster_labels(
+            int_df, ext_df, internal_granularity, external_granularity
+        )
 
         # (F.4) Build feature matrix (dropping cluster labels)
         df_features = build_feature_matrix(int_df, ext_df)
@@ -167,7 +183,7 @@ def main():
             internal_granularity,
             external_granularity,
             merged_output_dir,
-            file_suffix=""  # No suffix for standard version
+            file_suffix="",  # No suffix for standard version
         )
         logging.info(f"Merged & rebalanced file saved: {output_path}")
 
@@ -185,13 +201,9 @@ def main():
 
         # Now merge on str_nbr (from final_df) == STORE_NBR (from df_all_external)
         final_df_all = pd.merge(
-            final_df,
-            df_all_external_subset,
-            how="inner",
-            left_on="store_nbr",
-            right_on="STORE_NBR"
+            final_df, df_all_external_subset, how="inner", left_on="store_nbr", right_on="STORE_NBR"
         )
-### ------------------------------------------------------------------------------------------
+        ### ------------------------------------------------------------------------------------------
         # Fetch data from the SQL query
         path = "/home/jovyan/fsassortment/store_clustering/data/df_region.parquet"
         df_region = pd.read_parquet(path)
@@ -205,39 +217,40 @@ def main():
             "Alaska": "west",
             "Eastern": "nonwest",
             "Central": "nonwest",
-            "Atlantic-PR": "nonwest"
+            "Atlantic-PR": "nonwest",
         }
 
         # Map the time zones to regions in df_need_states
-        df_region['region'] = df_region['TIME_ZONE_ID'].map(time_zone_to_region)
+        df_region["region"] = df_region["TIME_ZONE_ID"].map(time_zone_to_region)
 
         # Handle cases where the time zone is not in the mapping
-        df_region['region'] = df_region['region'].fillna('unknown')
+        df_region["region"] = df_region["region"].fillna("unknown")
         df_region.columns = df_region.columns.str.lower()
 
         # Merge the dataframes
-        final_df_all = pd.merge(final_df_all, df_region, on='store_nbr')
+        final_df_all = pd.merge(final_df_all, df_region, on="store_nbr")
 
         # Perform the concatenation only if the left-hand side of the split is 'GROCERY'
-        final_df_all['rebalanced_demand_cluster_labels'] = final_df_all.apply(
-            lambda row: row['rebalanced_demand_cluster_labels'] + "_" + row['region']
-            if row['external_granularity'].split("_", 1)[0] == "GROCERY" else row['rebalanced_demand_cluster_labels'],
-            axis=1
+        final_df_all["rebalanced_demand_cluster_labels"] = final_df_all.apply(
+            lambda row: row["rebalanced_demand_cluster_labels"] + "_" + row["region"]
+            if row["external_granularity"].split("_", 1)[0] == "GROCERY"
+            else row["rebalanced_demand_cluster_labels"],
+            axis=1,
         )
 
         # Drop unnecessary columns
-        final_df_all = final_df_all.drop(['region', 'time_zone_id'], axis=1)
+        final_df_all = final_df_all.drop(["region", "time_zone_id"], axis=1)
 
         # Print or return the final DataFrame
         print(final_df_all)
-### ------------------------------------------------------------------------------------------
+        ### ------------------------------------------------------------------------------------------
         # Save final_df_all (with "ALL" suffix)
         output_path_all = save_final_df(
             final_df_all,
             internal_granularity,
             external_granularity,
             merged_output_dir_all,
-            file_suffix="ALL"
+            file_suffix="ALL",
         )
         logging.info(f"All-included merged file saved: {output_path_all}")
 
@@ -249,8 +262,6 @@ def main():
 # =============================================================================
 if __name__ == "__main__":
     main()
-
-
 
 
 # # =============================================================================
@@ -416,4 +427,3 @@ if __name__ == "__main__":
 # # =============================================================================
 # if __name__ == "__main__":
 #     main()
-
