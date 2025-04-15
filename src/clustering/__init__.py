@@ -1,4 +1,8 @@
-"""Store clustering analysis package."""
+"""Clustering analysis package for data processing and model building.
+
+This package provides a structured framework for running clustering analysis
+pipelines using Dagster for workflow orchestration.
+"""
 
 __version__ = "0.1.0"
 

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any, ClassVar
 
 import loguru
 import pydantic as pdt
@@ -12,15 +13,15 @@ class LoggerService(pdt.BaseModel):
 
     https://loguru.readthedocs.io/en/stable/api/logger.html
 
-    Parameters:
-        sink (str): logging output.
-        level (str): logging level.
-        format (str): logging format.
-        colorize (bool): colorize output.
-        serialize (bool): convert to JSON.
-        backtrace (bool): enable exception trace.
-        diagnose (bool): enable variable display.
-        catch (bool): catch errors during log handling.
+    Attributes:
+        sink: Logging output destination.
+        level: Logging level.
+        format: Logging format.
+        colorize: Whether to colorize output.
+        serialize: Whether to convert to JSON.
+        backtrace: Whether to enable exception trace.
+        diagnose: Whether to enable variable display.
+        catch: Whether to catch errors during log handling.
     """
 
     sink: str = "logs/app.log"  # Save logs to a file in the logs folder
@@ -32,13 +33,9 @@ class LoggerService(pdt.BaseModel):
     diagnose: bool = False
     catch: bool = True
 
-    class Config:
-        """Pydantic configuration for LoggerSettings.
-
-        Forbids extra attributes in the configuration.
-        """
-
-        extra = "forbid"
+    model_config: ClassVar[dict[str, Any]] = {
+        "extra": "forbid",
+    }
 
     def start(self) -> None:
         """Start the logging service."""
@@ -58,10 +55,10 @@ class LoggerService(pdt.BaseModel):
         # Nothing to do as loguru handles this automatically
         pass
 
-    def logger(self):
+    def logger(self) -> loguru.Logger:
         """Return the main logger.
 
         Returns:
-            The main logger.
+            The configured logger instance.
         """
         return loguru.logger

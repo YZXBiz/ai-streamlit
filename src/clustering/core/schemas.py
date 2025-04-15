@@ -5,7 +5,7 @@ across the pipeline. These schemas ensure data consistency and quality.
 """
 
 # %% IMPORTS
-from typing import TypeVar
+from typing import ClassVar, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -24,9 +24,10 @@ SeriesType = pd.Series | pl.Series | np.ndarray
 class Schema(pa.DataFrameModel):
     """Base class for all schemas."""
 
-    class Config:  # noqa: D106
-        coerce: bool = True
-        strict: bool = True
+    model_config: ClassVar[dict] = {
+        "coerce": True,
+        "strict": True,
+    }
 
     @classmethod
     def check(cls: type[TSchema], data: pd.DataFrame | pl.DataFrame) -> pd.DataFrame | pl.DataFrame:

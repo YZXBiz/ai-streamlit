@@ -5,6 +5,7 @@ import pickle
 from io import BytesIO
 
 import polars as pl
+from azure.core.exceptions import AzureError, ServiceRequestError
 from azure.storage.blob import BlobClient
 
 from clustering.io.writers.base import Writer
@@ -25,6 +26,10 @@ class BlobWriter(Writer):
 
         Args:
             data: DataFrame to write
+
+        Raises:
+            ValueError: If the file format is not supported
+            RuntimeError: If there's an error uploading to blob storage
         """
         buffer = BytesIO()
         file_extension = os.path.splitext(self.blob_name)[1].lower()
@@ -61,5 +66,9 @@ class BlobWriter(Writer):
                 overwrite=self.overwrite,
                 max_concurrency=self.max_concurrency,
             )
+        except AzureError as e:
+            raise RuntimeError(f"Azure service error when uploading blob: {str(e)}") from e
+        except ServiceRequestError as e:
+            raise RuntimeError(f"Network error when uploading blob: {str(e)}") from e 
         except Exception as e:
-            raise RuntimeError(f"Failed to upload blob: {e}")
+            raise RuntimeError(f"Unexpected error when uploading blob: {str(e)}") from e

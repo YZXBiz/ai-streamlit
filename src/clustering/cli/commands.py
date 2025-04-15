@@ -149,7 +149,7 @@ def main():
 )
 @click.option("--tags", type=str, multiple=True, help="Tags in format key=value to add to the run")
 @click.option("--verbose", "-v", is_flag=True, help="Show verbose output")
-def run(job_name: str, env: str, tags: tuple, verbose: bool):
+def run(job_name: str, env: str, tags: tuple[str, ...], verbose: bool):
     """Run a Dagster job.
 
     JOB_NAME: Name of the job to run. Options include:

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import dagster as dg
+import yaml
 
 # -----------------------------------------------------------------------------
 # Asset imports
@@ -264,17 +265,34 @@ def load_config(env: str = "dev") -> dict[str, Any]:
         if config_data is None:
             print(f"WARNING: Config file {config_path} parsed as None, using empty config")
             config_data = {}
+    except FileNotFoundError as e:
+        print(f"ERROR: Config file {config_path} not found: {str(e)}")
+        config_data = _get_default_config(env)
+    except (yaml.YAMLError, yaml.parser.ParserError) as e:
+        print(f"ERROR: Invalid YAML in config file {config_path}: {str(e)}")
+        config_data = _get_default_config(env)
     except Exception as e:
         print(f"ERROR loading config from {config_path}: {str(e)}")
-        # Provide default configuration to prevent errors
-        config_data = {
-            "job_params": {},
-            "logger": {"level": "INFO", "sink": f"logs/dagster_{env}.log"},
-            "readers": {},
-            "writers": {},
-        }
+        config_data = _get_default_config(env)
 
     return config_data
+
+
+def _get_default_config(env: str) -> dict[str, Any]:
+    """Get default configuration when config loading fails.
+    
+    Args:
+        env: Environment name (dev, staging, prod)
+        
+    Returns:
+        Default configuration dictionary
+    """
+    return {
+        "job_params": {},
+        "logger": {"level": "INFO", "sink": f"logs/dagster_{env}.log"},
+        "readers": {},
+        "writers": {},
+    }
 
 
 # -----------------------------------------------------------------------------

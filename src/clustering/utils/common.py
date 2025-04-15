@@ -7,6 +7,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
+import loguru
+
 T = TypeVar("T")
 
 
@@ -52,15 +54,23 @@ def timer(func: Callable[..., T]) -> Callable[..., T]:
         func: Function to decorate
 
     Returns:
-        Decorated function
+        Decorated function that logs execution time
     """
+    logger = loguru.logger
 
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> T:
-        start = time.time()
-        result = func(*args, **kwargs)
-        end = time.time()
-        print(f"{func.__name__} took {end - start:.2f} seconds to complete")
-        return result
+        start_time = time.time()
+        logger.debug(f"Starting {func.__name__}")
+        
+        try:
+            result = func(*args, **kwargs)
+            execution_time = time.time() - start_time
+            logger.info(f"{func.__name__} completed in {execution_time:.4f} seconds")
+            return result
+        except Exception as e:
+            execution_time = time.time() - start_time
+            logger.error(f"{func.__name__} failed after {execution_time:.4f} seconds: {str(e)}")
+            raise
 
     return cast(Callable[..., T], wrapper)
