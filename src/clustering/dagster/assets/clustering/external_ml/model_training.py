@@ -330,10 +330,9 @@ def external_save_clustering_models(
     # Use the configured model output resource
     model_output = context.resources.external_model_output
 
-    # Save each model
-    for category, model_info in external_train_clustering_models.items():
-        context.log.info(f"Saving model for category: {category}")
-        model_output.save(category, model_info)
+    # Save all models as a single dictionary
+    context.log.info(f"Saving {len(external_train_clustering_models)} models at once")
+    model_output.write("all_models", external_train_clustering_models)
 
     context.log.info(
         f"Successfully saved {len(external_train_clustering_models)} models to storage"
@@ -474,7 +473,7 @@ def external_save_cluster_assignments(
     # Save with default category name
     category = "default"
     context.log.info("Saving cluster assignments for external data")
-    assignments_output.save(category, external_assign_clusters)
+    assignments_output.write(category, external_assign_clusters)
 
     context.log.info("Successfully saved external cluster assignments")
     context.add_output_metadata(

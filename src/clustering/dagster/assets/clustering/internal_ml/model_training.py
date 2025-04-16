@@ -330,10 +330,9 @@ def internal_save_clustering_models(
     # Use the configured model output resource
     model_output = context.resources.internal_model_output
 
-    # Save each model
-    for category, model_info in internal_train_clustering_models.items():
-        context.log.info(f"Saving model for category: {category}")
-        model_output.save(category, model_info)
+    # Save all models as a single dictionary
+    context.log.info(f"Saving {len(internal_train_clustering_models)} models at once")
+    model_output.write("all_models", internal_train_clustering_models)
 
     context.log.info(
         f"Successfully saved {len(internal_train_clustering_models)} models to storage"
@@ -447,7 +446,7 @@ def internal_save_cluster_assignments(
     # Save each category's assignments
     for category, df in internal_assign_clusters.items():
         context.log.info(f"Saving cluster assignments for category: {category}")
-        assignments_output.save(category, df)
+        assignments_output.write(category, df)
 
     context.log.info(
         f"Successfully saved assignments for {len(internal_assign_clusters)} categories"
