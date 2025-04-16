@@ -161,7 +161,7 @@ docs-deps: ## Install documentation dependencies
 .PHONY: dev format lint type-check check-all version
 dev: ## Start Dagster development server without creating directories
 	@echo "==> Starting Dagster development server"
-	@$(PYTHON) -m dagster dev -m $(PACKAGE_NAME).dagster.definitions --host 0.0.0.0
+	@DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m $(PACKAGE_NAME).dagster.definitions --host 0.0.0.0
 	@echo "✓ Dagster development server stopped"
 
 format: ## Format code with ruff formatter

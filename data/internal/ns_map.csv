@@ -1,21 +1,181 @@
 PRODUCT_ID,CATEGORY,NEED_STATE,CDT,ATTRIBUTE_1,ATTRIBUTE_2,ATTRIBUTE_3,ATTRIBUTE_4,ATTRIBUTE_5,ATTRIBUTE_6,PLANOGRAM_DSC,PLANOGRAM_NBR,NEW_ITEM,TO_BE_DROPPED
-1001,Adult Care,Convenience_0,Convenience_1,Pads,Regular,Smooth,null,null,null,ADULT CARE,1,FALSE,FALSE
-1002,Adult Care,Convenience_1,Convenience_1,Pads,Regular,Smooth,null,null,null,BASIC NUTRITION,1,FALSE,FALSE
-1003,Adult Care,Convenience_2,Convenience_1,Pads,Regular,Smooth,null,null,null,ADULT CARE,1,FALSE,FALSE
-1004,Baby Care,Health_0,Health_1,Diapers,Size 1,Sensitive,Hypoallergenic,null,null,BABY CARE,2,FALSE,FALSE
-1005,Baby Care,Health_0,Health_1,Diapers,Size 2,Sensitive,Hypoallergenic,null,null,BABY CARE,2,FALSE,FALSE
-1006,Baby Care,Health_1,Health_1,Wipes,Regular,Fragrance-free,null,null,null,BABY CARE,2,TRUE,FALSE
-1007,Nutrition,Health_2,Health_2,Protein,Powder,Vanilla,Organic,GMO-free,null,NUTRITION,3,FALSE,FALSE
-1008,Nutrition,Health_2,Health_2,Protein,Powder,Chocolate,Organic,GMO-free,null,NUTRITION,3,FALSE,FALSE
-1009,Nutrition,Health_3,Health_2,Vitamins,Daily,Capsule,null,null,null,NUTRITION,3,FALSE,FALSE
-1010,Beauty,Wellness_0,Wellness_1,Skincare,Moisturizer,Anti-aging,SPF30,null,null,BEAUTY,4,TRUE,FALSE
-1011,Beauty,Wellness_0,Wellness_1,Skincare,Cleanser,Oil-free,null,null,null,BEAUTY,4,FALSE,FALSE
-1012,Beauty,Wellness_1,Wellness_1,Haircare,Shampoo,Hydrating,null,null,null,BEAUTY,4,FALSE,FALSE
-1013,Personal Care,Wellness_2,Wellness_2,Oral,Toothpaste,Whitening,Mint,null,null,PERSONAL CARE,5,FALSE,FALSE
-1014,Personal Care,Wellness_2,Wellness_2,Oral,Toothbrush,Electric,null,null,null,PERSONAL CARE,5,TRUE,FALSE
-1015,Personal Care,Wellness_3,Wellness_2,Body,Shower Gel,Moisturizing,null,null,null,PERSONAL CARE,5,FALSE,FALSE
-1016,Medication,Health_4,Health_3,Pain Relief,Tablets,Fast-acting,null,null,null,MEDICATION,6,FALSE,FALSE
-1017,Medication,Health_4,Health_3,Pain Relief,Gel,Topical,null,null,null,MEDICATION,6,FALSE,FALSE
-1018,Medication,Health_5,Health_3,Allergy,Tablets,24-hour,null,null,null,MEDICATION,6,FALSE,FALSE
-1019,Home Care,Convenience_3,Convenience_2,Cleaning,Multi-surface,Disinfectant,null,null,null,HOME CARE,7,FALSE,FALSE
-1020,Home Care,Convenience_3,Convenience_2,Cleaning,Bathroom,Antibacterial,null,null,null,HOME CARE,7,FALSE,TRUE
+1000,Grocery,Convenience_0,Convenience_2,Toothpaste,Powder,Anti-aging,SPF30,,,ADULT CARE,1,FALSE,FALSE
+1001,Grocery,Convenience_0,Convenience_3,Protein,Moisturizer,Fast-acting,Mint,,,ADULT CARE,1,FALSE,FALSE
+1002,Grocery,Convenience_2,Convenience_1,Protein,Multi-surface,Fast-acting,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1003,Grocery,Convenience_2,Convenience_1,Skincare,Multi-surface,Fast-acting,Hypoallergenic,,,ADULT CARE,1,FALSE,TRUE
+1004,Grocery,Convenience_2,Convenience_1,Diapers,Size 1,Fast-acting,SPF30,GMO-free,,ADULT CARE,1,TRUE,FALSE
+1005,Grocery,Convenience_0,Convenience_1,Diapers,Gel,Fast-acting,Mint,GMO-free,,ADULT CARE,1,TRUE,FALSE
+1006,Grocery,Convenience_2,Convenience_1,Protein,Gel,Sensitive,Mint,,,ADULT CARE,1,FALSE,FALSE
+1007,Grocery,Convenience_3,Convenience_3,Pads,Gel,Anti-aging,,,,ADULT CARE,1,FALSE,FALSE
+1008,Grocery,Convenience_0,Convenience_1,Cleaning,Regular,Smooth,SPF30,GMO-free,,ADULT CARE,1,FALSE,TRUE
+1009,Grocery,Convenience_0,Convenience_2,Diapers,Size 1,Anti-aging,,,,ADULT CARE,1,FALSE,FALSE
+1010,Grocery,Convenience_2,Convenience_2,Cleaning,Regular,Smooth,Mint,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1011,Grocery,Convenience_3,Convenience_1,Pain Relief,Gel,Fast-acting,SPF30,GMO-free,,ADULT CARE,1,FALSE,TRUE
+1012,Grocery,Convenience_3,Convenience_3,Cleaning,Regular,Fast-acting,Mint,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1013,Grocery,Convenience_3,Convenience_3,Protein,Powder,Vanilla,Mint,GMO-free,,ADULT CARE,1,TRUE,TRUE
+1014,Grocery,Convenience_1,Convenience_2,Cleaning,Size 1,Disinfectant,Mint,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1015,Beauty,Wellness_0,Wellness_1,Diapers,Size 1,Vanilla,SPF30,,,BEAUTY,4,FALSE,FALSE
+1016,Beauty,Wellness_0,Wellness_1,Diapers,Multi-surface,Sensitive,Hypoallergenic,GMO-free,,BEAUTY,4,TRUE,FALSE
+1017,Beauty,Wellness_1,Wellness_2,Skincare,Gel,Anti-aging,Hypoallergenic,GMO-free,,BEAUTY,4,TRUE,FALSE
+1018,Beauty,Wellness_1,Wellness_3,Pads,Regular,Vanilla,Mint,,,BEAUTY,4,FALSE,FALSE
+1019,Beauty,Wellness_1,Wellness_1,Protein,Powder,Disinfectant,SPF30,,,BEAUTY,4,FALSE,FALSE
+1020,Beauty,Wellness_1,Wellness_3,Pain Relief,Regular,Anti-aging,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1021,Beauty,Wellness_0,Wellness_2,Cleaning,Multi-surface,Disinfectant,Mint,,,BEAUTY,4,TRUE,FALSE
+1022,Beauty,Wellness_2,Wellness_1,Toothpaste,Moisturizer,Fast-acting,,,,BEAUTY,4,TRUE,FALSE
+1023,Beauty,Wellness_3,Wellness_3,Diapers,Powder,Anti-aging,,,,BEAUTY,4,FALSE,FALSE
+1024,Beauty,Wellness_3,Wellness_3,Pain Relief,Multi-surface,Vanilla,,,,BEAUTY,4,FALSE,FALSE
+1025,Beauty,Wellness_3,Wellness_1,Pain Relief,Size 1,Sensitive,SPF30,,,BEAUTY,4,FALSE,FALSE
+1026,Beauty,Wellness_3,Wellness_3,Cleaning,Size 1,Sensitive,Organic,GMO-free,,BEAUTY,4,FALSE,FALSE
+1027,Beauty,Wellness_2,Wellness_3,Wipes,Size 1,Smooth,,GMO-free,,BEAUTY,4,FALSE,TRUE
+1028,Beauty,Wellness_1,Wellness_2,Toothpaste,Moisturizer,Smooth,SPF30,,,BEAUTY,4,FALSE,FALSE
+1029,Beauty,Wellness_3,Wellness_3,Pain Relief,Multi-surface,Vanilla,,,,BEAUTY,4,FALSE,FALSE
+1030,Health,Health_3,Health_2,Cleaning,Multi-surface,Vanilla,Hypoallergenic,GMO-free,,MEDICATION,6,FALSE,TRUE
+1031,Health,Health_2,Health_1,Diapers,Multi-surface,Disinfectant,Mint,,,MEDICATION,6,FALSE,TRUE
+1032,Health,Health_2,Health_3,Protein,Gel,Disinfectant,Organic,,,MEDICATION,6,TRUE,FALSE
+1033,Health,Health_3,Health_2,Cleaning,Size 1,Disinfectant,Hypoallergenic,GMO-free,,MEDICATION,6,FALSE,FALSE
+1034,Health,Health_0,Health_3,Toothpaste,Powder,Disinfectant,,,,MEDICATION,6,FALSE,FALSE
+1035,Health,Health_2,Health_3,Cleaning,Gel,Anti-aging,SPF30,GMO-free,,MEDICATION,6,FALSE,FALSE
+1036,Health,Health_0,Health_3,Protein,Powder,Vanilla,SPF30,,,MEDICATION,6,FALSE,FALSE
+1037,Health,Health_1,Health_3,Wipes,Multi-surface,Disinfectant,Mint,GMO-free,,MEDICATION,6,FALSE,FALSE
+1038,Health,Health_0,Health_1,Protein,Gel,Sensitive,Hypoallergenic,GMO-free,,MEDICATION,6,TRUE,TRUE
+1039,Health,Health_1,Health_2,Skincare,Multi-surface,Smooth,Organic,GMO-free,,MEDICATION,6,FALSE,TRUE
+1040,Health,Health_2,Health_2,Diapers,Powder,Fast-acting,,,,MEDICATION,6,TRUE,FALSE
+1041,Health,Health_1,Health_1,Protein,Multi-surface,Sensitive,Mint,,,MEDICATION,6,FALSE,FALSE
+1042,Health,Health_0,Health_1,Protein,Multi-surface,Smooth,Mint,,,MEDICATION,6,TRUE,FALSE
+1043,Health,Health_3,Health_1,Protein,Gel,Disinfectant,Mint,,,MEDICATION,6,FALSE,FALSE
+1044,Health,Health_2,Health_3,Protein,Multi-surface,Sensitive,Hypoallergenic,GMO-free,,MEDICATION,6,FALSE,TRUE
+1045,Beverages,Convenience_0,Convenience_3,Protein,Size 1,Sensitive,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1046,Beverages,Convenience_2,Convenience_3,Toothpaste,Size 1,Vanilla,Mint,,,HOME CARE,7,FALSE,FALSE
+1047,Beverages,Convenience_1,Convenience_2,Protein,Multi-surface,Smooth,,,,HOME CARE,7,FALSE,FALSE
+1048,Beverages,Convenience_2,Convenience_2,Skincare,Regular,Vanilla,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1049,Beverages,Convenience_0,Convenience_1,Pads,Size 1,Fast-acting,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1050,Beverages,Convenience_2,Convenience_1,Pads,Gel,Fast-acting,Hypoallergenic,,,HOME CARE,7,FALSE,TRUE
+1051,Beverages,Convenience_1,Convenience_1,Pads,Size 1,Disinfectant,Hypoallergenic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1052,Beverages,Convenience_1,Convenience_1,Diapers,Size 1,Sensitive,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1053,Beverages,Convenience_2,Convenience_2,Protein,Powder,Sensitive,Organic,,,HOME CARE,7,FALSE,FALSE
+1054,Beverages,Convenience_3,Convenience_3,Skincare,Moisturizer,Sensitive,Mint,,,HOME CARE,7,FALSE,TRUE
+1055,Beverages,Convenience_3,Convenience_1,Pain Relief,Multi-surface,Anti-aging,Mint,,,HOME CARE,7,FALSE,FALSE
+1056,Beverages,Convenience_1,Convenience_2,Pads,Size 1,Smooth,Organic,,,HOME CARE,7,FALSE,FALSE
+1057,Beverages,Convenience_2,Convenience_2,Pain Relief,Moisturizer,Smooth,Organic,,,HOME CARE,7,TRUE,FALSE
+1058,Beverages,Convenience_2,Convenience_2,Cleaning,Moisturizer,Anti-aging,SPF30,,,HOME CARE,7,FALSE,FALSE
+1059,Beverages,Convenience_0,Convenience_3,Pain Relief,Multi-surface,Sensitive,Hypoallergenic,,,HOME CARE,7,FALSE,FALSE
+1060,Grocery,Convenience_2,Convenience_3,Skincare,Powder,Vanilla,Hypoallergenic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1061,Grocery,Convenience_0,Convenience_3,Cleaning,Gel,Anti-aging,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1062,Grocery,Convenience_1,Convenience_3,Cleaning,Regular,Anti-aging,Organic,,,ADULT CARE,1,FALSE,FALSE
+1063,Grocery,Convenience_0,Convenience_3,Skincare,Gel,Disinfectant,,,,ADULT CARE,1,TRUE,FALSE
+1064,Grocery,Convenience_2,Convenience_3,Pain Relief,Powder,Fast-acting,SPF30,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1065,Grocery,Convenience_1,Convenience_2,Toothpaste,Multi-surface,Fast-acting,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1066,Grocery,Convenience_1,Convenience_2,Toothpaste,Powder,Anti-aging,Mint,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1067,Grocery,Convenience_3,Convenience_1,Skincare,Size 1,Disinfectant,Organic,,,ADULT CARE,1,FALSE,FALSE
+1068,Grocery,Convenience_0,Convenience_2,Toothpaste,Regular,Fast-acting,Organic,,,ADULT CARE,1,FALSE,FALSE
+1069,Grocery,Convenience_1,Convenience_2,Wipes,Regular,Disinfectant,SPF30,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1070,Grocery,Convenience_2,Convenience_3,Pads,Moisturizer,Fast-acting,Hypoallergenic,,,ADULT CARE,1,FALSE,TRUE
+1071,Grocery,Convenience_2,Convenience_3,Toothpaste,Regular,Anti-aging,Mint,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1072,Grocery,Convenience_2,Convenience_3,Protein,Size 1,Smooth,,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1073,Grocery,Convenience_3,Convenience_2,Protein,Moisturizer,Smooth,SPF30,GMO-free,,ADULT CARE,1,TRUE,FALSE
+1074,Grocery,Convenience_2,Convenience_1,Toothpaste,Powder,Vanilla,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1075,Beauty,Wellness_1,Wellness_1,Cleaning,Multi-surface,Vanilla,Organic,,,BEAUTY,4,FALSE,FALSE
+1076,Beauty,Wellness_0,Wellness_1,Cleaning,Multi-surface,Sensitive,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1077,Beauty,Wellness_2,Wellness_1,Protein,Moisturizer,Fast-acting,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1078,Beauty,Wellness_2,Wellness_3,Protein,Multi-surface,Disinfectant,,GMO-free,,BEAUTY,4,TRUE,FALSE
+1079,Beauty,Wellness_0,Wellness_1,Cleaning,Moisturizer,Smooth,Organic,GMO-free,,BEAUTY,4,FALSE,FALSE
+1080,Beauty,Wellness_1,Wellness_1,Protein,Powder,Anti-aging,Mint,,,BEAUTY,4,FALSE,FALSE
+1081,Beauty,Wellness_1,Wellness_1,Cleaning,Gel,Disinfectant,SPF30,,,BEAUTY,4,TRUE,FALSE
+1082,Beauty,Wellness_3,Wellness_2,Diapers,Gel,Fast-acting,,,,BEAUTY,4,FALSE,FALSE
+1083,Beauty,Wellness_0,Wellness_1,Skincare,Regular,Fast-acting,SPF30,,,BEAUTY,4,FALSE,TRUE
+1084,Beauty,Wellness_3,Wellness_1,Cleaning,Gel,Anti-aging,Mint,,,BEAUTY,4,FALSE,FALSE
+1085,Beauty,Wellness_1,Wellness_1,Toothpaste,Gel,Vanilla,Mint,GMO-free,,BEAUTY,4,FALSE,FALSE
+1086,Beauty,Wellness_2,Wellness_2,Protein,Gel,Vanilla,Mint,,,BEAUTY,4,FALSE,FALSE
+1087,Beauty,Wellness_0,Wellness_1,Cleaning,Multi-surface,Disinfectant,SPF30,,,BEAUTY,4,FALSE,FALSE
+1088,Beauty,Wellness_1,Wellness_3,Cleaning,Powder,Anti-aging,Hypoallergenic,GMO-free,,BEAUTY,4,FALSE,FALSE
+1089,Beauty,Wellness_2,Wellness_2,Wipes,Gel,Anti-aging,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1090,Health,Health_0,Health_2,Cleaning,Powder,Anti-aging,Mint,GMO-free,,MEDICATION,6,FALSE,FALSE
+1091,Health,Health_0,Health_2,Diapers,Powder,Disinfectant,SPF30,GMO-free,,MEDICATION,6,FALSE,FALSE
+1092,Health,Health_0,Health_1,Wipes,Powder,Smooth,,,,MEDICATION,6,FALSE,FALSE
+1093,Health,Health_0,Health_3,Toothpaste,Gel,Smooth,Mint,GMO-free,,MEDICATION,6,FALSE,FALSE
+1094,Health,Health_0,Health_1,Protein,Gel,Smooth,,,,MEDICATION,6,FALSE,FALSE
+1095,Health,Health_3,Health_1,Wipes,Multi-surface,Disinfectant,,GMO-free,,MEDICATION,6,TRUE,FALSE
+1096,Health,Health_1,Health_2,Diapers,Moisturizer,Disinfectant,SPF30,GMO-free,,MEDICATION,6,FALSE,TRUE
+1097,Health,Health_2,Health_1,Pads,Moisturizer,Sensitive,Organic,GMO-free,,MEDICATION,6,FALSE,FALSE
+1098,Health,Health_0,Health_1,Diapers,Size 1,Vanilla,Organic,GMO-free,,MEDICATION,6,TRUE,FALSE
+1099,Health,Health_1,Health_1,Pads,Moisturizer,Vanilla,Mint,,,MEDICATION,6,TRUE,FALSE
+1100,Health,Health_1,Health_3,Cleaning,Multi-surface,Sensitive,SPF30,GMO-free,,MEDICATION,6,FALSE,FALSE
+1101,Health,Health_0,Health_3,Skincare,Size 1,Fast-acting,,,,MEDICATION,6,FALSE,FALSE
+1102,Health,Health_2,Health_1,Toothpaste,Moisturizer,Fast-acting,Organic,,,MEDICATION,6,FALSE,TRUE
+1103,Health,Health_0,Health_1,Toothpaste,Size 1,Disinfectant,Mint,,,MEDICATION,6,FALSE,FALSE
+1104,Health,Health_3,Health_3,Pads,Powder,Sensitive,Organic,GMO-free,,MEDICATION,6,TRUE,FALSE
+1105,Beverages,Convenience_3,Convenience_3,Diapers,Moisturizer,Fast-acting,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1106,Beverages,Convenience_3,Convenience_3,Skincare,Size 1,Anti-aging,Hypoallergenic,,,HOME CARE,7,TRUE,FALSE
+1107,Beverages,Convenience_2,Convenience_2,Wipes,Regular,Smooth,,,,HOME CARE,7,FALSE,FALSE
+1108,Beverages,Convenience_3,Convenience_2,Pads,Moisturizer,Smooth,,,,HOME CARE,7,FALSE,TRUE
+1109,Beverages,Convenience_2,Convenience_3,Wipes,Gel,Anti-aging,Hypoallergenic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1110,Beverages,Convenience_2,Convenience_2,Wipes,Size 1,Disinfectant,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1111,Beverages,Convenience_0,Convenience_2,Skincare,Gel,Sensitive,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1112,Beverages,Convenience_1,Convenience_1,Pads,Gel,Fast-acting,Organic,GMO-free,,HOME CARE,7,TRUE,TRUE
+1113,Beverages,Convenience_3,Convenience_2,Protein,Gel,Fast-acting,SPF30,GMO-free,,HOME CARE,7,FALSE,FALSE
+1114,Beverages,Convenience_0,Convenience_3,Pain Relief,Powder,Vanilla,Hypoallergenic,,,HOME CARE,7,FALSE,FALSE
+1115,Beverages,Convenience_0,Convenience_1,Toothpaste,Moisturizer,Fast-acting,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1116,Beverages,Convenience_3,Convenience_3,Cleaning,Gel,Vanilla,,GMO-free,,HOME CARE,7,FALSE,FALSE
+1117,Beverages,Convenience_0,Convenience_1,Wipes,Moisturizer,Sensitive,SPF30,,,HOME CARE,7,FALSE,FALSE
+1118,Beverages,Convenience_0,Convenience_1,Pads,Gel,Anti-aging,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1119,Beverages,Convenience_2,Convenience_2,Skincare,Moisturizer,Disinfectant,,,,HOME CARE,7,FALSE,FALSE
+1120,Grocery,Convenience_0,Convenience_1,Toothpaste,Size 1,Anti-aging,SPF30,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1121,Grocery,Convenience_3,Convenience_2,Pain Relief,Size 1,Anti-aging,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1122,Grocery,Convenience_2,Convenience_3,Cleaning,Regular,Vanilla,Hypoallergenic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1123,Grocery,Convenience_1,Convenience_3,Pain Relief,Moisturizer,Fast-acting,Organic,,,ADULT CARE,1,FALSE,TRUE
+1124,Grocery,Convenience_0,Convenience_1,Pads,Regular,Smooth,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1125,Grocery,Convenience_0,Convenience_3,Toothpaste,Gel,Sensitive,,,,ADULT CARE,1,FALSE,FALSE
+1126,Grocery,Convenience_1,Convenience_2,Skincare,Moisturizer,Sensitive,SPF30,,,ADULT CARE,1,FALSE,FALSE
+1127,Grocery,Convenience_1,Convenience_3,Wipes,Powder,Sensitive,Hypoallergenic,GMO-free,,ADULT CARE,1,TRUE,TRUE
+1128,Grocery,Convenience_2,Convenience_1,Protein,Regular,Fast-acting,SPF30,GMO-free,,ADULT CARE,1,TRUE,FALSE
+1129,Grocery,Convenience_0,Convenience_1,Pain Relief,Regular,Anti-aging,Organic,,,ADULT CARE,1,TRUE,FALSE
+1130,Grocery,Convenience_1,Convenience_2,Toothpaste,Moisturizer,Disinfectant,Organic,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1131,Grocery,Convenience_0,Convenience_1,Cleaning,Size 1,Fast-acting,,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1132,Grocery,Convenience_3,Convenience_1,Pain Relief,Size 1,Sensitive,Mint,,,ADULT CARE,1,FALSE,FALSE
+1133,Grocery,Convenience_1,Convenience_1,Cleaning,Moisturizer,Sensitive,Organic,,,ADULT CARE,1,FALSE,FALSE
+1134,Grocery,Convenience_2,Convenience_3,Toothpaste,Gel,Fast-acting,SPF30,GMO-free,,ADULT CARE,1,FALSE,FALSE
+1135,Beauty,Wellness_0,Wellness_3,Skincare,Powder,Smooth,SPF30,,,BEAUTY,4,TRUE,FALSE
+1136,Beauty,Wellness_3,Wellness_2,Diapers,Size 1,Anti-aging,Mint,,,BEAUTY,4,FALSE,FALSE
+1137,Beauty,Wellness_3,Wellness_2,Protein,Gel,Disinfectant,Mint,GMO-free,,BEAUTY,4,FALSE,FALSE
+1138,Beauty,Wellness_3,Wellness_3,Pain Relief,Multi-surface,Sensitive,Hypoallergenic,,,BEAUTY,4,FALSE,TRUE
+1139,Beauty,Wellness_3,Wellness_1,Pain Relief,Regular,Smooth,Hypoallergenic,GMO-free,,BEAUTY,4,TRUE,FALSE
+1140,Beauty,Wellness_1,Wellness_1,Pain Relief,Size 1,Smooth,,,,BEAUTY,4,FALSE,FALSE
+1141,Beauty,Wellness_2,Wellness_1,Pads,Powder,Vanilla,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1142,Beauty,Wellness_1,Wellness_3,Wipes,Gel,Vanilla,SPF30,,,BEAUTY,4,FALSE,FALSE
+1143,Beauty,Wellness_0,Wellness_1,Diapers,Size 1,Fast-acting,SPF30,,,BEAUTY,4,FALSE,FALSE
+1144,Beauty,Wellness_1,Wellness_3,Pain Relief,Gel,Fast-acting,Organic,GMO-free,,BEAUTY,4,TRUE,FALSE
+1145,Beauty,Wellness_2,Wellness_1,Protein,Regular,Disinfectant,SPF30,GMO-free,,BEAUTY,4,FALSE,FALSE
+1146,Beauty,Wellness_0,Wellness_2,Pads,Gel,Disinfectant,Mint,,,BEAUTY,4,FALSE,FALSE
+1147,Beauty,Wellness_1,Wellness_2,Wipes,Moisturizer,Smooth,Mint,GMO-free,,BEAUTY,4,FALSE,FALSE
+1148,Beauty,Wellness_0,Wellness_3,Diapers,Regular,Smooth,Organic,,,BEAUTY,4,FALSE,FALSE
+1149,Beauty,Wellness_0,Wellness_3,Skincare,Gel,Sensitive,SPF30,,,BEAUTY,4,FALSE,FALSE
+1150,Health,Health_2,Health_2,Protein,Moisturizer,Fast-acting,Mint,,,MEDICATION,6,FALSE,FALSE
+1151,Health,Health_0,Health_3,Wipes,Gel,Smooth,SPF30,,,MEDICATION,6,FALSE,FALSE
+1152,Health,Health_2,Health_1,Diapers,Multi-surface,Fast-acting,,,,MEDICATION,6,FALSE,TRUE
+1153,Health,Health_3,Health_2,Diapers,Powder,Smooth,Organic,GMO-free,,MEDICATION,6,FALSE,FALSE
+1154,Health,Health_3,Health_1,Wipes,Regular,Anti-aging,Hypoallergenic,,,MEDICATION,6,FALSE,FALSE
+1155,Health,Health_2,Health_3,Pads,Moisturizer,Sensitive,Mint,GMO-free,,MEDICATION,6,FALSE,TRUE
+1156,Health,Health_2,Health_2,Pads,Size 1,Fast-acting,,GMO-free,,MEDICATION,6,FALSE,FALSE
+1157,Health,Health_3,Health_1,Toothpaste,Moisturizer,Vanilla,,,,MEDICATION,6,FALSE,FALSE
+1158,Health,Health_2,Health_1,Cleaning,Powder,Smooth,SPF30,,,MEDICATION,6,FALSE,FALSE
+1159,Health,Health_3,Health_3,Skincare,Regular,Fast-acting,Hypoallergenic,,,MEDICATION,6,FALSE,FALSE
+1160,Health,Health_2,Health_2,Protein,Size 1,Smooth,,,,MEDICATION,6,FALSE,FALSE
+1161,Health,Health_2,Health_2,Pads,Regular,Vanilla,Hypoallergenic,,,MEDICATION,6,FALSE,FALSE
+1162,Health,Health_0,Health_2,Wipes,Gel,Vanilla,Organic,GMO-free,,MEDICATION,6,FALSE,FALSE
+1163,Health,Health_2,Health_3,Protein,Powder,Vanilla,SPF30,GMO-free,,MEDICATION,6,FALSE,FALSE
+1164,Health,Health_1,Health_1,Pain Relief,Regular,Disinfectant,Hypoallergenic,,,MEDICATION,6,TRUE,TRUE
+1165,Beverages,Convenience_3,Convenience_1,Wipes,Multi-surface,Smooth,Hypoallergenic,,,HOME CARE,7,FALSE,FALSE
+1166,Beverages,Convenience_0,Convenience_2,Skincare,Multi-surface,Fast-acting,Hypoallergenic,,,HOME CARE,7,FALSE,FALSE
+1167,Beverages,Convenience_1,Convenience_3,Toothpaste,Multi-surface,Fast-acting,Mint,GMO-free,,HOME CARE,7,TRUE,FALSE
+1168,Beverages,Convenience_3,Convenience_3,Skincare,Size 1,Vanilla,Mint,,,HOME CARE,7,FALSE,FALSE
+1169,Beverages,Convenience_2,Convenience_3,Diapers,Multi-surface,Smooth,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1170,Beverages,Convenience_2,Convenience_3,Toothpaste,Multi-surface,Sensitive,Hypoallergenic,,,HOME CARE,7,TRUE,FALSE
+1171,Beverages,Convenience_2,Convenience_1,Diapers,Regular,Vanilla,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1172,Beverages,Convenience_3,Convenience_1,Diapers,Multi-surface,Anti-aging,SPF30,GMO-free,,HOME CARE,7,FALSE,FALSE
+1173,Beverages,Convenience_3,Convenience_2,Toothpaste,Gel,Disinfectant,Mint,GMO-free,,HOME CARE,7,FALSE,FALSE
+1174,Beverages,Convenience_3,Convenience_2,Pain Relief,Powder,Fast-acting,Hypoallergenic,,,HOME CARE,7,TRUE,FALSE
+1175,Beverages,Convenience_3,Convenience_3,Toothpaste,Gel,Vanilla,SPF30,GMO-free,,HOME CARE,7,FALSE,FALSE
+1176,Beverages,Convenience_1,Convenience_1,Toothpaste,Powder,Sensitive,Organic,GMO-free,,HOME CARE,7,TRUE,FALSE
+1177,Beverages,Convenience_0,Convenience_3,Protein,Moisturizer,Fast-acting,Organic,GMO-free,,HOME CARE,7,FALSE,FALSE
+1178,Beverages,Convenience_1,Convenience_1,Diapers,Gel,Anti-aging,,,,HOME CARE,7,FALSE,FALSE
+1179,Beverages,Convenience_0,Convenience_2,Pads,Size 1,Sensitive,,,,HOME CARE,7,TRUE,FALSE

@@ -1,8 +1,0 @@
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - LOGS_CAPTURED - Started capturing logs in process (pid: 85980).
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - internal_fe_raw_data - STEP_START - Started execution of step "internal_fe_raw_data".
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mINFO[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - internal_fe_raw_data - Loading sales data by category
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - internal_fe_raw_data - STEP_OUTPUT - Yielded output "result" of type "Dict[String,DataFrame]". (Type check passed).
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - internal_fe_raw_data - Writing file at: storage/internal_fe_raw_data using PickledObjectFilesystemIOManager...
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - internal_fe_raw_data - ASSET_MATERIALIZATION - Materialized value internal_fe_raw_data.
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - internal_fe_raw_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
-[32m2025-04-15 03:54:24 +0000[0m - dagster - [34mDEBUG[0m - full_pipeline_job - 61033a6d-dfbf-4a77-92e1-531f826367cf - 85980 - internal_fe_raw_data - STEP_SUCCESS - Finished execution of step "internal_fe_raw_data" in 221ms.

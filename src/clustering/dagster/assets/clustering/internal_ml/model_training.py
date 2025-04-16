@@ -5,10 +5,12 @@ engineered features.
 """
 
 from typing import Any
+import os
+import tempfile
 
 import dagster as dg
 import polars as pl
-from pycaret.clustering import ClusteringExperiment
+from pycaret.clustering import ClusteringExperiment, load_experiment
 
 
 class Defaults:
@@ -201,6 +203,10 @@ def internal_train_clustering_models(
         Dictionary of trained clustering models organized by category
     """
     trained_models = {}
+    
+    # Create a temp directory for experiment files
+    temp_dir = tempfile.mkdtemp(prefix="pycaret_internal_experiments_")
+    context.log.info(f"Using temporary directory for experiments: {temp_dir}")
 
     # Get configuration parameters
     algorithm = getattr(context.resources.config, "algorithm", Defaults.ALGORITHM)
@@ -257,14 +263,26 @@ def internal_train_clustering_models(
             num_clusters=cluster_count,
             verbose=False,
         )
+        
+        # Save the experiment using PyCaret's built-in function that handles lambda functions
+        experiment_path = os.path.join(temp_dir, f"{category}_experiment")
+        exp.save_experiment(experiment_path)
+        
+        # Get metrics before we reset the experiment
+        try:
+            metrics = exp.pull().iloc[0].to_dict()
+        except:
+            metrics = {}
+            context.log.warning(f"Could not extract metrics from experiment for {category}")
 
-        # Store the model and experiment
+        # Store the model and experiment path
         trained_models[category] = {
             "model": model,
-            "experiment": exp,
+            "experiment_path": experiment_path,
             "features": df.columns,
             "num_clusters": cluster_count,
             "num_samples": len(df),
+            "metrics": metrics,
         }
 
         context.log.info(f"Completed training for {category}")
@@ -276,6 +294,9 @@ def internal_train_clustering_models(
             "categories": list(trained_models.keys()),
             "cluster_counts": dg.MetadataValue.json(
                 {category: data["num_clusters"] for category, data in trained_models.items()}
+            ),
+            "experiment_paths": dg.MetadataValue.json(
+                {category: data["experiment_path"] for category, data in trained_models.items()}
             ),
         }
     )
@@ -359,13 +380,20 @@ def internal_assign_clusters(
 
         # Get the model info
         model_info = internal_train_clustering_models[category]
-        exp = model_info["experiment"]
-
+        model = model_info["model"]
+        experiment_path = model_info["experiment_path"]
+        
+        context.log.info(f"Loading experiment from {experiment_path}")
+        
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
+        
+        # Load the experiment using PyCaret's load_experiment function
+        # This correctly handles lambda functions using cloudpickle
+        exp = load_experiment(experiment_path, data=pandas_df)
 
-        # Get predictions using the trained model
-        predictions = exp.predict_model(model_info["model"], data=pandas_df)
+        # Get predictions using the loaded experiment and model
+        predictions = exp.predict_model(model, data=pandas_df)
 
         # Convert back to Polars and store
         assigned_data[category] = pl.from_pandas(predictions)
@@ -454,51 +482,53 @@ def internal_calculate_cluster_metrics(
     """
     metrics = {}
 
-    # Get metrics from PyCaret and calculate additional custom metrics
+    context.log.info("Calculating evaluation metrics for clusters")
+
     for category, model_info in internal_train_clustering_models.items():
+        # Check if this category has assignments
         if category not in internal_assign_clusters:
-            context.log.warning(f"No assignments found for category: {category}")
+            context.log.warning(f"No cluster assignments found for {category}, skipping metrics")
             continue
 
-        context.log.info(f"Calculating evaluation metrics for category: {category}")
-
-        # Get experiment and model
-        exp = model_info["experiment"]
-
-        # Get PyCaret metrics
-        pycaret_metrics = exp.pull().to_dict("records")[0]
+        # Get metrics that were stored during training
+        pycaret_metrics = model_info.get("metrics", {})
 
         # Get cluster distribution from assignments
-        assignments_df = internal_assign_clusters[category]
+        assignments = internal_assign_clusters[category]
         cluster_distribution = (
-            assignments_df.group_by("Cluster").agg(pl.count().alias("count")).to_dicts()
+            assignments.group_by("Cluster").agg(pl.count().alias("count")).to_dicts()
         )
 
-        # Combine all metrics
+        # Calculate category metrics
         category_metrics = {
-            "pycaret_metrics": pycaret_metrics,
             "num_clusters": model_info["num_clusters"],
             "num_samples": model_info["num_samples"],
+            "silhouette": pycaret_metrics.get("Silhouette"),
+            "calinski_harabasz": pycaret_metrics.get("Calinski-Harabasz"),
+            "davies_bouldin": pycaret_metrics.get("Davies-Bouldin"),
             "cluster_distribution": cluster_distribution,
         }
 
+        # Store metrics for this category
         metrics[category] = category_metrics
 
-        # Log some key metrics
+        # Log key metrics
         context.log.info(
             f"Metrics for {category}: "
-            f"silhouette={pycaret_metrics.get('silhouette', 'N/A'):.4f}, "
-            f"clusters={model_info['num_clusters']}"
+            f"silhouette={category_metrics.get('silhouette', 'N/A')}, "
+            f"num_clusters={category_metrics['num_clusters']}, "
+            f"num_samples={category_metrics['num_samples']}"
         )
 
     # Store summary in context metadata
     context.add_output_metadata(
         {
             "categories": list(metrics.keys()),
-            "silhouette_scores": {
-                category: metrics[category]["pycaret_metrics"].get("silhouette", None)
-                for category in metrics
-            },
+            "average_silhouette": (
+                sum(m.get("silhouette", 0) or 0 for m in metrics.values()) / len(metrics)
+                if metrics
+                else None
+            ),
         }
     )
 

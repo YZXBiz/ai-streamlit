@@ -63,7 +63,7 @@ readers:
     kind: "CSVReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/ns_sales.csv
-  sales_by_category:
+  sales_by_category: # read in feature engineering
     kind: "PickleReader"
     config:
       path: ${env:INTERNAL_DATA_DIR,/workspaces/testing-dagster/data/internal}/sales_by_category.pkl
@@ -73,7 +73,7 @@ readers:
     kind: "CSVReader"
     config:
       path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/placerai.csv
-  external_data_source:
+  external_data_source: # read in feature engineering
     kind: "PickleReader"
     config:
       path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/processed_external_data.pkl

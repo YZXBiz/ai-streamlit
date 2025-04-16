@@ -5,10 +5,12 @@ engineered features from external data sources.
 """
 
 from typing import Any
+import os
+import tempfile
 
 import dagster as dg
 import polars as pl
-from pycaret.clustering import ClusteringExperiment
+from pycaret.clustering import ClusteringExperiment, load_experiment
 
 
 class Defaults:
@@ -201,6 +203,10 @@ def external_train_clustering_models(
     """
     trained_models = {}
     category = "default"  # Use a single default category for external data
+    
+    # Create a temp directory for experiment files
+    temp_dir = tempfile.mkdtemp(prefix="pycaret_experiments_")
+    context.log.info(f"Using temporary directory for experiments: {temp_dir}")
 
     # Get configuration parameters
     algorithm = getattr(context.resources.config, "algorithm", Defaults.ALGORITHM)
@@ -257,14 +263,26 @@ def external_train_clustering_models(
         num_clusters=cluster_count,
         verbose=False,
     )
+    
+    # Save the experiment using PyCaret's built-in function that handles lambda functions
+    experiment_path = os.path.join(temp_dir, f"{category}_experiment")
+    exp.save_experiment(experiment_path)
+    
+    # Get metrics before we reset the experiment
+    try:
+        metrics = exp.pull().iloc[0].to_dict()
+    except:
+        metrics = {}
+        context.log.warning("Could not extract metrics from experiment")
 
-    # Store the model and experiment
+    # Store the model and experiment path
     trained_models[category] = {
         "model": model,
-        "experiment": exp,
+        "experiment_path": experiment_path,
         "features": df.columns,
         "num_clusters": cluster_count,
         "num_samples": len(df),
+        "metrics": metrics,
     }
 
     context.log.info("Completed training for external data")
@@ -276,6 +294,9 @@ def external_train_clustering_models(
             "categories": list(trained_models.keys()),
             "cluster_counts": dg.MetadataValue.json(
                 {category: data["num_clusters"] for category, data in trained_models.items()}
+            ),
+            "experiment_paths": dg.MetadataValue.json(
+                {category: data["experiment_path"] for category, data in trained_models.items()}
             ),
         }
     )
@@ -378,12 +399,19 @@ def external_assign_clusters(
 
     # Get the model info
     model_info = external_train_clustering_models[category]
-    exp = model_info["experiment"]
-
+    model = model_info["model"]
+    experiment_path = model_info["experiment_path"]
+    
+    context.log.info(f"Loading experiment from {experiment_path}")
+    
+    # Load the experiment using PyCaret's load_experiment function
+    # This correctly handles lambda functions using cloudpickle
+    exp = load_experiment(experiment_path, data=pandas_df)
+    
     context.log.info("Using model to assign clusters")
 
-    # Get predictions using the trained model
-    predictions = exp.predict_model(model_info["model"], data=pandas_df)
+    # Get predictions using the loaded experiment and model
+    predictions = exp.predict_model(model, data=pandas_df)
 
     # Convert back to Polars
     assigned_data = pl.from_pandas(predictions)
@@ -537,21 +565,19 @@ def external_calculate_cluster_metrics(
 
     # Get model info
     model_info = external_train_clustering_models[category]
-    exp = model_info["experiment"]
-
-    # Get PyCaret metrics
-    pycaret_metrics = get_pycaret_metrics(exp)
+    
+    # Get metrics that were stored during training
+    metrics = model_info.get("metrics", {})
 
     # Get cluster distribution from assignments
     cluster_distribution = (
         external_assign_clusters.group_by("Cluster").agg(pl.count().alias("count")).to_dicts()
     )
 
-    # Define metrics for logging but don't assign to a variable
     # Log some key metrics directly
     context.log.info(
         f"Metrics for external data: "
-        f"silhouette={pycaret_metrics.get('silhouette', 'N/A')}, "
+        f"silhouette={metrics.get('Silhouette', 'N/A')}, "
         f"num_clusters={model_info['num_clusters']}, "
         f"num_samples={model_info['num_samples']}"
     )
@@ -562,9 +588,9 @@ def external_calculate_cluster_metrics(
             {
                 "category": category,
                 "num_clusters": model_info["num_clusters"],
-                "silhouette": pycaret_metrics.get("silhouette", None),
-                "calinski_harabasz": pycaret_metrics.get("calinski_harabasz", None),
-                "davies_bouldin": pycaret_metrics.get("davies_bouldin", None),
+                "silhouette": metrics.get("Silhouette"),
+                "calinski_harabasz": metrics.get("Calinski-Harabasz"),
+                "davies_bouldin": metrics.get("Davies-Bouldin"),
                 "cluster_distribution": str(cluster_distribution),
                 "status": "success",
             }
@@ -575,7 +601,7 @@ def external_calculate_cluster_metrics(
     context.add_output_metadata(
         {
             "category": category,
-            "silhouette_score": pycaret_metrics.get("silhouette", None),
+            "silhouette_score": metrics.get("Silhouette"),
             "num_clusters": model_info["num_clusters"],
             "status": "success",
         }
@@ -695,13 +721,19 @@ def external_generate_cluster_visualizations(
     return pl.DataFrame(visualizations)
 
 
-def get_pycaret_metrics(exp):
-    """Get metrics from a PyCaret experiment.
+def get_pycaret_metrics(model):
+    """Get metrics from a model.
 
     Args:
-        exp: PyCaret experiment
+        model: scikit-learn model
 
     Returns:
         Dictionary of metrics
     """
-    return exp.pull().to_dict("records")[0]
+    # Since we don't have the PyCaret experiment anymore, we'll return empty metrics
+    # In a real implementation, you could calculate these from scratch using scikit-learn
+    return {
+        "silhouette": None,
+        "calinski_harabasz": None,
+        "davies_bouldin": None,
+    }
