@@ -73,6 +73,9 @@ dependencies = [
     "psutil>=6.1.0",
     "setuptools>=75.6.0",
     "pre-commit>=4.2.0",
+    # === Dashboard ===
+    "streamlit>=1.31.0",
+    "plotly>=5.18.0",
 ]
 
 # =========================================

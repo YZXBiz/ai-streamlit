@@ -330,13 +330,53 @@ def internal_save_clustering_models(
     # Use the configured model output resource
     model_output = context.resources.internal_model_output
 
-    # Save all models as a single dictionary
-    context.log.info(f"Saving {len(internal_train_clustering_models)} models at once")
-    model_output.write("all_models", internal_train_clustering_models)
+    # Convert model info to a DataFrame to comply with PickleWriter requirements
+    if internal_train_clustering_models:
+        # Create a dictionary where each key is a category and the value is a DataFrame
+        model_dataframes = {}
+        
+        for category, model_info in internal_train_clustering_models.items():
+            # Create a dictionary with string metadata from the model info
+            model_metadata = {
+                "num_clusters": model_info["num_clusters"],
+                "num_samples": model_info["num_samples"],
+                "features": str(model_info["features"]),
+                "experiment_path": model_info["experiment_path"],
+            }
+            
+            # Add metrics if available
+            if "metrics" in model_info and model_info["metrics"]:
+                for k, v in model_info["metrics"].items():
+                    model_metadata[f"metric_{k}"] = v
+            
+            # Create a DataFrame with a single row containing the metadata
+            model_dataframes[category] = pl.DataFrame([model_metadata])
+        
+        # Save the DataFrame dictionary (can't save the actual model objects directly)
+        context.log.info(f"Saving {len(model_dataframes)} model metadata entries to storage")
+        model_output.write(model_dataframes)
+        
+        # Save model paths to the context for reference
+        context.add_output_metadata({
+            "model_paths": {
+                category: info["experiment_path"] 
+                for category, info in internal_train_clustering_models.items()
+            },
+            "categories": list(internal_train_clustering_models.keys()),
+            "num_models": len(internal_train_clustering_models),
+        })
+    else:
+        # Create an empty DataFrame
+        empty_df = pl.DataFrame({
+            "num_clusters": [],
+            "num_samples": [],
+            "features": [],
+            "experiment_path": [],
+        })
+        model_output.write({"default": empty_df})
+        context.log.warning("No models to save, writing empty metadata DataFrame")
 
-    context.log.info(
-        f"Successfully saved {len(internal_train_clustering_models)} models to storage"
-    )
+    context.log.info("Successfully saved model metadata to storage")
 
 
 @dg.asset(

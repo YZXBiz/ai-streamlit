@@ -2,13 +2,5 @@
   "image": "debian:bullseye-slim",
   "features": {
     "ghcr.io/va-h/devcontainers-features/uv:1": {}
-  },
-  "forwardPorts": [3000],
-  "appPort": ["3000:3000"],
-  "portsAttributes": {
-    "3000": {
-      "label": "Dagster UI",
-      "onAutoForward": "notify"
-    }
   }
 }

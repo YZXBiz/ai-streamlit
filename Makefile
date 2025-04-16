@@ -158,7 +158,7 @@ docs-deps: ## Install documentation dependencies
 
 ##@ Development
 
-.PHONY: dev format lint type-check check-all version
+.PHONY: dev format lint type-check check-all version dashboard
 dev: ## Start Dagster development server without creating directories
 	@echo "==> Starting Dagster development server"
 	@DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m $(PACKAGE_NAME).dagster.definitions --host 0.0.0.0
@@ -196,6 +196,12 @@ version: ## Display version and author information
 	@echo "  Developed by $(AUTHOR)"
 	@echo "  Copyright (c) 2025 CVS Health"
 	@echo "=================================================="
+
+dashboard: ## Run the clustering dashboard
+	@echo "==> Starting Clustering Dashboard"
+	@mkdir -p $(LOGS_DIR)
+	@cd $(SRC_DIR) && $(PYTHON) -m streamlit run -m clustering.dashboard.app --server.enableCORS=false --server.enableXsrfProtection=false --server.port=8501 --browser.serverAddress=0.0.0.0 --browser.gatherUsageStats=false
+	@echo "✓ Dashboard server stopped"
 
 ################################################################################
 # TESTING TARGETS
