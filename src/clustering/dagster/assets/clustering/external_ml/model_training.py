@@ -344,33 +344,35 @@ def external_save_clustering_models(
     description="Assigns clusters to external data points using trained models",
     group_name="cluster_assignment",
     compute_kind="external_cluster_assignment",
-    deps=["external_fe_raw_data", "external_train_clustering_models"],
+    deps=["external_dimensionality_reduced_features", "external_train_clustering_models", "external_fe_raw_data"],
     required_resource_keys={"config"},
 )
 def external_assign_clusters(
     context: dg.AssetExecutionContext,
-    external_fe_raw_data: pl.DataFrame,
+    external_dimensionality_reduced_features: pl.DataFrame,
     external_train_clustering_models: dict[str, Any],
+    external_fe_raw_data: pl.DataFrame,
 ) -> pl.DataFrame:
     """Assign cluster labels to external data points using trained models.
 
-    Uses the trained clustering models to assign cluster labels to each
-    data point in the raw external data.
+    Uses the trained clustering models to assign cluster labels using the dimensionality reduced features,
+    then applies these labels back to the original raw data with all columns preserved.
 
     Args:
         context: Dagster asset execution context
-        external_fe_raw_data: DataFrame with raw external features
+        external_dimensionality_reduced_features: DataFrame with dimensionality reduced external features
         external_train_clustering_models: Dictionary of trained clustering models by category
+        external_fe_raw_data: DataFrame with original raw external features
 
     Returns:
-        DataFrame with cluster assignments, or empty DataFrame with same schema if no models are available
+        DataFrame with cluster assignments added to original data, or empty DataFrame with same schema if no models are available
     """
-    context.log.info("Assigning clusters to external data points")
+    context.log.info("Assigning clusters using dimensionality reduced features and applying to raw data")
 
     # Check if we have any trained models
     if not external_train_clustering_models:
         context.log.warning(
-            "No trained models available for cluster assignment, returning empty DataFrame"
+            "No trained models available for cluster assignment, returning original DataFrame with empty cluster column"
         )
         # Create an empty DataFrame with the expected schema
         # Include the original data but add an empty Cluster column
@@ -387,8 +389,8 @@ def external_assign_clusters(
 
         return result_df
 
-    # Convert Polars DataFrame to Pandas
-    pandas_df = external_fe_raw_data.to_pandas()
+    # Convert Polars DataFrame to Pandas for PyCaret
+    pandas_df = external_dimensionality_reduced_features.to_pandas()
 
     # Use the default category model if available
     category = "default"
@@ -409,11 +411,41 @@ def external_assign_clusters(
     
     context.log.info("Using model to assign clusters")
 
-    # Get predictions using the loaded experiment and model
-    predictions = exp.predict_model(model, data=pandas_df)
-
+    # Use assign_model instead of predict_model since we're using the same data
+    predictions = exp.assign_model(model)
+    
+    # Get just the cluster assignments
+    cluster_assignments = predictions[["Cluster"]]
+    
+    # Get the original raw data
+    original_data = external_fe_raw_data.to_pandas()
+    
+    # Ensure the indices match
+    if len(original_data) != len(cluster_assignments):
+        context.log.warning(
+            f"Size mismatch between original data ({len(original_data)}) and "
+            f"cluster assignments ({len(cluster_assignments)})"
+        )
+        # In a real implementation, you might want more sophisticated matching
+        # For now, just return the original data with an empty cluster column
+        result_df = external_fe_raw_data.with_columns(pl.lit(None).cast(pl.Int64).alias("Cluster"))
+        
+        context.add_output_metadata(
+            {
+                "warning": "Size mismatch between original and clustered data",
+                "total_records": len(result_df),
+                "cluster_assigned": False,
+            }
+        )
+        
+        return result_df
+    
+    # Add cluster assignments to the original data
+    original_data_with_clusters = original_data.copy()
+    original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
+    
     # Convert back to Polars
-    assigned_data = pl.from_pandas(predictions)
+    assigned_data = pl.from_pandas(original_data_with_clusters)
 
     # Log cluster distribution
     cluster_counts = (
@@ -470,10 +502,12 @@ def external_save_cluster_assignments(
     # Use the configured output resource
     assignments_output = context.resources.external_cluster_assignments
 
-    # Save with default category name
-    category = "default"
-    context.log.info("Saving cluster assignments for external data")
-    assignments_output.write(category, external_assign_clusters)
+    # Add a default category label
+    df_with_category = external_assign_clusters.with_columns(pl.lit("default").alias("category"))
+    
+    # Save to storage
+    context.log.info(f"Saving cluster assignments with {len(df_with_category)} records")
+    assignments_output.write(df_with_category)
 
     context.log.info("Successfully saved external cluster assignments")
     context.add_output_metadata(

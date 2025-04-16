@@ -20,13 +20,10 @@ import yaml
 from clustering.dagster.assets import (
     cluster_reassignment,
     external_assign_clusters,
-    external_calculate_cluster_metrics,
     external_dimensionality_reduced_features,
     external_fe_raw_data,
-    external_feature_metadata,
     external_features_data,
     external_filtered_features,
-    external_generate_cluster_visualizations,
     external_imputed_features,
     external_normalized_data,
     external_optimal_cluster_counts,
@@ -35,12 +32,9 @@ from clustering.dagster.assets import (
     external_save_clustering_models,
     external_train_clustering_models,
     internal_assign_clusters,
-    internal_calculate_cluster_metrics,
     internal_dimensionality_reduced_features,
     internal_fe_raw_data,
-    internal_feature_metadata,
     internal_filtered_features,
-    internal_generate_cluster_visualizations,
     internal_imputed_features,
     internal_normalized_data,
     internal_normalized_sales_data,
@@ -94,7 +88,6 @@ internal_feature_engineering_assets = [
     internal_normalized_data,
     internal_outlier_removed_features,
     internal_dimensionality_reduced_features,
-    internal_feature_metadata,
 ]
 
 internal_model_training_assets = [
@@ -108,11 +101,6 @@ internal_cluster_assignment_assets = [
     internal_save_cluster_assignments,
 ]
 
-internal_cluster_analysis_assets = [
-    internal_calculate_cluster_metrics,
-    internal_generate_cluster_visualizations,
-]
-
 external_feature_engineering_assets = [
     external_fe_raw_data,
     external_filtered_features,
@@ -120,7 +108,6 @@ external_feature_engineering_assets = [
     external_normalized_data,
     external_outlier_removed_features,
     external_dimensionality_reduced_features,
-    external_feature_metadata,
 ]
 
 external_model_training_assets = [
@@ -132,11 +119,6 @@ external_model_training_assets = [
 external_cluster_assignment_assets = [
     external_assign_clusters,
     external_save_cluster_assignments,
-]
-
-external_cluster_analysis_assets = [
-    external_calculate_cluster_metrics,
-    external_generate_cluster_visualizations,
 ]
 
 merging_assets_list = [
@@ -175,8 +157,6 @@ internal_ml_job = dg.define_asset_job(
         *internal_model_training_assets,
         # Cluster assignment
         *internal_cluster_assignment_assets,
-        # Cluster analysis
-        *internal_cluster_analysis_assets,
     ],
     tags={"kind": "internal_ml"},
 )
@@ -191,8 +171,6 @@ external_ml_job = dg.define_asset_job(
         *external_model_training_assets,
         # Cluster assignment
         *external_cluster_assignment_assets,
-        # Cluster analysis
-        *external_cluster_analysis_assets,
     ],
     tags={"kind": "external_ml"},
 )
@@ -216,8 +194,6 @@ full_pipeline_job = dg.define_asset_job(
         *internal_model_training_assets,
         # Internal cluster assignment
         *internal_cluster_assignment_assets,
-        # Internal cluster analysis
-        *internal_cluster_analysis_assets,
         # External preprocessing
         *external_preprocessing_assets,
         # External feature engineering
@@ -226,8 +202,6 @@ full_pipeline_job = dg.define_asset_job(
         *external_model_training_assets,
         # External cluster assignment
         *external_cluster_assignment_assets,
-        # External cluster analysis
-        *external_cluster_analysis_assets,
         # Merging
         *merging_assets_list,
     ],
@@ -421,8 +395,6 @@ def create_definitions(env: str | Environment = Environment.DEV) -> dg.Definitio
         *external_model_training_assets,
         *internal_cluster_assignment_assets,
         *external_cluster_assignment_assets,
-        *internal_cluster_analysis_assets,
-        *external_cluster_analysis_assets,
         *merging_assets_list,
     ]
 

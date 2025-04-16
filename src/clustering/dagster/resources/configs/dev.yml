@@ -72,7 +72,7 @@ readers:
   external_placerai:
     kind: "CSVReader"
     config:
-      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/placerai.csv
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/placer_store_features_2024_20250211_1420_with_remaining.csv
   external_data_source: # read in feature engineering
     kind: "PickleReader"
     config:

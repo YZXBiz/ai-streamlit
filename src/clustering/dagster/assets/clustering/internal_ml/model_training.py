@@ -344,36 +344,43 @@ def internal_save_clustering_models(
     description="Assigns clusters to data points using trained models",
     group_name="cluster_assignment",
     compute_kind="internal_cluster_assignment",
-    deps=["internal_fe_raw_data", "internal_train_clustering_models"],
+    deps=["internal_dimensionality_reduced_features", "internal_train_clustering_models", "internal_fe_raw_data"],
     required_resource_keys={"config"},
 )
 def internal_assign_clusters(
     context: dg.AssetExecutionContext,
-    internal_fe_raw_data: dict[str, pl.DataFrame],
+    internal_dimensionality_reduced_features: dict[str, pl.DataFrame],
     internal_train_clustering_models: dict[str, Any],
+    internal_fe_raw_data: dict[str, pl.DataFrame],
 ) -> dict[str, pl.DataFrame]:
     """Assign cluster labels to data points using trained models.
 
-    Uses the trained clustering models to assign cluster labels to each
-    data point directly from the raw data.
+    Uses the trained clustering models to assign cluster labels to the dimensionality reduced features,
+    then applies these labels back to the original raw data with all columns preserved.
 
     Args:
         context: Dagster asset execution context
-        internal_fe_raw_data: Dictionary of raw DataFrames by category
+        internal_dimensionality_reduced_features: Dictionary of dimensionality reduced DataFrames by category
         internal_train_clustering_models: Dictionary of trained clustering models by category
+        internal_fe_raw_data: Dictionary of original raw DataFrames by category
 
     Returns:
-        Dictionary of DataFrames with cluster assignments by category
+        Dictionary of original DataFrames with cluster assignments by category
     """
     assigned_data = {}
 
-    context.log.info("Assigning clusters to data points from raw features")
+    context.log.info("Assigning clusters using dimensionality reduced features and applying to raw data")
 
-    for category, df in internal_fe_raw_data.items():
+    for category, df in internal_dimensionality_reduced_features.items():
         # Check if we have a trained model for this category
         if category not in internal_train_clustering_models:
             context.log.warning(f"No trained model found for category: {category}")
             continue
+
+        # Check if we have the original raw data for this category
+        if category not in internal_fe_raw_data:
+            context.log.warning(f"No raw data found for category: {category}")
+            raise ValueError(f"No raw data found for category: {category}")
 
         context.log.info(f"Assigning clusters for category: {category}")
 
@@ -391,11 +398,30 @@ def internal_assign_clusters(
         # This correctly handles lambda functions using cloudpickle
         exp = load_experiment(experiment_path, data=pandas_df)
 
-        # Get predictions using the loaded experiment and model
-        predictions = exp.predict_model(model, data=pandas_df)
-
+        # Use assign_model instead of predict_model since we're using the same data
+        predictions = exp.assign_model(model)
+        
+        # Get just the cluster assignments
+        cluster_assignments = predictions[["Cluster"]]
+        
+        # Get the original raw data for this category
+        original_data = internal_fe_raw_data[category].to_pandas()
+        
+        # Ensure the indices match
+        if len(original_data) != len(cluster_assignments):
+            context.log.warning(
+                f"Size mismatch between original data ({len(original_data)}) and "
+                f"cluster assignments ({len(cluster_assignments)}) for {category}"
+            )
+            # In a real implementation, you might want more sophisticated matching
+            continue
+        
+        # Add cluster assignments to the original data
+        original_data_with_clusters = original_data.copy()
+        original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
+        
         # Convert back to Polars and store
-        assigned_data[category] = pl.from_pandas(predictions)
+        assigned_data[category] = pl.from_pandas(original_data_with_clusters)
 
         # Log cluster distribution
         cluster_counts = (
@@ -443,14 +469,29 @@ def internal_save_cluster_assignments(
     # Use the configured output resource
     assignments_output = context.resources.internal_cluster_assignments
 
-    # Save each category's assignments
+    # Since we can only save one DataFrame per writer,
+    # combine all category DataFrames into a single one with a category column
+    combined_data = []
+    
     for category, df in internal_assign_clusters.items():
-        context.log.info(f"Saving cluster assignments for category: {category}")
-        assignments_output.write(category, df)
-
-    context.log.info(
-        f"Successfully saved assignments for {len(internal_assign_clusters)} categories"
-    )
+        context.log.info(f"Processing cluster assignments for category: {category}")
+        # Add a category column to identify the source
+        category_df = df.with_columns(pl.lit(category).alias("category"))
+        combined_data.append(category_df)
+    
+    if combined_data:
+        # Combine all dataframes
+        all_assignments = pl.concat(combined_data)
+        
+        # Write the combined data
+        context.log.info(f"Saving combined assignments with {len(all_assignments)} records")
+        assignments_output.write(all_assignments)
+        
+        context.log.info(
+            f"Successfully saved assignments for {len(internal_assign_clusters)} categories"
+        )
+    else:
+        context.log.warning("No cluster assignments to save")
 
 
 @dg.asset(
