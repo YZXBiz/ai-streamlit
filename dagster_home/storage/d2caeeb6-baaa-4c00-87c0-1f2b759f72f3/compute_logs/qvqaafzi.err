@@ -1,0 +1,42 @@
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - 41060 - LOGS_CAPTURED - Started capturing logs in process (pid: 41060).
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - 41060 - internal_sales_by_ns - STEP_START - Started execution of step "internal_sales_by_ns".
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - internal_sales_by_ns - Loading file from: storage/internal_normalized_sales using PickledObjectFilesystemIOManager...
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - 41060 - internal_sales_by_ns - LOADED_INPUT - Loaded input "internal_normalized_sales" using input manager "io_manager", from output "result" of step "internal_normalized_sales"
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - 41060 - internal_sales_by_ns - STEP_INPUT - Got input "internal_normalized_sales" of type "DataFrame". (Type check passed).
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mINFO[0m - internal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - internal_sales_by_ns - Creating category dictionary with need state percentage metrics
+[32m2025-04-16 03:40:34 +0000[0m - dagster - [34mERROR[0m - [31minternal_preprocessing_job - d2caeeb6-baaa-4c00-87c0-1f2b759f72f3 - 41060 - internal_sales_by_ns - STEP_FAILURE - Execution of step "internal_sales_by_ns" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "internal_sales_by_ns"::
+
+polars.exceptions.ColumnNotFoundError: 'rename' on column: 'CONVENIENCE_1' is invalid
+
+Schema at this point: Schema:
+name: NEED_STATE, field: String
+name: 101, field: Float64
+name: 103, field: Float64
+name: 102, field: Float64
+
+
+Resolved plan until failure:
+
+	---> FAILED HERE RESOLVING 'sink' <---
+DF ["NEED_STATE", "101", "103", "102"]; PROJECT */4 COLUMNS
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 56, in op_execution_error_boundary
+    yield
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 391, in iterate_with_context
+    next_output = next(iterator)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 127, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 115, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/workspaces/testing-dagster/src/clustering/dagster/assets/preprocessing/internal.py", line 210, in internal_sales_by_ns
+    final_df = pivoted.rename(rename_map)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/dataframe/frame.py", line 4861, in rename
+    return self.lazy().rename(mapping, strict=strict).collect(_eager=True)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/_utils/deprecation.py", line 93, in wrapper
+    return function(*args, **kwargs)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/polars/lazyframe/frame.py", line 2206, in collect
+    return wrap_df(ldf.collect(engine, callback))
+[0m

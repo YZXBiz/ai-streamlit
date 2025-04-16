@@ -1,0 +1,82 @@
+Exception while writing logger call to event log: (sqlite3.OperationalError) locking protocol
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - ENGINE_EVENT - Exception while setting up compute log capture
+
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) locking protocol
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/execute_plan.py", line 51, in inner_plan_execution_iterator
+    yield DagsterEvent.capture_logs(job_context, step_keys, log_key, log_context)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 1556, in capture_logs
+    return DagsterEvent.from_job(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 518, in from_job
+    log_job_event(job_context, event)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/events/__init__.py", line 377, in log_job_event
+    job_context.log.log_dagster_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 394, in log_dagster_event
+    self.log(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 424, in log
+    self._log(level, msg, args, **kwargs)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1624, in _log
+    self.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1634, in handle
+    self.callHandlers(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 1696, in callHandlers
+    hdlr.handle(record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/log_manager.py", line 268, in emit
+    handler.handle(dagster_record)
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 262, in emit
+    self._instance.handle_new_event(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/instance/__init__.py", line 2541, in handle_new_event
+    self._event_storage.store_event(events[0])
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 257, in store_event
+    with self.run_connection(run_id) as conn:
+  File "/root/.local/share/uv/python/cpython-3.10.17-linux-aarch64-gnu/lib/python3.10/contextlib.py", line 142, in __exit__
+    next(self.gen)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/dagster/_core/storage/event_log/sqlite/sqlite_event_log.py", line 236, in _connect
+    with conn.begin():
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/util.py", line 235, in __exit__
+    with util.safe_reraise():
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/util.py", line 233, in __exit__
+    self.commit()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2469, in commit
+    self._do_commit()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2659, in _do_commit
+    self._connection_commit_impl()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2630, in _connection_commit_impl
+    self.connection._commit_impl()
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1096, in _commit_impl
+    self._handle_dbapi_exception(e, None, None, None, None)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1094, in _commit_impl
+    self.engine.dialect.do_commit(self.connection)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 686, in do_commit
+    dbapi_connection.commit()
+
+The above exception was caused by the following exception:
+sqlite3.OperationalError: locking protocol
+
+Stack Trace:
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1094, in _commit_impl
+    self.engine.dialect.do_commit(self.connection)
+  File "/workspaces/testing-dagster/.venv/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 686, in do_commit
+    dbapi_connection.commit()
+
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - internal_ns_map - STEP_START - Started execution of step "internal_ns_map".
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - internal_ns_map - STEP_OUTPUT - Yielded output "result" of type "NSMappingSchema". (Type check passed).
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - internal_ns_map - Writing file at: storage/internal_ns_map using PickledObjectFilesystemIOManager...
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - internal_ns_map - ASSET_MATERIALIZATION - Materialized value internal_ns_map.
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - internal_ns_map - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-16 03:38:20 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 3e6e878f-244d-473b-9a49-1fc3f42271e0 - 26632 - internal_ns_map - STEP_SUCCESS - Finished execution of step "internal_ns_map" in 480ms.

@@ -1,0 +1,7 @@
+[32m2025-04-16 03:48:30 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - LOGS_CAPTURED - Started capturing logs in process (pid: 7942).
+[32m2025-04-16 03:48:30 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - internal_ns_map - STEP_START - Started execution of step "internal_ns_map".
+[32m2025-04-16 03:48:30 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - internal_ns_map - STEP_OUTPUT - Yielded output "result" of type "NSMappingSchema". (Type check passed).
+[32m2025-04-16 03:48:30 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - internal_ns_map - Writing file at: storage/internal_ns_map using PickledObjectFilesystemIOManager...
+[32m2025-04-16 03:48:31 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - internal_ns_map - ASSET_MATERIALIZATION - Materialized value internal_ns_map.
+[32m2025-04-16 03:48:31 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - internal_ns_map - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2025-04-16 03:48:31 +0000[0m - dagster - [34mDEBUG[0m - internal_preprocessing_job - 23f0e568-575d-4d2c-9934-848fba321616 - 7942 - internal_ns_map - STEP_SUCCESS - Finished execution of step "internal_ns_map" in 306ms.
