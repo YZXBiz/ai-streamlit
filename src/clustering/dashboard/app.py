@@ -92,10 +92,10 @@ def display_df_summary(df: pd.DataFrame) -> None:
         df: DataFrame to summarize
     """
     # Dataset top-level metrics in visually appealing cards
-    st.markdown("<h3>📋 Dataset Overview</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='apple-heading'><h3>📋 Dataset Overview</h3></div>", unsafe_allow_html=True)
+    st.markdown("<div class='content-container'>", unsafe_allow_html=True)
 
     # Key metrics row with 4 cards
-    st.markdown("<div class='content-container'>", unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(
@@ -144,7 +144,7 @@ def display_df_summary(df: pd.DataFrame) -> None:
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Data preview and schema in tabs
-    st.markdown("<h3>🔍 Data Structure</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='apple-heading'><h3>🔍 Data Structure</h3></div>", unsafe_allow_html=True)
     st.markdown("<div class='content-container'>", unsafe_allow_html=True)
     data_tabs = st.tabs(["✨ Preview", "📋 Schema", "📊 Data Types"])
 
@@ -183,7 +183,7 @@ def display_df_summary(df: pd.DataFrame) -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Statistical summary in expandable section
-    st.markdown("<h3>📊 Statistical Summary</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='apple-heading'><h3>📊 Statistical Summary</h3></div>", unsafe_allow_html=True)
     st.markdown("<div class='content-container'>", unsafe_allow_html=True)
 
     with st.expander("View Numerical Statistics", expanded=True):
@@ -209,7 +209,8 @@ def display_df_summary(df: pd.DataFrame) -> None:
 
     # Sample of selected columns (if too many columns)
     if len(df.columns) > 8:
-        st.markdown("<h3>📊 Column Highlights</h3>", unsafe_allow_html=True)
+        st.markdown("<div class='apple-heading'><h3>📊 Column Highlights</h3></div>", unsafe_allow_html=True)
+        st.markdown("<div class='content-container'>", unsafe_allow_html=True)
 
         # Select a sample of diverse columns
         numeric_sample = numeric_cols[: min(3, len(numeric_cols))]
@@ -245,6 +246,8 @@ def display_df_summary(df: pd.DataFrame) -> None:
                                     f"Top values ({min(5, len(value_counts))} of {df[column_name].nunique()}):"
                                 )
                                 st.write(value_counts)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def create_metric_card(title: str, value: Any, prefix: str = "", suffix: str = "") -> None:
@@ -372,13 +375,16 @@ def add_custom_css():
             color: #1d1d1f;
             font-size: 1.6rem !important;
             letter-spacing: -0.01em;
-            padding-top: 1rem;
+            padding-top: 0.5rem;
+            margin-bottom: 0.5rem;
         }
         
         h3 {
             color: #1d1d1f;
             font-size: 1.3rem !important;
             letter-spacing: -0.01em;
+            margin-bottom: 0 !important;
+            padding-bottom: 5px !important;
         }
 
         p, li, div {
@@ -428,10 +434,32 @@ def add_custom_css():
             padding-top: 0;
         }
         
-        /* Additional fix for Dataset Overview tab */
-        div[data-testid="stVerticalBlock"] > div:first-child {
+        /* Additional fixes for whitespace around elements */
+        .block-container > div:first-child {
             margin-top: 0 !important;
             padding-top: 0 !important;
+        }
+        
+        /* Remove padding from headers */
+        .stMarkdown {
+            margin-bottom: 0 !important;
+        }
+        
+        /* Remove whitespace above and below content */
+        div[data-testid="stVerticalBlock"] > div {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Fix specific issue with Dataset Overview element */
+        div[data-testid="stImage"], 
+        div[data-testid="element-container"] {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
         }
         
         /* Button styling */
@@ -625,16 +653,96 @@ def add_custom_css():
             visibility: hidden;
         }
         
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-        }
-        
         /* Snowflake mode styling */
         body.snowflake-mode .navigation-section {
             display: none !important;
+        }
+
+        /* Make headers part of their content containers */
+        h3 + .content-container {
+            margin-top: 5px !important;
+            border-top-left-radius: 0 !important;
+        }
+
+        /* Apple-style heading with icon */
+        .apple-heading {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f7;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0 !important;
+            border-bottom: 1px solid #e8e8ed;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e8e8ed;
+            border-bottom: none;
+        }
+
+        .apple-heading h3 {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-weight: 500;
+        }
+
+        .apple-heading + .content-container {
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+            margin-top: 0 !important;
+            border-top: none;
+        }
+
+        /* Heading with icon inline style */
+        h3 > span.icon {
+            margin-right: 8px;
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        /* Style for h4 elements in content containers */
+        h4 {
+            margin-top: 0.5rem;
+            color: #1d1d1f;
+            font-size: 1.1rem;
+            padding-bottom: 0.5rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+
+        /* Style for h4 elements with section title style */
+        h4.section-title {
+            color: #2563EB;
+            font-size: 1.2rem;
+            padding-bottom: 0.5rem;
+            margin-top: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Remove any margin between header elements and the main content */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* Fix for headers that appear directly under tabs */
+        [data-testid="stHeader"] {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* Force no white space around headers */
+        .stMarkdown h3 {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Ensure all containers connect directly with headers */
+        .stMarkdown + div {
+            margin-top: 0 !important;
+        }
+
+        /* Restore container padding with better values */
+        .block-container {
+            padding: 0.5rem 1.5rem !important;
         }
         </style>
         """,
@@ -810,15 +918,15 @@ def main():
     # Display visualization if data is loaded
     if st.session_state.data is not None:
         # Create tabs for Dataset Overview and Interactive Visualization with Apple-style design
-        tab1, tab2 = st.tabs(["Dataset Overview", "Interactive Visualization"])
+        tab1, tab2 = st.tabs(["📋 Dataset Overview", "📊 Interactive Visualization"])
 
         # Dataset Overview tab
         with tab1:
             st.markdown(
                 """
-                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
-                    <h2 style="margin-top: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">Dataset Overview</h2>
-                    <p style="color: #86868b; margin-bottom: 0; font-size: 1rem;">
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                    <h2 style="margin: 0; padding: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">📋 Dataset Overview</h2>
+                    <p style="color: #86868b; margin: 0.5rem 0 0 0; padding: 0; font-size: 1rem;">
                         Complete analysis of your dataset's structure, statistics, and quality metrics.
                     </p>
                 </div>
@@ -862,11 +970,11 @@ def main():
             # Add immediate interactive EDA visualizations - with better visual separation
             st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
             st.markdown(
-                "<h3 class='section-header'>🔍 Interactive Data Explorer</h3>",
+                "<div class='apple-heading'><h3>🔍 Interactive Data Explorer</h3></div>",
                 unsafe_allow_html=True,
             )
 
-            st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+            st.markdown("<div class='content-container'>", unsafe_allow_html=True)
             # Quick column exploration
             cols = st.multiselect(
                 "Select columns to explore",
@@ -888,7 +996,7 @@ def main():
                 # Show immediate visualizations for selected columns
                 if numeric_cols:
                     st.markdown(
-                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Quick Numeric Column Analysis</h4>",
+                        "<h4 class='section-title'>Quick Numeric Column Analysis</h4>",
                         unsafe_allow_html=True,
                     )
 
@@ -930,7 +1038,7 @@ def main():
                 # Show categorical data visualizations
                 if categorical_cols:
                     st.markdown(
-                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Quick Categorical Column Analysis</h4>",
+                        "<h4 class='section-title'>Quick Categorical Column Analysis</h4>",
                         unsafe_allow_html=True,
                     )
                     cat_viz_cols = st.columns(min(2, len(categorical_cols)))
@@ -970,13 +1078,13 @@ def main():
             # Advanced data quality section
             st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
             st.markdown(
-                "<h3 class='section-header'>🔍 Data Quality Assessment</h3>", unsafe_allow_html=True
+                "<div class='apple-heading'><h3>🔍 Data Quality Assessment</h3></div>", unsafe_allow_html=True
             )
 
             quality_tabs = st.tabs(["Completeness", "Consistency", "Distribution Analysis"])
 
             with quality_tabs[0]:  # Completeness tab
-                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                st.markdown("<div class='content-container'>", unsafe_allow_html=True)
                 # Calculate completeness metrics
                 total_cells = st.session_state.data.shape[0] * st.session_state.data.shape[1]
                 missing_cells = st.session_state.data.isna().sum().sum()
@@ -996,7 +1104,7 @@ def main():
 
                     # Missing values by column
                     st.markdown(
-                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Missing Values by Column</h4>",
+                        "<h4 class='section-title'>Missing Values by Column</h4>",
                         unsafe_allow_html=True,
                     )
                     missing_by_col = st.session_state.data.isna().sum().sort_values(ascending=False)
@@ -1031,9 +1139,9 @@ def main():
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with quality_tabs[1]:  # Consistency tab
-                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                st.markdown("<div class='content-container'>", unsafe_allow_html=True)
                 st.markdown(
-                    "<h4 style='color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Value Consistency</h4>",
+                    "<h4 class='section-title'>Value Consistency</h4>",
                     unsafe_allow_html=True,
                 )
 
@@ -1120,9 +1228,9 @@ def main():
                 st.markdown("</div>", unsafe_allow_html=True)
 
             with quality_tabs[2]:  # Distribution Analysis
-                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                st.markdown("<div class='content-container'>", unsafe_allow_html=True)
                 st.markdown(
-                    "<h4 style='color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Distribution Analysis</h4>",
+                    "<h4 class='section-title'>Distribution Analysis</h4>",
                     unsafe_allow_html=True,
                 )
 
@@ -1195,10 +1303,10 @@ def main():
             # Add interactive correlation heatmap (removed PCA and Time Series)
             st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
             st.markdown(
-                "<h3 class='section-header'>🧪 Feature Correlations</h3>", unsafe_allow_html=True
+                "<div class='apple-heading'><h3>🧪 Feature Correlations</h3></div>", unsafe_allow_html=True
             )
 
-            st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+            st.markdown("<div class='content-container'>", unsafe_allow_html=True)
             numeric_cols = st.session_state.data.select_dtypes(include=[np.number]).columns.tolist()
             if len(numeric_cols) > 1:
                 selected_features = st.multiselect(
@@ -1258,7 +1366,17 @@ def main():
 
         # Interactive Visualization tab
         with tab2:
-            st.markdown("## Interactive Visualization")
+            st.markdown(
+                """
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                    <h2 style="margin: 0; padding: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">📊 Interactive Visualization</h2>
+                    <p style="color: #86868b; margin: 0.5rem 0 0 0; padding: 0; font-size: 1rem;">
+                        Dynamic visualization and exploration of your dataset.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             # Get cached renderer
             renderer = get_pyg_renderer(st.session_state.data)
