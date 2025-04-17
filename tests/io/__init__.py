@@ -1,1 +1,1 @@
-"""Tests for the io module."""
+"""IO functionality tests for the clustering package."""

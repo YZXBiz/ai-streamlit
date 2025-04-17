@@ -7,7 +7,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Any, Optional, Union
 
 # Import dashboard components
 from clustering.dashboard.components.data_loader import (
@@ -26,7 +26,6 @@ from clustering.dashboard.components.cluster_view import (
 )
 from clustering.dashboard.components.feature_explorer import (
     show_feature_distribution,
-    show_dimensionality_reduction
 )
 
 # Import settings
@@ -82,7 +81,7 @@ def setup_page_config():
             if key == "primaryColor":
                 css += f"""
                 a {{color: {value} !important;}}
-                .stButton>button {{background-color: {value} !important;}}
+                .stButton>button {{background-color: {value} !important; color: white !important;}}
                 .stProgress .st-bo {{background-color: {value} !important;}}
                 """
             elif key == "backgroundColor":
@@ -101,13 +100,70 @@ def setup_page_config():
                 css += f"""
                 body {{font-family: {value} !important;}}
                 """
+        
+        # Add modern styling touches
+        css += """
+        /* Make widgets more modern with rounded corners and shadows */
+        div[data-testid="stForm"], div.stButton > button, div[data-testid="stFileUploader"] {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Better spacing for dataframes */
+        .dataframe {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        /* More readable headings */
+        h1, h2, h3 {
+            font-weight: 600 !important;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Improve sidebar appearance */
+        .sidebar .sidebar-content {
+            padding: 1rem 0.8rem;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        /* Better button styling */
+        .stButton>button {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+        .stButton>button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Improve tabs appearance */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 4px 4px 0 0;
+            padding: 10px 16px;
+        }
+        
+        /* Better plots styling */
+        [data-testid="stPlotlyChart"] {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        """
+        
         css += """
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
 
 
-def render_sidebar(available_assets: List[str]):
+def render_sidebar(available_assets: list[str]):
     """Render the sidebar for asset selection.
     
     Args:
@@ -145,7 +201,7 @@ def render_sidebar(available_assets: List[str]):
     return selected_asset
 
 
-def load_selected_asset(asset_name: str) -> Tuple[Union[pd.DataFrame, Dict[str, Any], None], str]:
+def load_selected_asset(asset_name: str) -> tuple[Union[pd.DataFrame, dict[str, Any], None], str]:
     """Load the selected asset and display loading information.
     
     Args:
@@ -194,7 +250,7 @@ def load_selected_asset(asset_name: str) -> Tuple[Union[pd.DataFrame, Dict[str, 
     return data, path
 
 
-def select_analysis_dataframe(data: Union[pd.DataFrame, Dict[str, Any]]) -> Tuple[Optional[pd.DataFrame], List[str], List[str]]:
+def select_analysis_dataframe(data: Union[pd.DataFrame, dict[str, Any]]) -> tuple[Optional[pd.DataFrame], list[str], list[str]]:
     """Select the DataFrame to analyze and extract relevant columns.
     
     Args:
@@ -210,39 +266,74 @@ def select_analysis_dataframe(data: Union[pd.DataFrame, Dict[str, Any]]) -> Tupl
     # Different handling based on data type
     if isinstance(data, pd.DataFrame):
         selected_df = data
-        feature_cols = extract_features(data)
+        # Make ALL columns available, not just those identified as features
+        feature_cols = data.columns.tolist()
         cluster_cols = extract_cluster_columns(data)
         
     elif isinstance(data, dict):
-        # Select which part of the dictionary to analyze
+        # Show dict keys in a nice format
+        st.markdown("### Available Data")
+        
+        # Create a more visual selector for dictionary keys
         dict_keys = list(data.keys())
         
-        # Filter to only DataFrames for analysis
+        # Filter to categorize different data types
         df_keys = [k for k in dict_keys if isinstance(data[k], pd.DataFrame)]
         non_df_keys = [k for k in dict_keys if k not in df_keys]
         
+        # Create a more visual key selector using buttons in columns
         if df_keys:
-            selected_key = st.selectbox(
-                "Select data to analyze",
-                options=df_keys,
-                index=0
-            )
+            st.write("#### DataFrames:")
+            cols = st.columns(min(3, len(df_keys)))
             
+            # Session state to track selected key
+            if "selected_dict_key" not in st.session_state:
+                st.session_state.selected_dict_key = df_keys[0]
+                
+            # Create a button for each key
+            for i, key in enumerate(df_keys):
+                col_idx = i % len(cols)
+                with cols[col_idx]:
+                    if st.button(
+                        key, 
+                        help=f"Shape: {data[key].shape if isinstance(data[key], pd.DataFrame) else 'N/A'}",
+                        use_container_width=True,
+                        type="primary" if st.session_state.selected_dict_key == key else "secondary"
+                    ):
+                        st.session_state.selected_dict_key = key
+            
+            selected_key = st.session_state.selected_dict_key
             selected_df = data[selected_key]
-            feature_cols = extract_features(selected_df)
+            
+            # Show summary info
+            st.info(f"Selected: **{selected_key}** - Shape: {selected_df.shape}")
+                    
+            # Make ALL columns available, not just those identified as features
+            feature_cols = selected_df.columns.tolist()
             cluster_cols = extract_cluster_columns(selected_df)
         
         # Display any non-DataFrame elements
         if non_df_keys:
-            with st.expander("Additional data elements"):
+            with st.expander("Additional Data Elements", expanded=False):
                 for key in non_df_keys:
                     st.write(f"### {key}")
-                    st.write(data[key])
+                    # Format the output based on type
+                    if isinstance(data[key], dict):
+                        st.json(data[key])
+                    elif isinstance(data[key], (list, tuple)):
+                        st.write(f"List with {len(data[key])} items")
+                        st.write(data[key])
+                    else:
+                        st.write(data[key])
+    
+    # Remove cluster columns from feature columns to avoid confusion
+    if cluster_cols:
+        feature_cols = [col for col in feature_cols if col not in cluster_cols]
     
     return selected_df, feature_cols, cluster_cols
 
 
-def render_cluster_analysis(df: pd.DataFrame, features: List[str], cluster_cols: List[str]):
+def render_cluster_analysis(df: pd.DataFrame, features: list[str], cluster_cols: list[str]):
     """Render the cluster analysis view.
     
     Args:
@@ -272,10 +363,9 @@ def render_cluster_analysis(df: pd.DataFrame, features: List[str], cluster_cols:
     st.session_state.cluster_column = selected_cluster_col
     
     # Create tabs for different visualizations
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "Cluster Distribution", 
         "Feature Analysis", 
-        "Dimension Reduction",
         "Cluster Comparison"
     ])
     
@@ -288,7 +378,7 @@ def render_cluster_analysis(df: pd.DataFrame, features: List[str], cluster_cols:
         
         # Limit the number of features shown if there are too many
         if len(features) > MAX_FEATURES_TO_DISPLAY:
-            st.info(f"Showing {MAX_FEATURES_TO_DISPLAY} out of {len(features)} features. Use dimension reduction for full analysis.")
+            st.info(f"Showing {MAX_FEATURES_TO_DISPLAY} out of {len(features)} features.")
             display_features = features[:MAX_FEATURES_TO_DISPLAY]
         else:
             display_features = features
@@ -323,14 +413,6 @@ def render_cluster_analysis(df: pd.DataFrame, features: List[str], cluster_cols:
                 show_parallel_coordinates(df, selected_cluster_col, selected_features)
     
     with tab3:
-        st.subheader("Dimension Reduction")
-        
-        if len(features) >= 3:
-            show_dimensionality_reduction(df, features, selected_cluster_col)
-        else:
-            st.warning("Need at least 3 features for dimensionality reduction.")
-    
-    with tab4:
         st.subheader("Cluster Comparison")
         
         # Check if we have any comparison data
@@ -399,9 +481,29 @@ def main():
     # Setup page configuration
     setup_page_config()
     
-    # Title and description
-    st.title(DASHBOARD_TITLE)
-    st.write(DASHBOARD_SUBTITLE)
+    # Create a visually appealing banner
+    st.markdown(
+        f"""
+        <div style="
+            background-color: #4CAF50; 
+            padding: 10px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(90deg, #4CAF50 0%, #2E7D32 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        ">
+            <div>
+                <h1 style="color: white; margin: 0; padding: 0;">{DASHBOARD_TITLE}</h1>
+                <p style="color: rgba(255, 255, 255, 0.9); margin: 4px 0 0 0;">{DASHBOARD_SUBTITLE}</p>
+            </div>
+            <div style="font-size: 48px; padding-right: 20px;">📊</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     
     # Get available assets
     available_assets = get_available_assets()

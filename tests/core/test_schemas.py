@@ -1,4 +1,4 @@
-"""Tests for clustering.core.schemas module."""
+"""Tests for the schema validation module."""
 
 import pandas as pd
 import polars as pl
@@ -14,12 +14,20 @@ from clustering.core.schemas import (
 )
 
 
+@pytest.fixture
+def sample_data() -> pl.DataFrame:
+    """Create a sample DataFrame for testing."""
+    return pl.DataFrame({
+        "id": [1, 2, 3],
+        "name": ["a", "b", "c"]
+    })
+
+
 class TestSchema:
     """Tests for the base Schema class."""
 
     def test_check_method_pandas(self) -> None:
         """Test the check method with pandas DataFrame."""
-
         # Create a simple schema for testing
         class TestSchema(Schema):
             col1: int
@@ -34,7 +42,6 @@ class TestSchema:
 
     def test_check_method_polars(self) -> None:
         """Test the check method with polars DataFrame."""
-
         # Create a simple schema for testing
         class TestSchema(Schema):
             col1: int
@@ -49,7 +56,6 @@ class TestSchema:
 
     def test_invalid_data(self) -> None:
         """Test that the schema raises an error for invalid data."""
-
         # Create a simple schema for testing
         class TestSchema(Schema):
             col1: int
@@ -79,6 +85,23 @@ class TestSalesSchema:
         validated_data = SalesSchema.check(data)
         assert len(validated_data) == 3
 
+    def test_polars_dataframe(self) -> None:
+        """Test validation with polars DataFrame."""
+        # Create valid data
+        valid_data = pl.DataFrame({
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "TOTAL_SALES": [1500.50, 2200.75, 3100.25]
+        })
+        
+        # Validate data
+        result = SalesSchema.check(valid_data)
+        
+        # Assert validation passed
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 3
+
     def test_data_coercion(self) -> None:
         """Test coercion of data types."""
         # Strings that should be coerced to numbers
@@ -96,18 +119,18 @@ class TestSalesSchema:
         assert isinstance(validated_data["TOTAL_SALES"].iloc[0], float)
 
     def test_invalid_data_negative_values(self) -> None:
-        """Test validation fails with negative SKU numbers."""
-        data = pd.DataFrame(
-            {
-                "SKU_NBR": [-1, 102, 103],  # Negative value, should fail
-                "STORE_NBR": [1, 2, 3],
-                "CAT_DSC": ["Category A", "Category B", "Category C"],
-                "TOTAL_SALES": [100.0, 200.0, 300.0],
-            }
-        )
-
+        """Test validation fails with negative sales values."""
+        # Create invalid data with negative sales
+        invalid_data = pl.DataFrame({
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "TOTAL_SALES": [1500.50, -2200.75, 3100.25]  # Negative value
+        })
+        
+        # Validate data - should raise SchemaError
         with pytest.raises(SchemaError):
-            SalesSchema.check(data)
+            SalesSchema.check(invalid_data)
 
     def test_missing_required_column(self) -> None:
         """Test validation fails with missing columns."""
@@ -119,14 +142,6 @@ class TestSalesSchema:
                 "CAT_DSC": ["Category A", "Category B", "Category C"],
             }
         )
-
-        with pytest.raises(SchemaError):
-            SalesSchema.check(data)
-
-    def test_empty_dataframe(self) -> None:
-        """Test validation fails with empty DataFrame."""
-        # Create empty DataFrame with correct columns
-        data = pd.DataFrame({"SKU_NBR": [], "STORE_NBR": [], "CAT_DSC": [], "TOTAL_SALES": []})
 
         with pytest.raises(SchemaError):
             SalesSchema.check(data)
@@ -206,6 +221,7 @@ class TestNSMappingSchema:
             }
         )
 
+        # This should pass validation since attributes can be null
         validated_data = NSMappingSchema.check(data)
         assert len(validated_data) == 3
 
@@ -229,20 +245,22 @@ class TestMergedDataSchema:
         assert len(validated_data) == 3
 
     def test_polars_dataframe(self) -> None:
-        """Test that schema works with polars DataFrame."""
-        data = pl.DataFrame(
-            {
-                "SKU_NBR": [101, 102, 103],
-                "STORE_NBR": [1, 2, 3],
-                "CAT_DSC": ["Category A", "Category B", "Category C"],
-                "NEED_STATE": ["State A", "State B", "State C"],
-                "TOTAL_SALES": [100.0, 200.0, 300.0],
-            }
-        )
-
-        validated_data = MergedDataSchema.check(data)
-        assert isinstance(validated_data, pl.DataFrame)
-        assert len(validated_data) == 3
+        """Test validation with polars DataFrame."""
+        # Create valid data
+        valid_data = pl.DataFrame({
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "NEED_STATE": ["NS1", "NS2", "NS3"],
+            "TOTAL_SALES": [1500.50, 2200.75, 3100.25]
+        })
+        
+        # Validate data
+        result = MergedDataSchema.check(valid_data)
+        
+        # Assert validation passed
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 3
 
 
 class TestDistributedDataSchema:
@@ -262,3 +280,36 @@ class TestDistributedDataSchema:
 
         validated_data = DistributedDataSchema.check(data)
         assert len(validated_data) == 3
+
+    def test_polars_dataframe(self) -> None:
+        """Test validation with polars DataFrame."""
+        # Create valid data
+        valid_data = pl.DataFrame({
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "NEED_STATE": ["NS1", "NS2", "NS3"],
+            "TOTAL_SALES": [1500.50, 2200.75, 3100.25]
+        })
+        
+        # Validate data
+        result = DistributedDataSchema.check(valid_data)
+        
+        # Assert validation passed
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 3
+
+    def test_empty_dataframe(self) -> None:
+        """Test empty DataFrame handling."""
+        # Create an empty DataFrame with correct columns
+        empty_data = pl.DataFrame({
+            "SKU_NBR": [],
+            "STORE_NBR": [],
+            "CAT_DSC": [],
+            "NEED_STATE": [],
+            "TOTAL_SALES": []
+        })
+        
+        # Empty dataframes should not pass validation
+        with pytest.raises(SchemaError):
+            DistributedDataSchema.check(empty_data) 

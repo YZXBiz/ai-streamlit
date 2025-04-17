@@ -4,7 +4,9 @@ This directory contains tests for the clustering package.
 
 ## Structure
 
-- `unit/`: Unit tests for individual components
+- `core/`: Unit tests for core components (schemas, models, utils)
+- `io/`: Tests for IO functionality (readers, writers, blob storage, etc.)
+- `dagster/`: Tests for Dagster-specific components (assets, jobs, resources)
 - `integration/`: Integration tests for workflow combinations
 
 ## Running Tests
@@ -15,10 +17,10 @@ To run all tests:
 make test
 ```
 
-To run a specific test file:
+To run tests for a specific component:
 
 ```bash
-pytest tests/unit/test_configs.py -v
+pytest tests/core/test_schemas.py -v
 ```
 
 To run tests with code coverage:
@@ -31,10 +33,9 @@ pytest tests/ --cov=src/clustering --cov-report=term --cov-report=html
 
 When writing new tests:
 
-1. Place unit tests in the appropriate file under `tests/unit/`
-2. Place integration tests in the appropriate file under `tests/integration/`
-3. Use fixtures from `conftest.py` when possible
-4. Follow the existing naming conventions
+1. Place tests in the appropriate directory based on component type
+2. Use fixtures from `conftest.py` when possible
+3. Follow existing naming conventions
 
 ## Test Data
 

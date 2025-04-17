@@ -1,283 +1,369 @@
-"""Feature exploration components for the clustering dashboard.
+"""Feature explorer components for the clustering dashboard.
 
-This module provides utilities for exploring and visualizing high-dimensional features.
+This module provides components for exploring feature distributions and relationships.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
-from typing import List, Optional, Tuple
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
+from typing import Optional, Union, Any
+
+from clustering.dashboard.utils import get_color_scale
 
 
 def show_feature_distribution(
-    data: pd.DataFrame,
-    features: List[str],
+    data: pd.DataFrame, 
+    features: list[str], 
     cluster_col: Optional[str] = None
 ) -> None:
     """Show distribution of selected features.
     
     Args:
-        data: DataFrame with features
-        features: List of feature columns
-        cluster_col: Optional cluster column for coloring
+        data: DataFrame with features and cluster column
+        features: List of feature columns to display
+        cluster_col: Name of the cluster column (optional)
     """
-    # Let user select a feature to visualize
-    selected_feature = st.selectbox(
-        "Select feature to visualize",
-        options=features
+    st.markdown("### Feature Distribution")
+    
+    # Let user select a feature
+    feature = st.selectbox("Select Feature", features)
+    
+    # Let user select chart type
+    chart_type = st.selectbox(
+        "Chart Type",
+        ["Histogram", "Box Plot", "Violin Plot", "KDE Plot"],
+        index=0
     )
     
-    # Create histogram
-    if cluster_col and cluster_col in data.columns:
-        # Colored by cluster
+    # Create plot based on chart type
+    if chart_type == "Histogram":
         fig = px.histogram(
-            data,
-            x=selected_feature,
+            data, 
+            x=feature,
             color=cluster_col,
             marginal="box",
-            title=f"Distribution of {selected_feature} by Cluster",
-            labels={selected_feature: selected_feature, cluster_col: 'Cluster'}
-        )
-    else:
-        # Single color
-        fig = px.histogram(
-            data,
-            x=selected_feature,
-            marginal="box",
-            title=f"Distribution of {selected_feature}",
-            labels={selected_feature: selected_feature}
+            title=f"Distribution of {feature}",
+            opacity=0.7
         )
     
+    elif chart_type == "Box Plot":
+        fig = px.box(
+            data,
+            y=feature,
+            x=cluster_col if cluster_col else None,
+            title=f"Box Plot of {feature}",
+            color=cluster_col
+        )
+    
+    elif chart_type == "Violin Plot":
+        fig = px.violin(
+            data,
+            y=feature,
+            x=cluster_col if cluster_col else None,
+            title=f"Violin Plot of {feature}",
+            color=cluster_col,
+            box=True
+        )
+    
+    elif chart_type == "KDE Plot":
+        fig = px.density_contour(
+            data,
+            x=feature,
+            title=f"KDE Plot of {feature}",
+            color=cluster_col
+        )
+        fig.update_traces(contours_coloring="fill", contours_showlabels=True)
+    
+    # Update layout
+    fig.update_layout(
+        xaxis_title=feature,
+        yaxis_title="Count" if chart_type == "Histogram" else feature,
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#FFFFFF"),
+        title_font=dict(size=20, color="#FFFFFF"),
+        margin=dict(l=40, r=40, t=50, b=40),
+    )
+    
     st.plotly_chart(fig, use_container_width=True)
+    
+    # Show feature statistics
+    with st.expander("Feature Statistics"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("#### Basic Statistics")
+            st.write(data[feature].describe())
+        
+        with col2:
+            if cluster_col:
+                st.write("#### Statistics by Cluster")
+                st.write(data.groupby(cluster_col)[feature].describe())
 
 
 def run_pca(
-    data: pd.DataFrame,
-    features: List[str],
-    cluster_col: str,
-    n_components: int = 3
-) -> Tuple[pd.DataFrame, List[float]]:
+    data: pd.DataFrame, 
+    features: list[str], 
+    n_components: int = 2
+) -> tuple[pd.DataFrame, list[float]]:
     """Run PCA on the selected features.
     
     Args:
         data: DataFrame with features
-        features: List of feature columns
-        cluster_col: Cluster column name
-        n_components: Number of PCA components
+        features: List of feature columns for PCA
+        n_components: Number of principal components
         
     Returns:
-        Tuple of (PCA results DataFrame, explained variance ratios)
+        Tuple containing the transformed DataFrame and explained variance ratios
     """
-    # Create feature matrix
-    X = data[features].values
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+    
+    # Extract and standardize features
+    X = data[features].copy()
+    
+    # Handle missing values
+    X = X.fillna(X.mean())
+    
+    # Scale the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
     
     # Run PCA
-    pca = PCA(n_components=min(n_components, len(features)))
-    pca_result = pca.fit_transform(X)
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X_scaled)
     
-    # Create DataFrame with PCA results
+    # Create a DataFrame with PCA results
     pca_df = pd.DataFrame(
-        pca_result,
-        columns=[f'PC{i+1}' for i in range(pca.n_components_)]
+        X_pca, 
+        columns=[f"PC{i+1}" for i in range(n_components)]
     )
     
-    # Add cluster information
-    pca_df[cluster_col] = data[cluster_col].values
+    # Add index from original data
+    pca_df.index = data.index
     
-    # Add STORE_NBR if available
-    if 'STORE_NBR' in data.columns:
-        pca_df['STORE_NBR'] = data['STORE_NBR'].values
-    
-    return pca_df, pca.explained_variance_ratio_
+    return pca_df, pca.explained_variance_ratio_.tolist()
 
 
 def run_tsne(
-    data: pd.DataFrame,
-    features: List[str],
-    cluster_col: str,
-    n_components: int = 2,
-    perplexity: float = 30.0,
-    random_state: int = 42
+    data: pd.DataFrame, 
+    features: list[str], 
+    n_components: int = 2, 
+    perplexity: int = 30
 ) -> pd.DataFrame:
     """Run t-SNE on the selected features.
     
     Args:
         data: DataFrame with features
-        features: List of feature columns
-        cluster_col: Cluster column name
-        n_components: Number of t-SNE components
+        features: List of feature columns for t-SNE
+        n_components: Number of dimensions for t-SNE
         perplexity: t-SNE perplexity parameter
-        random_state: Random seed
         
     Returns:
         DataFrame with t-SNE results
     """
-    # Create feature matrix
-    X = data[features].values
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.manifold import TSNE
+    
+    # Extract and standardize features
+    X = data[features].copy()
+    
+    # Handle missing values
+    X = X.fillna(X.mean())
+    
+    # Scale the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
     
     # Run t-SNE
     tsne = TSNE(
         n_components=n_components,
-        perplexity=min(perplexity, len(data) - 1),
-        random_state=random_state
+        perplexity=perplexity,
+        n_iter=300,
+        random_state=42
     )
-    tsne_result = tsne.fit_transform(X)
+    X_tsne = tsne.fit_transform(X_scaled)
     
-    # Create DataFrame with t-SNE results
+    # Create a DataFrame with t-SNE results
     tsne_df = pd.DataFrame(
-        tsne_result,
-        columns=[f'TSNE{i+1}' for i in range(n_components)]
+        X_tsne, 
+        columns=[f"t-SNE{i+1}" for i in range(n_components)]
     )
     
-    # Add cluster information
-    tsne_df[cluster_col] = data[cluster_col].values
-    
-    # Add STORE_NBR if available
-    if 'STORE_NBR' in data.columns:
-        tsne_df['STORE_NBR'] = data['STORE_NBR'].values
+    # Add index from original data
+    tsne_df.index = data.index
     
     return tsne_df
 
 
 def show_dimensionality_reduction(
-    data: pd.DataFrame,
-    features: List[str],
-    cluster_col: str
+    data: pd.DataFrame, 
+    features: list[str], 
+    cluster_col: Optional[str] = None
 ) -> None:
-    """Show dimensionality reduction visualizations.
+    """Show dimensionality reduction visualization.
     
     Args:
-        data: DataFrame with features
+        data: DataFrame with features and clusters
         features: List of feature columns
-        cluster_col: Cluster column name
+        cluster_col: Name of the cluster column (optional)
     """
-    # Only proceed if we have enough features
     if len(features) < 3:
         st.warning("Need at least 3 features for dimensionality reduction")
         return
+        
+    st.markdown("### Dimensionality Reduction")
     
-    # Let user select dimensionality reduction method
-    method = st.selectbox(
-        "Select dimensionality reduction method",
-        options=["PCA", "t-SNE"],
+    # Let user select technique
+    technique = st.selectbox(
+        "Technique", 
+        ["PCA", "t-SNE"],
         index=0
     )
     
-    if method == "PCA":
-        # Let user select number of components
-        n_components = st.slider(
-            "Number of PCA components",
-            min_value=2,
-            max_value=min(10, len(features)),
-            value=3
-        )
-        
-        # Run PCA
-        with st.spinner("Running PCA..."):
-            pca_df, explained_variance = run_pca(
-                data,
-                features,
-                cluster_col,
-                n_components
-            )
-        
-        # Show explained variance
-        st.write("### Explained Variance")
-        
-        # Create bar chart of explained variance
-        fig = px.bar(
-            x=[f"PC{i+1}" for i in range(len(explained_variance))],
-            y=explained_variance,
-            labels={"x": "Principal Component", "y": "Explained Variance Ratio"},
-            title="Explained Variance by Principal Component"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Show PCA results
-        if n_components >= 2:
-            st.write("### PCA Visualization")
-            
-            # Show 2D or 3D plot
-            if n_components >= 3:
-                fig = px.scatter_3d(
-                    pca_df,
-                    x="PC1",
-                    y="PC2",
-                    z="PC3",
-                    color=cluster_col,
-                    title="PCA Visualization (First 3 Components)",
-                    labels={"PC1": "PC1", "PC2": "PC2", "PC3": "PC3", cluster_col: "Cluster"},
-                    hover_data=['STORE_NBR'] if 'STORE_NBR' in pca_df.columns else None
-                )
-                fig.update_layout(height=700)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                fig = px.scatter(
-                    pca_df,
-                    x="PC1",
-                    y="PC2",
-                    color=cluster_col,
-                    title="PCA Visualization (First 2 Components)",
-                    labels={"PC1": "PC1", "PC2": "PC2", cluster_col: "Cluster"},
-                    hover_data=['STORE_NBR'] if 'STORE_NBR' in pca_df.columns else None
-                )
-                st.plotly_chart(fig, use_container_width=True)
+    # Let user select number of components
+    n_components = st.slider(
+        "Number of Components", 
+        min_value=2, 
+        max_value=min(5, len(features)),
+        value=2
+    )
     
-    elif method == "t-SNE":
-        # Let user select number of components
-        n_components = st.slider(
-            "Number of t-SNE components",
-            min_value=2,
-            max_value=3,
-            value=2
-        )
-        
-        # Let user adjust perplexity
+    # Additional parameters for t-SNE
+    perplexity = 30
+    if technique == "t-SNE":
         perplexity = st.slider(
-            "Perplexity",
-            min_value=5,
-            max_value=min(50, len(data) - 1),
-            value=min(30, len(data) // 3)
+            "Perplexity", 
+            min_value=5, 
+            max_value=50,
+            value=30
+        )
+    
+    # Run dimensionality reduction
+    if technique == "PCA":
+        with st.spinner("Running PCA..."):
+            result_df, explained_var = run_pca(
+                data, 
+                features, 
+                n_components=n_components
+            )
+            
+            # Display explained variance
+            st.write("#### Explained Variance")
+            explained_df = pd.DataFrame({
+                'Component': [f"PC{i+1}" for i in range(n_components)],
+                'Explained Variance Ratio': explained_var,
+                'Cumulative Explained Variance': np.cumsum(explained_var)
+            })
+            st.dataframe(explained_df)
+            
+    else:  # t-SNE
+        with st.spinner("Running t-SNE (this may take a while)..."):
+            result_df = run_tsne(
+                data, 
+                features, 
+                n_components=n_components,
+                perplexity=perplexity
+            )
+    
+    # Visualization
+    if n_components == 2:
+        # 2D visualization
+        fig = px.scatter(
+            result_df,
+            x=result_df.columns[0],
+            y=result_df.columns[1],
+            color=data[cluster_col] if cluster_col else None,
+            title=f"{technique} Visualization",
+            labels={
+                result_df.columns[0]: result_df.columns[0],
+                result_df.columns[1]: result_df.columns[1]
+            }
         )
         
-        # Run t-SNE
-        with st.spinner("Running t-SNE (this may take a while)..."):
-            tsne_df = run_tsne(
-                data,
-                features,
-                cluster_col,
-                n_components,
-                perplexity
-            )
+    elif n_components == 3:
+        # 3D visualization
+        fig = px.scatter_3d(
+            result_df,
+            x=result_df.columns[0],
+            y=result_df.columns[1],
+            z=result_df.columns[2],
+            color=data[cluster_col] if cluster_col else None,
+            title=f"{technique} Visualization",
+            labels={
+                result_df.columns[0]: result_df.columns[0],
+                result_df.columns[1]: result_df.columns[1],
+                result_df.columns[2]: result_df.columns[2]
+            }
+        )
         
-        # Show t-SNE results
-        st.write("### t-SNE Visualization")
+    else:
+        # Parallel coordinates for more than 3 dimensions
+        # Combine result with cluster information
+        combined = result_df.copy()
+        if cluster_col:
+            combined[cluster_col] = data[cluster_col].values
+            
+        fig = px.parallel_coordinates(
+            combined,
+            color=cluster_col if cluster_col else None,
+            dimensions=result_df.columns.tolist(),
+            title=f"{technique} Visualization"
+        )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        template="plotly_dark",
+        margin=dict(l=20, r=20, t=50, b=20),
+        height=600
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show the top contributing features for PCA
+    if technique == "PCA" and st.checkbox("Show feature contributions"):
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.decomposition import PCA
         
-        # Show 2D or 3D plot
-        if n_components == 3:
-            fig = px.scatter_3d(
-                tsne_df,
-                x="TSNE1",
-                y="TSNE2",
-                z="TSNE3",
-                color=cluster_col,
-                title="t-SNE Visualization",
-                labels={"TSNE1": "t-SNE 1", "TSNE2": "t-SNE 2", "TSNE3": "t-SNE 3", cluster_col: "Cluster"},
-                hover_data=['STORE_NBR'] if 'STORE_NBR' in tsne_df.columns else None
+        # Extract and scale features
+        X = data[features].copy().fillna(data[features].mean())
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        
+        # Fit PCA
+        pca = PCA(n_components=n_components)
+        pca.fit(X_scaled)
+        
+        # Show loading scores for each component
+        for i in range(n_components):
+            st.write(f"#### Principal Component {i+1}")
+            
+            # Get loading scores
+            loading_scores = pd.DataFrame(
+                pca.components_[i], 
+                columns=["Loading Score"],
+                index=features
             )
-            fig.update_layout(height=700)
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            fig = px.scatter(
-                tsne_df,
-                x="TSNE1",
-                y="TSNE2",
-                color=cluster_col,
-                title="t-SNE Visualization",
-                labels={"TSNE1": "t-SNE 1", "TSNE2": "t-SNE 2", cluster_col: "Cluster"},
-                hover_data=['STORE_NBR'] if 'STORE_NBR' in tsne_df.columns else None
+            loading_scores["Abs Loading Score"] = loading_scores["Loading Score"].abs()
+            loading_scores = loading_scores.sort_values("Abs Loading Score", ascending=False)
+            
+            # Plot top features
+            top_features = loading_scores.head(10)
+            
+            fig = px.bar(
+                top_features,
+                y=top_features.index,
+                x="Loading Score",
+                orientation='h',
+                title=f"Top Features Contributing to PC{i+1}"
             )
+            
+            fig.update_layout(
+                yaxis_title="Feature",
+                xaxis_title="Loading Score",
+                height=400
+            )
+            
             st.plotly_chart(fig, use_container_width=True) 

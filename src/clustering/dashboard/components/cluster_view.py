@@ -8,7 +8,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from typing import List, Optional, Tuple, Dict, Any, Union
+from typing import Optional, Any, Union
+
+from clustering.dashboard.utils import get_color_scale
 
 
 def show_cluster_distribution(
@@ -42,14 +44,19 @@ def show_cluster_distribution(
         title=title,
         labels={'Count': 'Number of Stores', 'Cluster': 'Cluster ID'},
         color='Count',
-        color_continuous_scale=px.colors.sequential.Viridis
+        color_continuous_scale=get_color_scale("sequential")
     )
     
     # Customize layout
     fig.update_layout(
         xaxis_title="Cluster",
         yaxis_title="Number of Stores",
-        coloraxis_showscale=True
+        coloraxis_showscale=True,
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#FFFFFF"),
+        title_font=dict(size=22, color="#FFFFFF"),
+        margin=dict(l=40, r=40, t=50, b=40),
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -59,50 +66,210 @@ def show_cluster_distribution(
         st.dataframe(cluster_counts)
 
 
-def show_feature_scatter(
-    data: pd.DataFrame,
-    cluster_col: str,
-    features: List[str],
-    title_prefix: str = "Cluster Visualization"
-) -> None:
-    """Show scatter plot of features colored by cluster.
+def show_feature_scatter(df: pd.DataFrame, feature_cols: list[str], 
+                        cluster_col: Optional[str] = None):
+    """Show scatter plot of features with cluster coloring.
     
     Args:
-        data: DataFrame with features and clusters
-        cluster_col: Name of the cluster column
-        features: List of feature columns to choose from
-        title_prefix: Prefix for the plot title
+        df: DataFrame with features and clusters
+        feature_cols: Columns containing features
+        cluster_col: Column containing cluster labels
     """
-    if len(features) < 2:
-        st.warning("Need at least 2 features for scatter plot")
+    if len(feature_cols) < 2:
+        st.warning("Need at least 2 feature columns to create a scatter plot")
         return
         
-    # Let user select features for x and y axes
-    col1, col2 = st.columns(2)
-    with col1:
-        x_axis = st.selectbox("X-axis", options=features, index=0)
-    with col2:
-        default_y_index = min(1, len(features) - 1)
-        y_axis = st.selectbox("Y-axis", options=features, index=default_y_index)
+    st.markdown("### Feature Visualization")
     
-    # Create scatter plot
-    fig = px.scatter(
-        data, 
-        x=x_axis, 
-        y=y_axis,
-        color=cluster_col,
-        title=f"{title_prefix}: {x_axis} vs {y_axis}",
-        labels={x_axis: x_axis, y_axis: y_axis, cluster_col: 'Cluster'},
-        hover_data=['STORE_NBR'] if 'STORE_NBR' in data.columns else None
+    # Chart type selector
+    chart_types = {
+        "Scatter Plot": "scatter",
+        "3D Scatter": "scatter_3d",
+        "Bubble Chart": "bubble",
+        "Line Plot": "line",
+        "Bar Chart": "bar",
+        "Box Plot": "box",
+        "Violin Plot": "violin",
+        "Histogram": "histogram",
+        "Density Heatmap": "density_heatmap",
+    }
+    
+    chart_type = st.selectbox(
+        "Chart Type",
+        options=list(chart_types.keys()),
+        index=0
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    # Create the column selection area with drag-and-drop style
+    col1, col2 = st.columns(2)
+    
+    # Create a feature selector with search functionality
+    with col1:
+        st.markdown("#### X-Axis")
+        
+        # Show search box for X axis features
+        x_search = st.text_input("Search X-axis features", key="x_search")
+        filtered_x_features = [col for col in feature_cols if not x_search or x_search.lower() in col.lower()]
+        
+        # Ensure we have a default value that exists in the filtered list
+        default_x = filtered_x_features[0] if filtered_x_features else feature_cols[0]
+        x_feature = st.selectbox(
+            "Drag or select feature for X-axis",
+            options=filtered_x_features,
+            index=filtered_x_features.index(default_x) if default_x in filtered_x_features else 0
+        )
+    
+    with col2:
+        st.markdown("#### Y-Axis")
+        
+        # Show search box for Y axis features
+        y_search = st.text_input("Search Y-axis features", key="y_search")
+        filtered_y_features = [col for col in feature_cols if not y_search or y_search.lower() in col.lower()]
+        
+        # Ensure we have a default value that exists in the filtered list
+        default_y = filtered_y_features[1] if len(filtered_y_features) > 1 else filtered_y_features[0]
+        y_feature = st.selectbox(
+            "Drag or select feature for Y-axis",
+            options=filtered_y_features,
+            index=filtered_y_features.index(default_y) if default_y in filtered_y_features else 0
+        )
+    
+    # For 3D plots, add z-axis
+    z_feature = None
+    if chart_types[chart_type] == "scatter_3d":
+        z_search = st.text_input("Search Z-axis features", key="z_search")
+        filtered_z_features = [col for col in feature_cols if not z_search or z_search.lower() in col.lower()]
+        default_z = filtered_z_features[2] if len(filtered_z_features) > 2 else filtered_z_features[0]
+        z_feature = st.selectbox(
+            "Drag or select feature for Z-axis",
+            options=filtered_z_features,
+            index=filtered_z_features.index(default_z) if default_z in filtered_z_features else 0
+        )
+    
+    # Size variable for bubble charts
+    size_var = None
+    if chart_types[chart_type] == "bubble":
+        size_search = st.text_input("Search size variable", key="size_search")
+        filtered_size_features = [col for col in feature_cols if not size_search or size_search.lower() in col.lower()]
+        size_var = st.selectbox(
+            "Drag or select feature for point size",
+            options=filtered_size_features,
+            index=0
+        )
+    
+    # Additional visualization options
+    with st.expander("Chart Options", expanded=False):
+        # Options that make sense for most chart types
+        show_trendline = st.checkbox("Show Trendline", value=False)
+        trendline_type = None
+        if show_trendline and chart_types[chart_type] in ["scatter", "scatter_3d", "line"]:
+            trendline_type = st.selectbox(
+                "Trendline Type",
+                options=["ols", "lowess"],
+                index=0
+            )
+        
+        # Color options
+        color_scale = st.selectbox(
+            "Color Scale",
+            options=["Default", "Viridis", "Plasma", "Inferno", "Magma", "Cividis", 
+                    "Bluered", "RdBu", "Rainbow", "Custom"],
+            index=0
+        )
+        
+        # Option to log transform axes
+        log_x = st.checkbox("Log scale X-axis", value=False)
+        log_y = st.checkbox("Log scale Y-axis", value=False)
+        
+        # Point customization
+        if chart_types[chart_type] in ["scatter", "scatter_3d", "bubble"]:
+            point_size = st.slider("Point Size", min_value=2, max_value=15, value=8)
+            opacity = st.slider("Opacity", min_value=0.1, max_value=1.0, value=0.8, step=0.1)
+    
+    # Plot the data
+    try:
+        # Get custom color scale if selected
+        color_scale_value = None
+        if color_scale != "Default":
+            if color_scale == "Custom":
+                color_scale_value = get_color_scale()
+            else:
+                color_scale_value = color_scale.lower()
+        
+        # Start building plot arguments
+        plot_args = {
+            "x": x_feature,
+            "y": y_feature,
+            "title": f"{chart_type}: {x_feature} vs {y_feature}",
+            "color": cluster_col if cluster_col else None,
+            "color_continuous_scale": color_scale_value,
+            "labels": {
+                x_feature: x_feature.replace("_", " ").title(),
+                y_feature: y_feature.replace("_", " ").title(),
+            },
+        }
+        
+        # Add z-axis for 3D scatter
+        if chart_types[chart_type] == "scatter_3d" and z_feature:
+            plot_args["z"] = z_feature
+            plot_args["labels"][z_feature] = z_feature.replace("_", " ").title()
+            plot_args["title"] = f"3D Scatter: {x_feature}, {y_feature}, {z_feature}"
+        
+        # Add size for bubble chart
+        if chart_types[chart_type] == "bubble" and size_var:
+            plot_args["size"] = size_var
+            plot_args["size_max"] = 30
+        
+        # Add trendline if requested
+        if trendline_type:
+            plot_args["trendline"] = trendline_type
+        
+        # Add point customization
+        if "point_size" in locals():
+            if chart_types[chart_type] in ["scatter", "scatter_3d", "bubble"]:
+                # For these plot types, marker size is a direct parameter
+                plot_args["opacity"] = opacity
+                if not size_var:  # Only set marker size if not using a variable for size
+                    plot_args["size_max"] = point_size
+        
+        # Set log axis if requested
+        if log_x:
+            plot_args["log_x"] = True
+        if log_y:
+            plot_args["log_y"] = True
+        
+        # Create the appropriate plot based on chart type
+        plot_func = getattr(px, chart_types[chart_type])
+        fig = plot_func(df, **plot_args)
+        
+        # Update layout for better appearance
+        fig.update_layout(
+            template="plotly_dark" if st.session_state.get("theme") == "dark" else "plotly_white",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            margin=dict(l=20, r=20, t=40, b=20),
+        )
+        
+        # Display the plot
+        st.plotly_chart(fig, use_container_width=True)
+        
+    except Exception as e:
+        st.error(f"Error creating visualization: {str(e)}")
+        if chart_types[chart_type] == "scatter_3d":
+            st.info("Hint: 3D scatter plots require three numeric columns.")
+        elif chart_types[chart_type] in ["histogram", "box", "violin"]:
+            st.info(f"Hint: The {chart_type} may need different column types than provided.")
 
 
 def show_3d_scatter(
     data: pd.DataFrame,
     cluster_col: str,
-    features: List[str],
+    features: list[str],
     title: str = "3D Cluster Visualization"
 ) -> None:
     """Show 3D scatter plot of features colored by cluster.
@@ -154,7 +321,7 @@ def show_3d_scatter(
 def show_parallel_coordinates(
     data: pd.DataFrame,
     cluster_col: str,
-    features: List[str],
+    features: list[str],
     title: str = "Parallel Coordinates Visualization"
 ) -> None:
     """Show parallel coordinates plot for multi-dimensional visualization.

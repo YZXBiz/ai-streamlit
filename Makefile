@@ -200,7 +200,7 @@ version: ## Display version and author information
 dashboard: ## Run the clustering dashboard
 	@echo "==> Starting Clustering Dashboard"
 	@mkdir -p $(LOGS_DIR)
-	@cd $(SRC_DIR) && $(PYTHON) -m streamlit run -m clustering.dashboard.app --server.enableCORS=false --server.enableXsrfProtection=false --server.port=8501 --browser.serverAddress=0.0.0.0 --browser.gatherUsageStats=false
+	@cd $(SRC_DIR) && $(PYTHON) -m streamlit run clustering/dashboard/app.py --server.enableCORS=false --server.enableXsrfProtection=false --server.port=8501 --browser.serverAddress=0.0.0.0 --browser.gatherUsageStats=false
 	@echo "✓ Dashboard server stopped"
 
 ################################################################################
@@ -212,22 +212,22 @@ dashboard: ## Run the clustering dashboard
 .PHONY: test test-unit test-integration dagster-test
 test: ## Run tests with coverage reporting
 	@echo "==> Running tests with coverage"
-	@$(PYTHON) --no-deps -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
+	@$(PYTHON) -m pytest $(TESTS_DIR) --cov=$(SRC_DIR) --cov-report=term --cov-report=xml -v
 	@echo "✓ Tests completed"
 
 test-unit: ## Run only unit tests
 	@echo "==> Running unit tests"
-	@$(PYTHON) --no-deps -m pytest $(TESTS_DIR)/unit -v
+	@$(PYTHON) -m pytest $(TESTS_DIR)/core $(TESTS_DIR)/io -v
 	@echo "✓ Unit tests completed"
 
 test-integration: ## Run only integration tests
 	@echo "==> Running integration tests"
-	@$(PYTHON) --no-deps -m pytest $(TESTS_DIR)/integration -v
+	@$(PYTHON) -m pytest $(TESTS_DIR)/integration -v
 	@echo "✓ Integration tests completed"
 
 dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
-	@$(PYTHON) -m pytest $(TESTS_DIR)/test_dagster_implementation.py -v
+	@$(PYTHON) -m pytest $(TESTS_DIR)/dagster -v
 	@echo "✓ Dagster tests completed"
 
 ################################################################################

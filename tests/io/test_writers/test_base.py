@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from typing import ClassVar, Optional
 from unittest.mock import patch
 
 import polars as pl
@@ -13,7 +14,7 @@ from clustering.io.writers.base import FileWriter, Writer
 class ConcreteWriter(Writer):
     """Concrete implementation of Writer for testing."""
 
-    data_written = None
+    data_written: ClassVar[Optional[pl.DataFrame]] = None
 
     def write(self, data: pl.DataFrame) -> None:
         """Store data in a class variable for testing."""
@@ -23,7 +24,7 @@ class ConcreteWriter(Writer):
 class ConcreteFileWriter(FileWriter):
     """Concrete implementation of FileWriter for testing."""
 
-    data_written = None
+    data_written: ClassVar[Optional[pl.DataFrame]] = None
 
     def write(self, data: pl.DataFrame) -> None:
         """Store data in a class variable for testing."""

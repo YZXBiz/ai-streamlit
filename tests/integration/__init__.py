@@ -1,1 +1,1 @@
-"""Integration tests for the clustering package."""
+"""Integration tests for the clustering package workflow."""
