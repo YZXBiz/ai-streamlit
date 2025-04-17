@@ -14,6 +14,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+import json
+import base64
 
 from clustering.dashboard.components.pygwalker_view import get_pyg_renderer
 from clustering.io.readers import SnowflakeReader
@@ -753,6 +755,151 @@ def add_custom_css():
     )
 
 
+# Add helper function for CSV download
+def get_csv_download_link(df: pd.DataFrame, filename: str = "data.csv") -> str:
+    """Generate a link to download a dataframe as a CSV file.
+    
+    Args:
+        df: DataFrame to download
+        filename: Name of the CSV file
+        
+    Returns:
+        HTML link for downloading the dataframe as CSV
+    """
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Download CSV</a>'
+    return href
+
+
+# Function to handle AI chat queries
+def handle_ai_query(query: str, df: pd.DataFrame) -> tuple[str, pd.DataFrame | None]:
+    """Process a natural language query about the dataset.
+    
+    Args:
+        query: The user's question about the data
+        df: DataFrame containing the data to analyze
+        
+    Returns:
+        Tuple containing the response text and optionally a dataframe with results
+    """
+    # Simple keyword-based processing - in production you would connect to an LLM API
+    query = query.lower()
+    result_df = None
+    
+    try:
+        # Handle different types of queries
+        if "describe" in query or "summarize" in query or "summary" in query:
+            result_df = df.describe()
+            response = "Here's a statistical summary of the numeric columns:"
+            
+        elif "correlation" in query or "correlate" in query:
+            numeric_df = df.select_dtypes(include=[np.number])
+            result_df = numeric_df.corr()
+            response = "Here's the correlation matrix between numeric features:"
+            
+        elif "missing" in query or "null" in query:
+            missing_counts = df.isnull().sum().reset_index()
+            missing_counts.columns = ["Column", "Missing Count"]
+            missing_counts["Missing Percentage"] = (missing_counts["Missing Count"] / len(df) * 100).round(2)
+            missing_counts = missing_counts.sort_values("Missing Count", ascending=False)
+            result_df = missing_counts
+            response = "Here's the analysis of missing values:"
+            
+        elif "unique" in query or "distinct" in query:
+            if "count" in query:
+                unique_counts = pd.DataFrame({
+                    "Column": df.columns,
+                    "Unique Values": [df[col].nunique() for col in df.columns]
+                })
+                result_df = unique_counts.sort_values("Unique Values", ascending=False)
+                response = "Here's the count of unique values in each column:"
+            else:
+                response = "Please specify which column you want to see unique values for."
+                
+        elif "group by" in query or "groupby" in query:
+            # Extract column name after "group by" or "groupby"
+            parts = query.split("group by" if "group by" in query else "groupby")
+            if len(parts) > 1 and parts[1].strip():
+                group_col = parts[1].strip().split()[0]
+                if group_col in df.columns:
+                    # Look for aggregation method
+                    agg_method = "count"
+                    if "average" in query or "mean" in query:
+                        agg_method = "mean"
+                    elif "sum" in query:
+                        agg_method = "sum"
+                    elif "max" in query:
+                        agg_method = "max"
+                    elif "min" in query:
+                        agg_method = "min"
+                    
+                    # Apply groupby operation
+                    if agg_method == "count":
+                        result_df = df.groupby(group_col).size().reset_index(name="count")
+                    else:
+                        # Find numeric columns for aggregation
+                        numeric_cols = df.select_dtypes(include=[np.number]).columns
+                        if len(numeric_cols) > 0:
+                            agg_col = numeric_cols[0]  # Default to first numeric column
+                            # Try to find mentioned column
+                            for col in numeric_cols:
+                                if col.lower() in query:
+                                    agg_col = col
+                                    break
+                            
+                            result_df = df.groupby(group_col)[agg_col].agg(agg_method).reset_index()
+                            result_df.columns = [group_col, f"{agg_method}_{agg_col}"]
+                    
+                    response = f"Here's the result of grouping by {group_col}:"
+                else:
+                    response = f"Column '{group_col}' not found. Available columns: {', '.join(df.columns)}"
+            else:
+                response = "Please specify which column to group by."
+                
+        elif "top" in query or "highest" in query or "largest" in query:
+            # Extract number after "top"
+            n = 5  # Default
+            for word in query.split():
+                if word.isdigit():
+                    n = int(word)
+                    break
+            
+            # Find which column to sort by
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                sort_col = numeric_cols[0]  # Default to first numeric column
+                # Try to find mentioned column
+                for col in df.columns:
+                    if col.lower() in query:
+                        sort_col = col
+                        break
+                
+                result_df = df.sort_values(sort_col, ascending=False).head(n)
+                response = f"Here are the top {n} rows sorted by {sort_col}:"
+            else:
+                response = "No numeric columns found for sorting."
+                
+        elif "filter" in query or "where" in query:
+            response = "Advanced filtering queries are supported through our LLM integration. In the demo version, try using simpler queries like 'summarize', 'correlation', etc."
+            
+        else:
+            response = (
+                "I'm not sure how to answer that. Try asking about:"
+                "\n- Summarize or describe the data"
+                "\n- Show correlations"
+                "\n- Show missing values"
+                "\n- Count unique values"
+                "\n- Group by a column"
+                "\n- Show top/highest values"
+            )
+    
+    except Exception as e:
+        response = f"Error processing your query: {str(e)}"
+    
+    return response, result_df
+
+
 def main():
     """Run the Assortment-Clustering Explorer application."""
     # Set page config
@@ -775,6 +922,13 @@ def main():
 
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Explorer"
+        
+    # Initialize AI chat history
+    if "ai_chat_history" not in st.session_state:
+        st.session_state.ai_chat_history = []
+        
+    if "ai_query_result" not in st.session_state:
+        st.session_state.ai_query_result = None
 
     # Header with logo and title in a modern layout
     col1, col2 = st.columns([1, 5])
@@ -921,7 +1075,7 @@ def main():
     # Display visualization if data is loaded
     if st.session_state.data is not None:
         # Create tabs for Dataset Overview and Interactive Visualization with Apple-style design
-        tab1, tab2 = st.tabs(["📋 Dataset Overview", "📊 Interactive Visualization"])
+        tab1, tab2, tab3 = st.tabs(["📋 Dataset Overview", "📊 Interactive Visualization", "🤖 AI Assistant"])
 
         # Dataset Overview tab
         with tab1:
@@ -1402,6 +1556,109 @@ def main():
                     renderer.explorer(default_tab="data", key="viz_tab_profiling")
                 elif st.session_state.view_mode == "Data Preview":
                     st.dataframe(st.session_state.data, use_container_width=True)
+
+        # AI Assistant tab
+        with tab3:
+            st.markdown(
+                """
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #CC0000; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                    <h2 style="margin: 0; padding: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">🤖 AI Data Assistant</h2>
+                    <p style="color: #86868b; margin: 0.5rem 0 0 0; padding: 0; font-size: 1rem;">
+                        Ask questions about your data and get AI-powered insights and analysis.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            
+            st.markdown("<div class='content-container'>", unsafe_allow_html=True)
+            
+            # Chat interface
+            st.markdown("<h4 class='section-title'>Ask About Your Data</h4>", unsafe_allow_html=True)
+            
+            # Input area
+            user_query = st.text_input(
+                "Ask a question about your data:", 
+                placeholder="E.g., 'Summarize the data', 'Show correlations', 'Group by column_name'"
+            )
+            
+            # Process query when submitted
+            if user_query:
+                with st.spinner("Processing your query..."):
+                    response, result_df = handle_ai_query(user_query, st.session_state.data)
+                    st.session_state.ai_chat_history.append({"query": user_query, "response": response})
+                    st.session_state.ai_query_result = result_df
+            
+            # Display chat history
+            st.markdown("<div style='max-height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
+            for entry in st.session_state.ai_chat_history:
+                st.markdown(
+                    f"""
+                    <div style='background-color: #f0f0f5; padding: 10px; border-radius: 10px; margin-bottom: 10px;'>
+                        <p style='margin: 0; font-weight: bold;'>You: {entry["query"]}</p>
+                    </div>
+                    <div style='background-color: #e7f5fe; padding: 10px; border-radius: 10px; margin-bottom: 20px;'>
+                        <p style='margin: 0;'>AI: {entry["response"]}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Display query result if available
+            if st.session_state.ai_query_result is not None:
+                st.markdown("<h4 class='section-title'>Analysis Result</h4>", unsafe_allow_html=True)
+                st.dataframe(st.session_state.ai_query_result, use_container_width=True)
+                
+                # Download link
+                st.markdown(
+                    get_csv_download_link(st.session_state.ai_query_result, "analysis_result.csv"),
+                    unsafe_allow_html=True
+                )
+                
+            # Example queries suggestions
+            st.markdown("<h4 class='section-title'>Example Queries</h4>", unsafe_allow_html=True)
+            example_queries = [
+                "Summarize the dataset",
+                "Show the correlation matrix",
+                "Analyze missing values",
+                "Count unique values in each column",
+                "Group by [column_name]",
+                "Show top 10 values by [column_name]",
+            ]
+            
+            # Display example queries as clickable buttons
+            cols = st.columns(3)
+            for i, query in enumerate(example_queries):
+                with cols[i % 3]:
+                    if st.button(query, key=f"example_query_{i}"):
+                        with st.spinner("Processing your query..."):
+                            response, result_df = handle_ai_query(query, st.session_state.data)
+                            st.session_state.ai_chat_history.append({"query": query, "response": response})
+                            st.session_state.ai_query_result = result_df
+                            st.rerun()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Future enhancements section
+            st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+            st.markdown("<div class='content-container'>", unsafe_allow_html=True)
+            st.markdown("<h4 class='section-title'>Coming Soon: Advanced AI Features</h4>", unsafe_allow_html=True)
+            
+            st.markdown(
+                """
+                <ul>
+                    <li><strong>Natural Language to SQL:</strong> Convert your questions directly into SQL queries</li>
+                    <li><strong>Automated Insights:</strong> Get AI-generated insights about patterns and anomalies in your data</li>
+                    <li><strong>Predictive Analysis:</strong> Make predictions based on historical data</li>
+                    <li><strong>Custom Visualizations:</strong> Generate charts and plots based on your questions</li>
+                    <li><strong>Data Storytelling:</strong> Get narrative explanations of your data trends</li>
+                </ul>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
     else:
         # Enhanced empty state with illustrations and guidance
         if "📄 File Upload" in data_source:
