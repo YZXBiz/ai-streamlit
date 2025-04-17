@@ -154,11 +154,11 @@ def main():
         if renderer:
             # Render selected view
             if view_mode == "Explorer":
-                renderer.explorer(config={"height": chart_height})
+                renderer.explorer()
             elif view_mode == "Chart":
-                renderer.chart(config={"height": chart_height})
+                renderer.chart()
             elif view_mode == "Data Profiling":
-                renderer.data_profiling(config={"height": chart_height})
+                renderer.data_profiling()
             elif view_mode == "Data Preview":
                 st.dataframe(st.session_state.data, use_container_width=True, height=chart_height)
     else:
