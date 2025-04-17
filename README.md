@@ -428,7 +428,6 @@ Build and view documentation with:
 ```bash
 make docs           # Build documentation
 ```
-
 Open `docs/build/html/index.html` in your browser to view.
 
 Or start the documentation server:
@@ -502,3 +501,4 @@ To use this CI/CD pipeline, you need to:
    - `DEPLOY_WEBHOOK_URL`: URL endpoint for triggering deployments
 
 For local development, you can still use the Makefile commands for testing and running the application.
+
