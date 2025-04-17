@@ -10,128 +10,13 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
 from clustering.dashboard.components.pygwalker_view import get_pyg_renderer
 from clustering.io.readers import SnowflakeReader
-
-# Custom styling for a more professional look
-st.set_page_config(
-    page_title="Assortment-Clustering Explorer",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# Custom styling
-st.markdown(
-    """
-<style>
-    .main .block-container {
-        padding-top: 1rem;
-        padding-bottom: 2rem;
-    }
-    h1 {
-        background: linear-gradient(90deg, #1E3A8A, #3B82F6);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 2.5rem !important;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e0e0e0;
-        margin-bottom: 1.5rem;
-    }
-    h2 {
-        color: #1E3A8A;
-        font-size: 1.8rem !important;
-        padding-top: 1rem;
-    }
-    h3 {
-        color: #3B82F6;
-        font-size: 1.4rem !important;
-    }
-    .stButton>button {
-        background-color: #1E3A8A;
-        color: white;
-        border-radius: 5px;
-        padding: 0.5rem 1rem;
-        border: none;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        background-color: #2563EB;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-    }
-    div.stDataFrame {
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    div.stDataFrame td {
-        text-align: left;
-    }
-    .css-18e3th9 {
-        padding: 1rem 3rem 10rem;
-    }
-    .st-emotion-cache-u8hs99 {
-        padding: 2rem;
-    }
-    /* Card style for sections */
-    .card {
-        border-radius: 8px;
-        background-color: #ffffff;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    /* Metric styling */
-    .metric-container {
-        background-color: #f8fafc;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        padding: 1rem;
-        text-align: center;
-    }
-    .metric-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #1E3A8A;
-    }
-    .metric-label {
-        font-size: 0.9rem;
-        color: #64748b;
-    }
-    /* Hide hamburger menu and footer */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Hide any "Visualization Options" sections that might be added by plugins */
-    [data-testid="stSidebarContent"] div:has(h2:contains("Visualization Options")) {
-        display: none !important;
-    }
-    [data-testid="stSidebarContent"] h2:contains("Visualization Options") {
-        display: none !important;
-    }
-    .visualization-options {
-        display: none !important;
-    }
-    
-    /* Hide the navigation header when using Snowflake */
-    .snowflake-mode div:has(h2:contains("Navigation")) {
-        display: none !important;
-    }
-    .snowflake-mode [data-testid="stSidebarContent"] h1:contains("Navigation") {
-        display: none !important;
-    }
-    .snowflake-mode #root div:has(p:contains("Navigation")) {
-        display: none !important;
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
 
 
 @st.cache_data
@@ -207,25 +92,60 @@ def display_df_summary(df: pd.DataFrame) -> None:
         df: DataFrame to summarize
     """
     # Dataset top-level metrics in visually appealing cards
-    st.markdown("<h3>📊 Dataset Metrics</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>📋 Dataset Overview</h3>", unsafe_allow_html=True)
 
     # Key metrics row with 4 cards
+    st.markdown("<div class='content-container'>", unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        create_metric_card("Total Records", f"{len(df):,}")
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-title">Total Records</div>
+                <div class="metric-value">{df.shape[0]:,}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     with col2:
-        create_metric_card("Columns", f"{df.shape[1]:,}")
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-title">Columns</div>
+                <div class="metric-value">{df.shape[1]}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     with col3:
-        num_cols = len(df.select_dtypes(include=[np.number]).columns)
-        create_metric_card("Numeric Columns", f"{num_cols:,}")
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-title">Numeric Columns</div>
+                <div class="metric-value">{len(numeric_cols)}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     with col4:
-        missing_percent = round((df.isna().sum().sum() / (df.shape[0] * df.shape[1])) * 100, 2)
-        create_metric_card("Missing Values", f"{missing_percent}%", suffix="%")
+        missing = df.isna().sum().sum()
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-title">Missing Values</div>
+                <div class="metric-value">{missing:,}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Data preview and schema in tabs
     st.markdown("<h3>🔍 Data Structure</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='content-container'>", unsafe_allow_html=True)
     data_tabs = st.tabs(["✨ Preview", "📋 Schema", "📊 Data Types"])
 
     with data_tabs[0]:  # Preview tab
@@ -234,7 +154,6 @@ def display_df_summary(df: pd.DataFrame) -> None:
     with data_tabs[1]:  # Schema tab
         buffer = pd.DataFrame(
             {
-                "Column": df.columns,
                 "Type": df.dtypes.astype(str),
                 "Non-Null Count": df.count(),
                 "Non-Null %": (df.count() / len(df) * 100).round(2).astype(str) + "%",
@@ -258,74 +177,35 @@ def display_df_summary(df: pd.DataFrame) -> None:
                 y=type_counts["Data Type"].astype(str),
                 x=type_counts["Count"],
                 orientation="h",
-                marker_color="#3B82F6",
+                marker_color="#0066CC",
             )
         )
-
-        fig.update_layout(
-            title="Column Data Types Distribution",
-            xaxis_title="Count",
-            yaxis_title="Data Type",
-            height=300,
-            margin=dict(l=0, r=0, b=0, t=40),
-            template="plotly_white",
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Statistical summary in expandable section
-    st.markdown("<h3>📈 Statistical Summary</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>📊 Statistical Summary</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='content-container'>", unsafe_allow_html=True)
 
-    # Only include numeric columns for summary statistics
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-
-    if numeric_cols:
-        stats_tabs = st.tabs(["Summary", "Correlation Matrix"])
-
-        with stats_tabs[0]:
+    with st.expander("View Numerical Statistics", expanded=True):
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        if numeric_cols:
             stats_df = df[numeric_cols].describe().T
-            # Add more useful statistics
-            stats_df["missing"] = df[numeric_cols].isna().sum()
-            stats_df["missing_pct"] = (df[numeric_cols].isna().sum() / len(df) * 100).round(2)
+            # Add more useful metrics
+            stats_df["missing"] = df[numeric_cols].isna().sum().values
+            stats_df["missing_pct"] = (df[numeric_cols].isna().sum() / len(df) * 100).values.round(
+                2
+            )
+            stats_df["zeros"] = (df[numeric_cols] == 0).sum().values
+            stats_df["zeros_pct"] = ((df[numeric_cols] == 0).sum() / len(df) * 100).values.round(2)
 
-            # Reorder and rename columns for clarity
-            stats_df = stats_df[
-                [
-                    "count",
-                    "missing",
-                    "missing_pct",
-                    "mean",
-                    "std",
-                    "min",
-                    "25%",
-                    "50%",
-                    "75%",
-                    "max",
-                ]
-            ]
-            stats_df.columns = [
-                "Count",
-                "Missing",
-                "Missing %",
-                "Mean",
-                "Std Dev",
-                "Min",
-                "25th Perc",
-                "Median",
-                "75th Perc",
-                "Max",
-            ]
-
+            # Format index to be more readable
+            stats_df.index.name = "Column"
+            stats_df = stats_df.reset_index()
             st.dataframe(stats_df, use_container_width=True)
+        else:
+            st.info("No numeric columns found in this dataset")
 
-        with stats_tabs[1]:
-            if len(numeric_cols) > 1:
-                fig = plot_correlation_matrix(df[numeric_cols])
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("Need at least two numeric columns to create a correlation matrix.")
-    else:
-        st.info("No numeric columns found for statistical analysis.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Sample of selected columns (if too many columns)
     if len(df.columns) > 8:
@@ -350,7 +230,7 @@ def display_df_summary(df: pd.DataFrame) -> None:
                                 # For numeric columns, show a small histogram
                                 fig = go.Figure()
                                 fig.add_trace(
-                                    go.Histogram(x=df[column_name].dropna(), marker_color="#3B82F6")
+                                    go.Histogram(x=df[column_name].dropna(), marker_color="#0066CC")
                                 )
                                 fig.update_layout(
                                     height=200,
@@ -378,11 +258,11 @@ def create_metric_card(title: str, value: Any, prefix: str = "", suffix: str = "
     """
     st.markdown(
         f"""
-    <div class="metric-container">
-        <div class="metric-value">{prefix}{value}{suffix}</div>
-        <div class="metric-label">{title}</div>
-    </div>
-    """,
+        <div class="metric-card">
+            <div class="metric-title">{title}</div>
+            <div class="metric-value">{prefix}{value}{suffix}</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -405,10 +285,10 @@ def plot_numerical_distribution(df: pd.DataFrame, column: str) -> go.Figure:
     )
 
     # Histogram
-    fig.add_trace(go.Histogram(x=df[column], name=column, marker_color="#3B82F6"), row=1, col=1)
+    fig.add_trace(go.Histogram(x=df[column], name=column, marker_color="#0066CC"), row=1, col=1)
 
     # Box plot
-    fig.add_trace(go.Box(y=df[column], name=column, marker_color="#3B82F6"), row=1, col=2)
+    fig.add_trace(go.Box(y=df[column], name=column, marker_color="#0066CC"), row=1, col=2)
 
     fig.update_layout(
         title=f"Distribution Analysis: {column}",
@@ -445,8 +325,336 @@ def plot_correlation_matrix(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def add_custom_css():
+    """Add custom CSS for styling the dashboard with an Apple-inspired design."""
+    st.markdown(
+        """
+        <style>
+        /* Main container styling */
+        .content-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .content-container:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        /* Base styles */
+        .main .block-container {
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+        }
+        
+        h1 {
+            color: #1d1d1f;
+            font-size: 2.3rem !important;
+            letter-spacing: -0.02em;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e8e8ed;
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            color: #1d1d1f;
+            font-size: 1.6rem !important;
+            letter-spacing: -0.01em;
+            padding-top: 1rem;
+        }
+        
+        h3 {
+            color: #1d1d1f;
+            font-size: 1.3rem !important;
+            letter-spacing: -0.01em;
+        }
+
+        p, li, div {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1d1d1f;
+        }
+        
+        /* Apple-inspired tab styling */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+        
+        .stTabs [role="tab"] {
+            border-radius: 8px;
+            padding: 8px 16px;
+            background-color: #f5f5f7;
+            border: none !important;
+            color: #1d1d1f;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .stTabs [role="tab"]:hover {
+            background-color: #0071e3;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stTabs [role="tab"][aria-selected="true"] {
+            background-color: #0071e3;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Fix white space below header */
+        .stTabs [data-baseweb="tab-panel"] {
+            padding: 0 !important;
+        }
+        
+        .stTabs {
+            margin-bottom: 0 !important;
+        }
+        
+        .main .block-container {
+            padding-top: 0;
+        }
+        
+        /* Additional fix for Dataset Overview tab */
+        div[data-testid="stVerticalBlock"] > div:first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        
+        /* Button styling */
+        .stButton button {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            border: none;
+            transition: all 0.2s ease;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+        }
+        
+        .stButton button:hover {
+            background-color: #e8e8ed;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Card styling for metrics */
+        .metric-card {
+            padding: 10px 15px;
+            border-radius: 10px;
+            background: linear-gradient(to bottom right, #f8f8f8, #ffffff);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .metric-title {
+            font-size: 0.9rem;
+            color: #6e6e73;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        /* Data table styling */
+        div.stDataFrame {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e8e8ed;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        div.stDataFrame td {
+            text-align: left;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        /* Card style for sections */
+        .card {
+            border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e8e8ed;
+        }
+        
+        /* Expander styling */
+        .streamlit-expanderHeader {
+            border-radius: 8px;
+            background-color: #f5f5f7 !important;
+            color: #1d1d1f !important;
+            font-weight: 500;
+        }
+        
+        .streamlit-expanderContent {
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #f0f0f0;
+            border-top: none;
+        }
+        
+        /* Sidebar styling */
+        .css-1d391kg, [data-testid="stSidebar"] {
+            background-color: #f5f5f7;
+            border-right: 1px solid #e8e8ed;
+        }
+        
+        [data-testid="stSidebarUserContent"] {
+            padding-top: 1rem;
+        }
+        
+        /* Radio buttons and checkboxes */
+        .stRadio > div {
+            padding: 0.3rem 0;
+        }
+        
+        .stRadio label, .stCheckbox label {
+            font-size: 0.95rem;
+            color: #1d1d1f;
+        }
+        
+        /* Section dividers and containers */
+        .section-divider {
+            margin: 2.5rem 0 1.5rem 0;
+            height: 1px;
+            background-color: #e8e8ed;
+        }
+        
+        .section-header {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #1d1d1f;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .section-container {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e8e8ed;
+        }
+        
+        h4.subsection-header {
+            margin-top: 1.5rem;
+            color: #1d1d1f;
+            font-size: 1.1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e8e8ed;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+        
+        /* Legacy metric styling for compatibility */
+        .apple-metric {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            padding: 1.2rem;
+            flex: 1;
+            min-width: 180px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .apple-metric:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .apple-metric h3 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 2rem;
+            font-weight: 600;
+            line-height: 1.1;
+        }
+        
+        .apple-metric p {
+            margin: 0.5rem 0 0 0;
+            color: #86868b;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        /* Nicer dividers */
+        hr {
+            height: 1px;
+            background-color: #e6e6e6;
+            border: none;
+            margin: 20px 0;
+        }
+        
+        /* Refinements to selectbox and inputs */
+        .stSelectbox, .stMultiSelect {
+            margin-bottom: 15px;
+        }
+        
+        [data-baseweb="select"] {
+            border-radius: 8px;
+        }
+        
+        /* Hide the default Streamlit menus and padding */
+        #MainMenu, footer, header {
+            visibility: hidden;
+        }
+        
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        
+        /* Snowflake mode styling */
+        body.snowflake-mode .navigation-section {
+            display: none !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def main():
     """Run the Assortment-Clustering Explorer application."""
+    # Set page config
+    st.set_page_config(
+        page_title="Assortment-Clustering Explorer",
+        page_icon="📊",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+
+    # Add custom CSS for Apple-inspired styling
+    add_custom_css()
+
     # Initialize session state variables if they don't exist
     if "data" not in st.session_state:
         st.session_state.data = None
@@ -454,14 +662,8 @@ def main():
     if "data_source" not in st.session_state:
         st.session_state.data_source = "📄 File Upload"
 
-    if "current_page" not in st.session_state:
-        st.session_state.current_page = "Data Loading"
-
     if "view_mode" not in st.session_state:
         st.session_state.view_mode = "Explorer"
-
-    if "hide_navigation" not in st.session_state:
-        st.session_state.hide_navigation = False
 
     # Header with logo and title in a modern layout
     col1, col2 = st.columns([1, 5])
@@ -486,7 +688,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-    # Sidebar for data source options
+    # Sidebar for data source options only
     with st.sidebar:
         st.markdown(
             """
@@ -521,30 +723,9 @@ def main():
             <script>
                 document.body.classList.add('snowflake-mode');
             </script>
-            <style>
-                .snowflake-mode h1:contains("Navigation"), 
-                .snowflake-mode h2:contains("Navigation"),
-                .snowflake-mode div:has(> h1:contains("Navigation")),
-                .snowflake-mode div:has(> p:contains("View Mode")) {
-                    display: none !important;
-                }
-            </style>
             """,
                 unsafe_allow_html=True,
             )
-
-        # Reset view when switching data sources - helps clean up UI
-        if (
-            "last_data_source" in st.session_state
-            and st.session_state.last_data_source != data_source
-        ):
-            current_source = data_source
-            if st.button("🔄 Reset View", help="Clear the current view and navigation"):
-                for key in list(st.session_state.keys()):
-                    if key != "data_source":
-                        del st.session_state[key]
-                st.session_state.data_source = current_source
-                st.rerun()
 
         # Store current data source for comparison on next render
         st.session_state.last_data_source = data_source
@@ -590,67 +771,6 @@ def main():
                 "🚀 Load Data from Snowflake", type="primary", use_container_width=True
             )
 
-        # Only show navigation if data is loaded AND we're not in Snowflake mode
-        if (
-            "data" in st.session_state
-            and st.session_state.data is not None
-            and "❄️ Snowflake" not in data_source
-        ):
-            # Add toggle button for navigation
-            if st.button(
-                "🔀 Hide Navigation"
-                if not st.session_state.hide_navigation
-                else "🔀 Show Navigation",
-                help="Hide or show the navigation panel",
-                use_container_width=True,
-            ):
-                st.session_state.hide_navigation = not st.session_state.hide_navigation
-                st.rerun()
-
-            # Only show navigation if not hidden
-            if not st.session_state.hide_navigation:
-                # Add page navigation section in sidebar
-                st.markdown(
-                    """
-                <h2 style='color: #E0E7FF; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid #818CF8; padding-bottom: 0.5rem; font-weight: 600; font-size: 1.25rem;'>
-                    <span style="margin-right: 8px;">📋</span> Navigation
-                </h2>
-                """,
-                    unsafe_allow_html=True,
-                )
-
-                selected_page = st.radio(
-                    "Select Page",
-                    ["Dataset Overview", "Interactive Visualization"],
-                    index=0 if st.session_state.current_page == "Dataset Overview" else 1,
-                    help="Navigate between different views of your data",
-                )
-
-                # Update the current page in session state when changed
-                if selected_page != st.session_state.current_page:
-                    st.session_state.current_page = selected_page
-
-                # View mode selection shown only when on the Interactive Visualization page
-                if selected_page == "Interactive Visualization":
-                    # View selection with icons and better descriptions
-                    st.markdown("### View Mode")
-                    view_mode = st.radio(
-                        "Select Mode",
-                        ["🔍 Explorer", "📊 Chart", "📋 Data Profiling", "👁️ Data Preview"],
-                        index=0,
-                        help="Choose how you want to view and interact with your data",
-                    )
-
-                    # Map back to the internal values
-                    view_mode_map = {
-                        "🔍 Explorer": "Explorer",
-                        "📊 Chart": "Chart",
-                        "📋 Data Profiling": "Data Profiling",
-                        "👁️ Data Preview": "Data Preview",
-                    }
-                    if st.session_state.view_mode != view_mode_map[view_mode]:
-                        st.session_state.view_mode = view_mode_map[view_mode]
-
     # Add a loading animation for better UX
     with st.spinner("Processing data..."):
         # Load data based on selected source
@@ -689,16 +809,16 @@ def main():
 
     # Display visualization if data is loaded
     if st.session_state.data is not None:
-        # Create tabs for Dataset Overview and Interactive Visualization
-        overview_tab, viz_tab = st.tabs(["Dataset Overview", "Interactive Visualization"])
+        # Create tabs for Dataset Overview and Interactive Visualization with Apple-style design
+        tab1, tab2 = st.tabs(["Dataset Overview", "Interactive Visualization"])
 
         # Dataset Overview tab
-        with overview_tab:
+        with tab1:
             st.markdown(
                 """
-                <div style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 5px solid #3B82F6; margin-bottom: 1.5rem;">
-                    <h2 style="margin-top: 0; color: #1E3A8A;">Dataset Overview</h2>
-                    <p style="color: #64748b; margin-bottom: 0;">
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                    <h2 style="margin-top: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">Dataset Overview</h2>
+                    <p style="color: #86868b; margin-bottom: 0; font-size: 1rem;">
                         Complete analysis of your dataset's structure, statistics, and quality metrics.
                     </p>
                 </div>
@@ -706,11 +826,438 @@ def main():
                 unsafe_allow_html=True,
             )
 
+            # Add CSS for section styling - Apple inspired
+            st.markdown(
+                """
+            <style>
+                .section-divider {
+                    margin: 2.5rem 0 1.5rem 0;
+                    height: 1px;
+                    background-color: #e8e8ed;
+                }
+                .section-header {
+                    font-size: 1.3rem;
+                    font-weight: 500;
+                    color: #1d1d1f;
+                    letter-spacing: -0.01em;
+                    padding-bottom: 0.8rem;
+                    margin-bottom: 1.5rem;
+                }
+                .section-container {
+                    background-color: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    margin-bottom: 2rem;
+                    border: 1px solid #e8e8ed;
+                }
+            </style>
+            """,
+                unsafe_allow_html=True,
+            )
+
             # Use the enhanced display_df_summary function
             display_df_summary(st.session_state.data)
 
+            # Add immediate interactive EDA visualizations - with better visual separation
+            st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<h3 class='section-header'>🔍 Interactive Data Explorer</h3>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+            # Quick column exploration
+            cols = st.multiselect(
+                "Select columns to explore",
+                st.session_state.data.columns.tolist(),
+                default=st.session_state.data.columns.tolist()[:3]
+                if len(st.session_state.data.columns) > 3
+                else st.session_state.data.columns.tolist(),
+            )
+
+            if cols:
+                st.dataframe(st.session_state.data[cols].head(10), use_container_width=True)
+
+                # Get column types for selected columns
+                numeric_cols = [
+                    col for col in cols if pd.api.types.is_numeric_dtype(st.session_state.data[col])
+                ]
+                categorical_cols = [col for col in cols if col not in numeric_cols]
+
+                # Show immediate visualizations for selected columns
+                if numeric_cols:
+                    st.markdown(
+                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Quick Numeric Column Analysis</h4>",
+                        unsafe_allow_html=True,
+                    )
+
+                    # Display histogram or boxplot for first numeric column
+                    if numeric_cols:
+                        viz_cols = st.columns(min(3, len(numeric_cols)))
+                        for i, col_container in enumerate(viz_cols):
+                            if i < len(numeric_cols):
+                                with col_container:
+                                    col_name = numeric_cols[i]
+                                    st.markdown(
+                                        f"<p style='font-weight:600; font-size:1.1rem;'>{col_name}</p>",
+                                        unsafe_allow_html=True,
+                                    )
+
+                                    # Simple histogram
+                                    fig = go.Figure()
+                                    fig.add_trace(
+                                        go.Histogram(
+                                            x=st.session_state.data[col_name].dropna(),
+                                            marker_color="#0066CC",
+                                        )
+                                    )
+                                    fig.update_layout(
+                                        height=200,
+                                        margin=dict(l=10, r=10, b=30, t=10),
+                                        xaxis_title=col_name,
+                                    )
+                                    st.plotly_chart(fig, use_container_width=True)
+
+                                    # Show quick stats
+                                    st.metric(
+                                        "Mean", f"{st.session_state.data[col_name].mean():.2f}"
+                                    )
+                                    min_val = st.session_state.data[col_name].min()
+                                    max_val = st.session_state.data[col_name].max()
+                                    st.write(f"Range: {min_val:.2f} - {max_val:.2f}")
+
+                # Show categorical data visualizations
+                if categorical_cols:
+                    st.markdown(
+                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Quick Categorical Column Analysis</h4>",
+                        unsafe_allow_html=True,
+                    )
+                    cat_viz_cols = st.columns(min(2, len(categorical_cols)))
+
+                    for i, col_container in enumerate(cat_viz_cols):
+                        if i < len(categorical_cols):
+                            with col_container:
+                                col_name = categorical_cols[i]
+                                st.markdown(
+                                    f"<p style='font-weight:600; font-size:1.1rem;'>{col_name}</p>",
+                                    unsafe_allow_html=True,
+                                )
+
+                                # Get value counts
+                                value_counts = (
+                                    st.session_state.data[col_name].value_counts().head(10)
+                                )
+
+                                # Create bar chart
+                                fig = go.Figure()
+                                fig.add_trace(
+                                    go.Bar(
+                                        x=value_counts.index,
+                                        y=value_counts.values,
+                                        marker_color="#0066CC",
+                                    )
+                                )
+                                fig.update_layout(
+                                    height=300,
+                                    margin=dict(l=10, r=10, b=30, t=10),
+                                    xaxis_title=col_name,
+                                    yaxis_title="Count",
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # Advanced data quality section
+            st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<h3 class='section-header'>🔍 Data Quality Assessment</h3>", unsafe_allow_html=True
+            )
+
+            quality_tabs = st.tabs(["Completeness", "Consistency", "Distribution Analysis"])
+
+            with quality_tabs[0]:  # Completeness tab
+                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                # Calculate completeness metrics
+                total_cells = st.session_state.data.shape[0] * st.session_state.data.shape[1]
+                missing_cells = st.session_state.data.isna().sum().sum()
+                completeness_pct = 100 - (missing_cells / total_cells * 100)
+
+                completeness_col1, completeness_col2 = st.columns([1, 2])
+                with completeness_col1:
+                    st.markdown(
+                        f"""
+                    <div class="apple-metric">
+                        <h3>{completeness_pct:.2f}%</h3>
+                        <p>Overall Completeness</p>
+                    </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
+
+                    # Missing values by column
+                    st.markdown(
+                        "<h4 style='margin-top:1.5rem; color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Missing Values by Column</h4>",
+                        unsafe_allow_html=True,
+                    )
+                    missing_by_col = st.session_state.data.isna().sum().sort_values(ascending=False)
+                    missing_by_col_pct = (
+                        missing_by_col / st.session_state.data.shape[0] * 100
+                    ).round(2)
+                    missing_df = pd.DataFrame(
+                        {"Missing Count": missing_by_col, "Missing %": missing_by_col_pct}
+                    ).reset_index()
+                    missing_df.columns = ["Column", "Missing Count", "Missing %"]
+                    st.dataframe(missing_df.head(10), use_container_width=True)
+
+                with completeness_col2:
+                    # Create a bar chart for missing values
+                    fig = go.Figure()
+                    fig.add_trace(
+                        go.Bar(
+                            x=missing_by_col.index[:15],  # Show top 15 columns with missing values
+                            y=missing_by_col_pct[:15],
+                            marker_color="#0066CC",
+                        )
+                    )
+                    fig.update_layout(
+                        title="Top Columns with Missing Values (%)",
+                        xaxis_title="Column",
+                        yaxis_title="Missing (%)",
+                        height=400,
+                        margin=dict(l=20, r=20, b=30, t=40),
+                        template="plotly_white",
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            with quality_tabs[1]:  # Consistency tab
+                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                st.markdown(
+                    "<h4 style='color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Value Consistency</h4>",
+                    unsafe_allow_html=True,
+                )
+
+                # Select numeric columns
+                numeric_cols = st.session_state.data.select_dtypes(
+                    include=[np.number]
+                ).columns.tolist()
+
+                consistency_col1, consistency_col2 = st.columns([1, 1])
+
+                with consistency_col1:
+                    if len(numeric_cols) > 0:
+                        selected_col = st.selectbox(
+                            "Select column for consistency check", numeric_cols
+                        )
+                        # Calculate potential duplicates and outliers
+                        unique_values = st.session_state.data[selected_col].nunique()
+                        duplicate_rows = st.session_state.data.duplicated().sum()
+
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(
+                                f"""
+                            <div class="apple-metric">
+                                <h3>{unique_values}</h3>
+                                <p>Unique Values</p>
+                            </div>
+                            """,
+                                unsafe_allow_html=True,
+                            )
+                        with col2:
+                            st.markdown(
+                                f"""
+                            <div class="apple-metric">
+                                <h3>{duplicate_rows}</h3>
+                                <p>Duplicate Rows</p>
+                            </div>
+                            """,
+                                unsafe_allow_html=True,
+                            )
+
+                        # Create boxplot to identify outliers
+                        fig = go.Figure()
+                        fig.add_trace(
+                            go.Box(
+                                y=st.session_state.data[selected_col].dropna(), name=selected_col
+                            )
+                        )
+                        fig.update_layout(
+                            title=f"Distribution and Outliers: {selected_col}", height=300
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No numeric columns available for consistency analysis")
+
+                with consistency_col2:
+                    categorical_cols = st.session_state.data.select_dtypes(
+                        include=["object"]
+                    ).columns.tolist()
+                    if len(categorical_cols) > 0:
+                        selected_cat_col = st.selectbox(
+                            "Select categorical column", categorical_cols
+                        )
+                        value_counts = (
+                            st.session_state.data[selected_cat_col].value_counts().reset_index()
+                        )
+                        value_counts.columns = ["Value", "Count"]
+
+                        # Create pie chart for categorical distribution
+                        fig = go.Figure(
+                            data=[
+                                go.Pie(
+                                    labels=value_counts["Value"][:10],  # Top 10 values
+                                    values=value_counts["Count"][:10],
+                                    hole=0.3,
+                                    marker_colors=px.colors.sequential.Blues_r,
+                                )
+                            ]
+                        )
+                        fig.update_layout(title=f"Top 10 Values: {selected_cat_col}")
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No categorical columns available for consistency analysis")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            with quality_tabs[2]:  # Distribution Analysis
+                st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+                st.markdown(
+                    "<h4 style='color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Distribution Analysis</h4>",
+                    unsafe_allow_html=True,
+                )
+
+                dist_col1, dist_col2 = st.columns([1, 1])
+
+                with dist_col1:
+                    if len(numeric_cols) > 0:
+                        selected_dist_col = st.selectbox(
+                            "Select column for distribution", numeric_cols
+                        )
+
+                        # Create histogram
+                        fig = go.Figure()
+                        fig.add_trace(
+                            go.Histogram(
+                                x=st.session_state.data[selected_dist_col].dropna(),
+                                marker_color="#0066CC",
+                                nbinsx=30,
+                            )
+                        )
+                        fig.update_layout(
+                            title=f"Histogram: {selected_dist_col}",
+                            xaxis_title=selected_dist_col,
+                            yaxis_title="Frequency",
+                            height=300,
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        # Add descriptive statistics
+                        desc_stats = (
+                            st.session_state.data[selected_dist_col].describe().reset_index()
+                        )
+                        desc_stats.columns = ["Statistic", "Value"]
+                        st.dataframe(desc_stats, use_container_width=True)
+                    else:
+                        st.info("No numeric columns available for distribution analysis")
+
+                with dist_col2:
+                    if len(numeric_cols) > 1:
+                        x_col = st.selectbox("X-axis", numeric_cols, index=0)
+                        y_col = st.selectbox(
+                            "Y-axis", numeric_cols, index=min(1, len(numeric_cols) - 1)
+                        )
+
+                        # Create scatter plot
+                        fig = go.Figure()
+                        fig.add_trace(
+                            go.Scatter(
+                                x=st.session_state.data[x_col],
+                                y=st.session_state.data[y_col],
+                                mode="markers",
+                                marker=dict(color="#0066CC", size=5, opacity=0.6),
+                            )
+                        )
+                        fig.update_layout(
+                            title=f"Relationship: {x_col} vs {y_col}",
+                            xaxis_title=x_col,
+                            yaxis_title=y_col,
+                            height=300,
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        # Calculate correlation
+                        correlation = st.session_state.data[[x_col, y_col]].corr().iloc[0, 1]
+                        st.metric("Correlation", f"{correlation:.4f}")
+                    else:
+                        st.info("Need at least two numeric columns for relationship analysis")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # Add interactive correlation heatmap (removed PCA and Time Series)
+            st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<h3 class='section-header'>🧪 Feature Correlations</h3>", unsafe_allow_html=True
+            )
+
+            st.markdown("<div class='section-container'>", unsafe_allow_html=True)
+            numeric_cols = st.session_state.data.select_dtypes(include=[np.number]).columns.tolist()
+            if len(numeric_cols) > 1:
+                selected_features = st.multiselect(
+                    "Select features to analyze correlations",
+                    numeric_cols,
+                    default=numeric_cols[: min(8, len(numeric_cols))],
+                )
+
+                if selected_features and len(selected_features) > 1:
+                    # Create correlation heatmap
+                    corr_matrix = st.session_state.data[selected_features].corr()
+
+                    fig = go.Figure(
+                        data=go.Heatmap(
+                            z=corr_matrix.values,
+                            x=corr_matrix.columns,
+                            y=corr_matrix.columns,
+                            colorscale="Blues",
+                            zmin=-1,
+                            zmax=1,
+                        )
+                    )
+                    fig.update_layout(
+                        title="Feature Correlation Matrix",
+                        height=500,
+                        margin=dict(l=40, r=40, b=40, t=50),
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    # Strong correlations
+                    corr_pairs = corr_matrix.unstack().sort_values(ascending=False)
+                    corr_pairs = corr_pairs[corr_pairs < 1.0]  # Remove self-correlations
+                    strong_corr = corr_pairs[abs(corr_pairs) > 0.5].sort_values(ascending=False)
+
+                    if not strong_corr.empty:
+                        st.markdown(
+                            "<h4 style='color:#2563EB; font-size:1.2rem; padding-bottom:0.5rem; border-bottom:1px solid #e5e7eb;'>Strong Correlations</h4>",
+                            unsafe_allow_html=True,
+                        )
+                        strong_corr_df = pd.DataFrame(
+                            {
+                                "Feature Pair": [
+                                    f"{idx[0]} — {idx[1]}" for idx in strong_corr.index
+                                ],
+                                "Correlation": strong_corr.values,
+                            }
+                        )
+                        st.dataframe(strong_corr_df, use_container_width=True)
+                    else:
+                        st.info("No strong correlations found between selected features")
+            else:
+                st.info("Need at least two numeric columns for correlation analysis")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # Remove the entire Data Explorer Widget section from here
+            # It's already available in the Interactive Visualization tab
+
         # Interactive Visualization tab
-        with viz_tab:
+        with tab2:
             st.markdown("## Interactive Visualization")
 
             # Get cached renderer
@@ -720,19 +1267,18 @@ def main():
                 # Render selected view
                 if st.session_state.view_mode == "Explorer":
                     # Use the explorer method for the standard view
-                    renderer.explorer()
+                    renderer.explorer(key="viz_tab_explorer")
                 elif st.session_state.view_mode == "Chart":
                     # For Chart view, we need to specify an index for which chart to display
-                    # Since there might not be any charts yet, we'll safely wrap this in try/except
                     try:
                         # Show the first chart (index 0)
-                        renderer.chart(0)
+                        renderer.chart(0, key="viz_tab_chart")
                     except Exception as e:
                         st.warning("⚠️ No charts available. Create a chart in Explorer view first.")
                         st.error(f"Error: {str(e)}")
                 elif st.session_state.view_mode == "Data Profiling":
                     # For Data Profiling, we use explorer with "data" as the default tab
-                    renderer.explorer(default_tab="data")
+                    renderer.explorer(default_tab="data", key="viz_tab_profiling")
                 elif st.session_state.view_mode == "Data Preview":
                     st.dataframe(st.session_state.data, use_container_width=True)
     else:
