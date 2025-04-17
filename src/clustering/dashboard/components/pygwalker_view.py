@@ -32,6 +32,7 @@ def render_pygwalker(df: pd.DataFrame) -> None:
             "vegaTheme": "g2",  # Use a clean theme
             "dark": "media",  # Adapt to Streamlit's theme
             "enableUserSelection": True,  # Allow users to select data points
+            "height": 600,  # Set the height using config
         }
 
         # Create a PyGWalker app with custom config
@@ -43,7 +44,7 @@ def render_pygwalker(df: pd.DataFrame) -> None:
         )
 
         # Set the height to a fixed value to ensure visibility
-        pyg_app.explorer(height=600, config=config)
+        pyg_app.explorer(config=config)
 
         # Add a tip for users
         st.caption(
@@ -92,6 +93,7 @@ def render_pygwalker_with_spec(df: pd.DataFrame, spec: str) -> None:
             "vegaTheme": "g2",  # Use a clean theme
             "dark": "media",  # Adapt to Streamlit's theme
             "enableUserSelection": True,  # Allow users to select data points
+            "height": 600,  # Set the height using config
         }
 
         # Create a PyGWalker app with the specification
@@ -103,7 +105,7 @@ def render_pygwalker_with_spec(df: pd.DataFrame, spec: str) -> None:
         )
 
         # Set the height to a fixed value to ensure visibility
-        pyg_app.explorer(height=600, config=config)
+        pyg_app.explorer(config=config)
 
     except ImportError:
         st.error("PyGWalker is not installed. Please install it using: `pip install pygwalker`")
