@@ -4,12 +4,14 @@ import io
 import json
 import os
 import pickle
+from pathlib import Path
 
 import duckdb
 import polars as pl
 import snowflake.connector
 
 from clustering.io.readers.base import Reader
+from clustering.utils.common import get_project_root
 
 
 class SnowflakeReader(Reader):
@@ -20,11 +22,11 @@ class SnowflakeReader(Reader):
 
     query: str
     use_cache: bool = True
-    cache_file: str = "cache/snowflake_cache.duckdb"
+    cache_file: str = str(get_project_root() / "cache/snowflake_cache.duckdb")
 
     # Credentials paths
-    pkb_path: str = "creds/pkb.pkl"
-    creds_path: str = "creds/sf_creds.json"
+    pkb_path: str = str(get_project_root() / "creds/pkb.pkl")
+    creds_path: str = str(get_project_root() / "creds/sf_creds.json")
 
     def _create_connection(self) -> snowflake.connector.SnowflakeConnection:
         """Create a Snowflake connection.
