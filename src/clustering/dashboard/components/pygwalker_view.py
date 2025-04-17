@@ -1,7 +1,7 @@
-"""PyGWalker integration for the clustering dashboard.
+"""Data visualization integration for the clustering dashboard.
 
-This module provides integration with PyGWalker's visual exploration capabilities
-following the latest API recommendations.
+This module provides integration with powerful visual exploration capabilities
+following modern visualization principles.
 """
 
 import pandas as pd
@@ -9,7 +9,7 @@ import streamlit as st
 
 
 def render_pygwalker(df: pd.DataFrame) -> None:
-    """Render the PyGWalker interface for data exploration.
+    """Render the visualization interface for data exploration.
 
     Args:
         df: DataFrame to visualize
@@ -20,30 +20,30 @@ def render_pygwalker(df: pd.DataFrame) -> None:
         from pygwalker.api.streamlit import StreamlitRenderer
 
         # Display title and info
-        st.markdown("### PyGWalker Visual Explorer")
+        st.markdown("### Visual Data Explorer")
         st.info(
             "Drag and drop fields to create visualizations. "
             "No coding required! Explore your data visually with this interactive tool."
         )
 
-        # Configure PyGWalker with Streamlit-friendly settings
+        # Configure visualization with Streamlit-friendly settings
         config = {
-            "hideDataSourceConfig": True,  # Hide data source panel since we're in Streamlit
+            "hideDataSourceConfig": True,  # Hide data source panel
             "vegaTheme": "g2",  # Use a clean theme
             "dark": "media",  # Adapt to Streamlit's theme
             "enableUserSelection": True,  # Allow users to select data points
         }
 
-        # Create a PyGWalker app with custom config
-        pyg_app = StreamlitRenderer(
+        # Create visualization app with custom config
+        viz_app = StreamlitRenderer(
             df,
             spec_io_mode="rw",  # Allow saving and loading chart configurations
             kernel_computation=True,  # Enable kernel computation for better performance
             theme="media",  # Use media query to match Streamlit's theme
         )
 
-        # Call explorer without config parameter
-        pyg_app.explorer()
+        # Call explorer method
+        viz_app.explorer()
 
         # Add a tip for users
         st.caption(
@@ -51,81 +51,70 @@ def render_pygwalker(df: pd.DataFrame) -> None:
         )
 
     except ImportError:
-        st.error("PyGWalker is not installed. Please install it using: `pip install pygwalker`")
-
-        # Show install instructions
-        with st.expander("Installation Instructions"):
-            st.code(
-                """
-                # Install PyGWalker
-                pip install pygwalker
-                
-                # Then restart this application
-                """,
-                language="bash",
-            )
-
-            st.markdown("After installation, restart the Streamlit server to use PyGWalker.")
+        st.error(
+            "Required visualization library is not installed. Please contact your administrator."
+        )
     except Exception as e:
-        st.error(f"Error initializing PyGWalker: {str(e)}")
+        st.error(f"Error initializing visualization tool: {str(e)}")
         if st.session_state.get("show_debugging", False):
             st.exception(e)
 
 
 def render_pygwalker_with_spec(df: pd.DataFrame, spec: str) -> None:
-    """Render PyGWalker with a saved specification.
+    """Render visualization with a saved specification.
 
     Args:
         df: DataFrame to visualize
-        spec: PyGWalker chart specification
+        spec: Chart specification
     """
     try:
         import pygwalker
         from pygwalker.api.streamlit import StreamlitRenderer
 
         # Display title and info
-        st.markdown("### Saved PyGWalker Visualization")
+        st.markdown("### Saved Visualization")
 
-        # Configure PyGWalker with Streamlit-friendly settings
+        # Configure visualization with Streamlit-friendly settings
         config = {
-            "hideDataSourceConfig": True,  # Hide data source panel since we're in Streamlit
+            "hideDataSourceConfig": True,  # Hide data source panel
             "vegaTheme": "g2",  # Use a clean theme
             "dark": "media",  # Adapt to Streamlit's theme
             "enableUserSelection": True,  # Allow users to select data points
         }
 
-        # Create a PyGWalker app with the specification
-        pyg_app = StreamlitRenderer(
+        # Create visualization app with the specification
+        viz_app = StreamlitRenderer(
             df,
             spec=spec,
             spec_io_mode="r",  # Read-only for saved specs
             theme="media",  # Use media query to match Streamlit's theme
         )
 
-        # Call explorer without config parameter
-        pyg_app.explorer()
+        # Call explorer method
+        viz_app.explorer()
 
     except ImportError:
-        st.error("PyGWalker is not installed. Please install it using: `pip install pygwalker`")
+        st.error(
+            "Required visualization library is not installed. Please contact your administrator."
+        )
     except Exception as e:
-        st.error(f"Error initializing PyGWalker with saved specification: {str(e)}")
+        st.error(f"Error initializing visualization with saved specification: {str(e)}")
         if st.session_state.get("show_debugging", False):
             st.exception(e)
 
 
 @st.cache_resource
 def get_pyg_renderer(df: pd.DataFrame, spec: str | None = None) -> object:
-    """Get a cached PyGWalker renderer instance.
+    """Get a cached visualization renderer instance.
 
-    This follows the best practice from the PyGWalker docs by using st.cache_resource
-    to prevent re-initialization on each rerun.
+    This uses st.cache_resource to prevent re-initialization on each rerun.
 
     Args:
         df: DataFrame to visualize
         spec: Optional chart specification to render
 
     Returns:
-        StreamlitRenderer instance or None if PyGWalker is not installed
+        Renderer instance or None if visualization library is not installed
     """
     try:
         from pygwalker.api.streamlit import StreamlitRenderer
@@ -141,5 +130,7 @@ def get_pyg_renderer(df: pd.DataFrame, spec: str | None = None) -> object:
 
         return renderer
     except ImportError:
-        st.error("PyGWalker is not installed. Please install it using: `pip install pygwalker`")
+        st.error(
+            "Required visualization library is not installed. Please contact your administrator."
+        )
         return None
