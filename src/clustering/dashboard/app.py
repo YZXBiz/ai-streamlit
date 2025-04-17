@@ -1,8 +1,8 @@
-"""PyGWalker Data Explorer Application.
+"""Assortment-Clustering Data Explorer Application.
 
-A streamlined application for exploring and visualizing data using PyGWalker.
+A streamlined application for exploring and visualizing assortment clustering data.
 This application allows users to upload data files and explore them visually
-using PyGWalker's drag-and-drop interface.
+using a drag-and-drop interface.
 """
 
 import os
@@ -15,8 +15,8 @@ from clustering.dashboard.components.pygwalker_view import get_pyg_renderer
 
 # Set page configuration
 st.set_page_config(
-    page_title="PyGWalker Explorer",
-    page_icon="📊",
+    page_title="Assortment-Clustering Explorer",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -64,13 +64,13 @@ def load_data(file_path: Path | str, file_type: str | None = None) -> pd.DataFra
 
 
 def main():
-    """Run the PyGWalker Explorer application."""
-    st.title("PyGWalker Data Explorer")
+    """Run the Assortment-Clustering Explorer application."""
+    st.title("Assortment-Clustering Data Explorer")
 
     # Add a description of the application
     st.markdown(
         """
-        Explore and visualize your data using PyGWalker's powerful interface.
+        Explore and visualize your clustering data using a powerful interactive interface.
         Upload a data file (CSV, Excel, or Pickle) or use the sample dataset to begin.
         """
     )
@@ -170,7 +170,7 @@ def main():
         import pygwalker
 
         version = pygwalker.__version__
-        st.sidebar.info(f"PyGWalker v{version}")
+        st.sidebar.info(f"Assortment-Clustering Explorer v1.0 (PyGWalker v{version})")
     except (ImportError, AttributeError):
         st.sidebar.warning("PyGWalker not installed. Install with `pip install pygwalker`")
 
