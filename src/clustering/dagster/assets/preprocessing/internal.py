@@ -197,7 +197,7 @@ def internal_sales_by_category(
 
         # Pivot the data
         pivoted = merged.pivot(
-            index="STORE_NBR", columns="NEED_STATE", values="Pct_of_Sales"
+            index="STORE_NBR", on="NEED_STATE", values="Pct_of_Sales"
         ).fill_null(0)
 
         # Create column rename mapping
