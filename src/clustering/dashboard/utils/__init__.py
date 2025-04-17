@@ -4,6 +4,27 @@ from typing import Literal
 
 import plotly.colors as pc
 
+# Import visualization utilities for easier access
+from clustering.dashboard.utils.visualization_utils import (
+    get_color_scale,
+    load_dataset,
+    format_file_size,
+    get_file_info,
+    show_dataframe_info,
+    plot_missing_values,
+    display_code,
+    load_image,
+    download_dataframe,
+    create_figure_with_dropdown,
+    create_sidebar_filters,
+    apply_filters,
+    cached_dataframe,
+    plot_correlation_matrix,
+    create_time_series_plot,
+    export_dashboard_state,
+    import_dashboard_state,
+)
+
 # Define a dark version of the Viridis colorscale for better contrast
 VIRIDIS_DARK = [
     [0.0, "#440154"],
@@ -32,21 +53,4 @@ DIVERGING_COLORS = [
 # Define a qualitative color scale for categorical data
 QUALITATIVE_COLORS = pc.qualitative.Bold
 
-def get_color_scale(scale_type: Literal["sequential", "diverging", "qualitative"]) -> list:
-    """Get a color scale based on the scale type.
-    
-    Args:
-        scale_type: Type of color scale to return
-        
-    Returns:
-        Color scale as a list
-    """
-    if scale_type == "sequential":
-        return VIRIDIS_DARK
-    elif scale_type == "diverging":
-        return DIVERGING_COLORS
-    elif scale_type == "qualitative":
-        return QUALITATIVE_COLORS
-    else:
-        # Default to sequential
-        return VIRIDIS_DARK 
+# Note: get_color_scale function has been moved to visualization_utils.py

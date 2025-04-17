@@ -338,6 +338,12 @@ def get_resources_by_env(
         "input_external_placerai_reader": data_io.data_reader.configured(
             readers_config.get("external_placerai", {})
         ),
+        "input_external_urbanicity_template_reader": data_io.data_reader.configured(
+            readers_config.get("external_urbanicity_template", {})
+        ),
+        "input_external_urbanicity_experiment_reader": data_io.data_reader.configured(
+            readers_config.get("external_urbanicity_experiment", {})
+        ),
         # Data writers
         "sales_by_category_writer": data_io.data_writer.configured(
             writers_config.get("sales_by_category", {})

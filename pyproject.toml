@@ -36,7 +36,7 @@ dependencies = [
     "dask>=2025.2.0",
     "duckdb>=1.2.1",
     "numba>=0.60.0",
-    "numpy>=1.26.0,<2.0.0",    # Constrained for pandas compatibility
+    "numpy>=1.26.0,<2.0.0", # Constrained for pandas compatibility
     "pandera[polars]>=0.21.0",
     "pandas>=2.1.4",
     "polars>=0.20.0",
@@ -76,6 +76,7 @@ dependencies = [
     # === Dashboard ===
     "streamlit>=1.31.0",
     "plotly>=5.18.0",
+    "pygwalker>=0.4.9.15",
 ]
 
 # =========================================

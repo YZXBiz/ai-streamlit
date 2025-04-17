@@ -12,6 +12,20 @@ This package implements a comprehensive clustering pipeline that:
 - Assigns data points to clusters and generates visualizations
 - Merges results from different clustering approaches
 
+## Dashboard
+
+The project includes an interactive Streamlit dashboard designed to visualize and explore the clustering results. The dashboard provides:
+
+- **Cluster Distribution Analysis**: View the distribution of stores/data points across different clusters
+- **Feature-Cluster Relationship Visualization**: Explore how features relate to cluster assignments through scatter plots, 3D visualizations, and parallel coordinates
+- **Feature Distribution Analysis**: Analyze the statistical distribution of features within each cluster
+- **Dimensionality Reduction Visualization**: Apply PCA and t-SNE to understand high-dimensional feature relationships
+- **Cluster Comparison**: Compare cluster assignments before and after optimization/merging
+- **Dynamic Asset Loading**: By default focuses on merging assets, with option for Excel file uploads
+- **Visual Data Explorer**: Drag-and-drop interface for creating visualizations with PyGWalker (no coding required)
+
+The dashboard serves as an exploration and validation tool for data scientists and business stakeholders to understand clustering results, identify patterns, and derive insights from the pipeline outputs.
+
 ## Project Structure
 
 ```
@@ -23,6 +37,10 @@ clustering/
 │   └── definitions.py     # Main pipeline definitions
 ├── io/                    # I/O handling components
 ├── utils/                 # Utility functions
+├── dashboard/             # Streamlit visualization dashboard
+│   ├── components/        # Dashboard visualization components
+│   ├── config/            # Dashboard configuration
+│   └── app.py             # Main dashboard application
 └── cli/                   # Command-line interface
 ```
 
@@ -50,6 +68,9 @@ make run-internal-preprocessing
 
 # Run the full pipeline
 make run-full ENV=prod
+
+# Launch the dashboard
+make dashboard
 ```
 
 ### Using Dagster UI
@@ -59,6 +80,27 @@ Access the Dagster UI at http://localhost:3000 to:
 - View asset materializations
 - Inspect job execution graphs
 - Launch ad-hoc runs
+
+## Code Style & Formatting
+
+This project uses ruff for code formatting and linting:
+
+```bash
+# Format all Python files
+ruff format .
+
+# Format specific files or directories
+ruff format clustering/dashboard/
+
+# Check formatting without making changes
+ruff format --check .
+
+# Run import sorting followed by formatting
+ruff check --select I --fix
+ruff format
+```
+
+Always run formatting before committing changes to maintain consistent code style.
 
 ## Configuration
 
@@ -131,7 +173,7 @@ make install
 make version
 
 # Install in development mode
-pip install -e .
+uv pip install -e .
 ```
 
 ### Testing
@@ -142,6 +184,9 @@ make test
 
 # Run specific test category
 make dagster-test
+
+# Run tests manually
+uv run -m pytest tests/
 ```
 
 ## License

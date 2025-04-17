@@ -73,6 +73,14 @@ readers:
     kind: "CSVReader"
     config:
       path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/placer_store_features_2024_20250211_1420_with_remaining.csv
+  external_urbanicity_template:
+    kind: "CSVReader"
+    config:
+      path: ${env:EXTERNAL_DATA_DIR,/workspaces/testing-dagster/data/external}/Urbanicity CVS Drive Times with Demos and competitors_#COMP_DEMO_ALL_07022025.csv
+  external_urbanicity_experiment:
+    kind: "CSVReader"
+    config:
+      path: /workspaces/clustering-dagster/experiments/inputs/template/Urbanicity CVS Drive Times with Demos and competitors_#COMP_DEMO_ALL_07022025.csv
   external_data_source: # read in feature engineering
     kind: "PickleReader"
     config:

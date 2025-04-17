@@ -4,10 +4,11 @@ A Streamlit dashboard for visualizing and exploring cluster assignments from the
 
 ## Features
 
-- **Asset Selection**: Choose any Dagster asset to visualize
+- **Asset Selection**: By default focuses on visualizing merging assets, with option for Excel file uploads
 - **Cluster Distribution**: View the distribution of stores across clusters
 - **Feature Analysis**: Explore relationships between features and clusters
 - **Cluster Comparison**: Compare cluster assignments before and after optimization
+- **Visual Data Explorer**: Drag-and-drop interface for interactive data visualization using PyGWalker
 - **Environment Variable Configuration**: Override settings with environment variables
 - **Type-Safe Settings**: Pydantic-based settings with validation
 
@@ -23,6 +24,7 @@ dashboard/
 │   ├── feature_explorer.py  # Feature exploration components
 │   ├── feature_selector.py  # UI for selecting features to visualize
 │   ├── visualization.py     # Generic visualization components
+│   ├── pygwalker_view.py    # PyGWalker integration for visual data exploration
 │   └── visualizer.py        # Plotting utilities
 ├── config/                  # Dashboard configuration
 │   └── settings.py          # Pydantic-based settings management
@@ -40,14 +42,62 @@ To run the dashboard:
 cd src
 streamlit run -m clustering.dashboard
 
-# Or with Python
-python -m clustering.dashboard
+# Or with uv (recommended)
+cd src
+uv run -m clustering.dashboard
 ```
 
 Or use the Makefile target:
 
 ```bash
 make dashboard
+```
+
+## Visual Data Explorer with PyGWalker
+
+The dashboard includes integration with PyGWalker, which provides a drag-and-drop interface for creating visualizations without writing code.
+
+### Features
+- **No-code visualization**: Create charts by simply dragging and dropping fields
+- **Multiple chart types**: Bar charts, scatter plots, line charts, heatmaps and more
+- **Interactive filtering**: Filter and transform your data visually
+- **Export capabilities**: Export chart specifications to reuse later
+
+### Installation
+PyGWalker is not included in the base requirements. To use this feature:
+
+```bash
+pip install pygwalker
+```
+
+Or with uv:
+```bash
+uv pip install pygwalker
+```
+
+After installation, restart the dashboard to access the PyGWalker tab.
+
+## Code Style & Formatting
+
+This project uses ruff for code formatting and linting. To format your code:
+
+```bash
+# Format all Python files in the project
+ruff format .
+
+# Format a specific file
+ruff format clustering/dashboard/app.py
+
+# Check formatting without making changes
+ruff format --check .
+```
+
+To run linting checks with import sorting:
+
+```bash
+# Run linting with import sorting
+ruff check --select I --fix
+ruff format
 ```
 
 ## Configuration
@@ -81,6 +131,14 @@ The configuration uses Pydantic Settings for type validation and easy environmen
 | Max Features | `DASHBOARD_MAX_FEATURES_TO_DISPLAY` | 20 | Maximum number of features to display |
 | Layout | `DASHBOARD_LAYOUT` | "wide" | Dashboard layout ("wide" or "centered") |
 | Storage Path | `DASHBOARD_STORAGE_PATH` | "../storage" | Path to Dagster storage directory |
+
+## Data Sources
+
+The dashboard supports the following data sources:
+
+1. **Merging Assets**: By default, the dashboard loads merging assets from the Dagster pipeline, focused on the final cluster assignments after internal and external data has been combined.
+
+2. **Excel File Upload**: Users can upload their own Excel files for visualization and analysis.
 
 ## Extending
 
@@ -126,5 +184,5 @@ To add a new data source:
 
 1. Ensure all functions have proper type hints using Python 3.10+ syntax
 2. Follow Google docstring format for all functions and classes
-3. Run tests with `pytest tests/dashboard`
-4. Format code with `black` and check types with `mypy` 
+3. Run tests with `uv run -m pytest tests/dashboard`
+4. Format code with `ruff format` and check types with `mypy` 

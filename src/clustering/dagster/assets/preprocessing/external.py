@@ -8,7 +8,11 @@ import polars as pl
     io_manager_key="io_manager",
     compute_kind="external_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"input_external_placerai_reader"},
+    required_resource_keys={
+        "input_external_placerai_reader",
+        "input_external_urbanicity_template_reader", 
+        "input_external_urbanicity_experiment_reader"
+    },
 )
 def external_features_data(
     context: dg.AssetExecutionContext,
@@ -25,6 +29,8 @@ def external_features_data(
     context.log.info("Initializing external data readers")
     external_readers = [
         context.resources.input_external_placerai_reader,
+        context.resources.input_external_urbanicity_template_reader,
+        context.resources.input_external_urbanicity_experiment_reader,
         # Add additional readers here as needed
     ]
 
@@ -44,22 +50,27 @@ def external_features_data(
         dataframes.append(df)
 
     # Step 3: Handle the single or empty dataframe case
-    if not dataframes:
+    if len(dataframes) == 0:
         context.log.error("No valid external data sources found")
         raise ValueError("Failed to read any valid external data")
-
+    
     if len(dataframes) == 1:
         context.log.info("Only one external data source. No merging needed.")
         return dataframes[0]
 
-    # Step 4: Merge multiple dataframes
-    context.log.info(f"Merging [outer] {len(dataframes)} external data sources on STORE_NBR")
-    merged_data = pl.concat(dataframes, how="outer")
+    # Start with the first dataframe
+    context.log.info(f"Merging {len(dataframes)} external data sources with outer join on STORE_NBR")
+    base_df = dataframes[0]
+    
+    # Join with each subsequent dataframe using coalesce=True to avoid duplicate STORE_NBR columns
+    for i, df in enumerate(dataframes[1:], 1):
+        context.log.info(f"Joining with data source {i+1} with coalesced join key")
+        base_df = base_df.join(df, on="STORE_NBR", how="outer", coalesce=True)
 
     context.log.info(
-        f"Merged external data has {merged_data.shape[0]} rows and {merged_data.shape[1]} columns"
+        f"Merged external data has {base_df.shape[0]} rows and {base_df.shape[1]} columns"
     )
-    return merged_data
+    return base_df
 
 
 @dg.asset(
