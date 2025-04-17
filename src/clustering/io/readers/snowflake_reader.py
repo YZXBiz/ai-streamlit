@@ -4,7 +4,6 @@ import io
 import json
 import os
 import pickle
-from pathlib import Path
 
 import duckdb
 import polars as pl
