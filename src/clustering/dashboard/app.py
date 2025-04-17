@@ -231,7 +231,10 @@ def display_df_summary(df: pd.DataFrame) -> None:
                                 # For numeric columns, show a small histogram
                                 fig = go.Figure()
                                 fig.add_trace(
-                                    go.Histogram(x=df[column_name].dropna(), marker_color="#0066CC")
+                                    go.Histogram(
+                                        x=df[column_name].dropna(),
+                                        marker_color="#CC0000",
+                                    )
                                 )
                                 fig.update_layout(
                                     height=200,
@@ -288,10 +291,10 @@ def plot_numerical_distribution(df: pd.DataFrame, column: str) -> go.Figure:
     )
 
     # Histogram
-    fig.add_trace(go.Histogram(x=df[column], name=column, marker_color="#0066CC"), row=1, col=1)
+    fig.add_trace(go.Histogram(x=df[column], name=column, marker_color="#CC0000"), row=1, col=1)
 
     # Box plot
-    fig.add_trace(go.Box(y=df[column], name=column, marker_color="#0066CC"), row=1, col=2)
+    fig.add_trace(go.Box(y=df[column], name=column, marker_color="#CC0000"), row=1, col=2)
 
     fig.update_layout(
         title=f"Distribution Analysis: {column}",
@@ -319,7 +322,7 @@ def plot_correlation_matrix(df: pd.DataFrame) -> go.Figure:
     # Create heatmap
     fig = go.Figure(
         data=go.Heatmap(
-            z=corr.values, x=corr.columns, y=corr.columns, colorscale="Blues", zmin=-1, zmax=1
+            z=corr.values, x=corr.columns, y=corr.columns, colorscale="Reds", zmin=-1, zmax=1
         )
     )
 
@@ -410,13 +413,13 @@ def add_custom_css():
         }
         
         .stTabs [role="tab"]:hover {
-            background-color: #0071e3;
+            background-color: #CC0000;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .stTabs [role="tab"][aria-selected="true"] {
-            background-color: #0071e3;
+            background-color: #CC0000;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -710,7 +713,7 @@ def add_custom_css():
 
         /* Style for h4 elements with section title style */
         h4.section-title {
-            color: #2563EB;
+            color: #CC0000;
             font-size: 1.2rem;
             padding-bottom: 0.5rem;
             margin-top: 1rem;
@@ -779,7 +782,7 @@ def main():
         st.markdown(
             """
         <div style='text-align: center; padding: 10px;'>
-            <span style='font-size: 3rem; color: #4F46E5;'>📊</span>
+            <span style='font-size: 3rem; color: #CC0000;'>📊</span>
         </div>
         """,
             unsafe_allow_html=True,
@@ -800,7 +803,7 @@ def main():
     with st.sidebar:
         st.markdown(
             """
-        <h2 style='color: #000000; margin-bottom: 1.5rem; border-bottom: 1px solid #818CF8; padding-bottom: 0.5rem; font-weight: 600; font-size: 1.25rem;'>
+        <h2 style='color: #000000; margin-bottom: 1.5rem; border-bottom: 1px solid #CC0000; padding-bottom: 0.5rem; font-weight: 600; font-size: 1.25rem;'>
             <span style="margin-right: 8px;">📂</span> Data Source
         </h2>
         """,
@@ -924,7 +927,7 @@ def main():
         with tab1:
             st.markdown(
                 """
-                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #CC0000; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
                     <h2 style="margin: 0; padding: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">📋 Dataset Overview</h2>
                     <p style="color: #86868b; margin: 0.5rem 0 0 0; padding: 0; font-size: 1rem;">
                         Complete analysis of your dataset's structure, statistics, and quality metrics.
@@ -1017,7 +1020,7 @@ def main():
                                     fig.add_trace(
                                         go.Histogram(
                                             x=st.session_state.data[col_name].dropna(),
-                                            marker_color="#0066CC",
+                                            marker_color="#CC0000",
                                         )
                                     )
                                     fig.update_layout(
@@ -1063,7 +1066,7 @@ def main():
                                     go.Bar(
                                         x=value_counts.index,
                                         y=value_counts.values,
-                                        marker_color="#0066CC",
+                                        marker_color="#CC0000",
                                     )
                                 )
                                 fig.update_layout(
@@ -1124,7 +1127,7 @@ def main():
                         go.Bar(
                             x=missing_by_col.index[:15],  # Show top 15 columns with missing values
                             y=missing_by_col_pct[:15],
-                            marker_color="#0066CC",
+                            marker_color="#CC0000",
                         )
                     )
                     fig.update_layout(
@@ -1217,7 +1220,7 @@ def main():
                                     labels=value_counts["Value"][:10],  # Top 10 values
                                     values=value_counts["Count"][:10],
                                     hole=0.3,
-                                    marker_colors=px.colors.sequential.Blues_r,
+                                    marker_colors=px.colors.sequential.Reds_r,
                                 )
                             ]
                         )
@@ -1247,7 +1250,7 @@ def main():
                         fig.add_trace(
                             go.Histogram(
                                 x=st.session_state.data[selected_dist_col].dropna(),
-                                marker_color="#0066CC",
+                                marker_color="#CC0000",
                                 nbinsx=30,
                             )
                         )
@@ -1282,7 +1285,7 @@ def main():
                                 x=st.session_state.data[x_col],
                                 y=st.session_state.data[y_col],
                                 mode="markers",
-                                marker=dict(color="#0066CC", size=5, opacity=0.6),
+                                marker=dict(color="#CC0000", size=5, opacity=0.6),
                             )
                         )
                         fig.update_layout(
@@ -1324,7 +1327,7 @@ def main():
                             z=corr_matrix.values,
                             x=corr_matrix.columns,
                             y=corr_matrix.columns,
-                            colorscale="Blues",
+                            colorscale="Reds",
                             zmin=-1,
                             zmax=1,
                         )
@@ -1368,7 +1371,7 @@ def main():
         with tab2:
             st.markdown(
                 """
-                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #0066CC; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                <div style="background-color: #f5f5f7; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #CC0000; margin-bottom: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
                     <h2 style="margin: 0; padding: 0; color: #1d1d1f; font-size: 1.6rem; letter-spacing: -0.01em;">📊 Interactive Visualization</h2>
                     <p style="color: #86868b; margin: 0.5rem 0 0 0; padding: 0; font-size: 1rem;">
                         Dynamic visualization and exploration of your dataset.
