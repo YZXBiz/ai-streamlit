@@ -6,7 +6,7 @@ or framework implementations.
 """
 
 # Import and expose core schemas
-from shared.schemas.schemas import (
+from clustering.shared.schemas.schemas import (
     SalesSchema,
     NSMappingSchema,
     MergedDataSchema,

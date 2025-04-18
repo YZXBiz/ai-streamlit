@@ -2,7 +2,7 @@
 
 # Preprocessing assets
 # Feature engineering, model training, cluster assignment and analysis assets
-from clustering.pipeline.assets.clustering import (
+from .clustering import (
     external_assign_clusters,
     external_dimensionality_reduced_features,
     external_fe_raw_data,
@@ -28,7 +28,7 @@ from clustering.pipeline.assets.clustering import (
 )
 
 # Import merging assets
-from clustering.pipeline.assets.merging.merge import (
+from .merging.merge import (
     cluster_reassignment,
     merged_cluster_assignments,
     merged_clusters,
@@ -37,13 +37,13 @@ from clustering.pipeline.assets.merging.merge import (
 )
 
 # Import preprocessing external assets if needed
-from clustering.pipeline.assets.preprocessing.external import (
+from .preprocessing.external import (
     external_features_data,
     preprocessed_external_data,
 )
 
 # Preprocessing assets
-from clustering.pipeline.assets.preprocessing.internal import (
+from .preprocessing.internal import (
     internal_normalized_sales_data,
     internal_output_sales_table,
     internal_product_category_mapping,

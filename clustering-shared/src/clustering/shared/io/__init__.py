@@ -1,6 +1,6 @@
 """Input/Output services for the clustering pipeline."""
 
-from shared.io.readers import (
+from clustering.shared.io.readers import (
     BlobReader,
     CSVReader,
     ExcelReader,
@@ -10,7 +10,7 @@ from shared.io.readers import (
     Reader,
     SnowflakeReader,
 )
-from shared.io.writers import (
+from clustering.shared.io.writers import (
     BlobWriter,
     CSVWriter,
     ExcelWriter,

@@ -1,19 +1,16 @@
 """Internal preprocessing assets for the clustering pipeline."""
 
-import os
-from typing import Any
 
 import dagster as dg
 import polars as pl
 from dagster_pandera import pandera_schema_to_dagster_type
 
-from shared.schemas import (
+from clustering.shared.schemas.schemas import (
     SalesSchema,
     NSMappingSchema,
     MergedDataSchema,
-    DistributedDataSchema
+    DistributedDataSchema,
 )
-
 
 @dg.asset(
     io_manager_key="io_manager",

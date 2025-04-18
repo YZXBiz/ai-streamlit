@@ -2,7 +2,7 @@
 
 import polars as pl
 
-from shared.io.writers.base import FileWriter
+from clustering.shared.io.writers.base import FileWriter
 
 
 class ParquetWriter(FileWriter):

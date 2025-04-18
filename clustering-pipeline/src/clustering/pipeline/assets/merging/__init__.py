@@ -1,6 +1,6 @@
 """Merging assets for the clustering pipeline."""
 
-from pipeline.assets.merging.merge import (
+from .merge import (
     cluster_reassignment,
     merged_cluster_assignments,
     merged_clusters,

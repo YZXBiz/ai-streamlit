@@ -7,7 +7,7 @@ from io import BytesIO
 import polars as pl
 from azure.storage.blob import BlobClient
 
-from shared.io.readers.base import Reader
+from clustering.shared.io.readers.base import Reader
 
 
 class BlobReader(Reader):

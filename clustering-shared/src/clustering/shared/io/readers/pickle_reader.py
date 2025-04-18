@@ -4,7 +4,7 @@ import pickle
 
 import polars as pl
 
-from shared.io.readers.base import FileReader
+from clustering.shared.io.readers.base import FileReader
 
 
 class PickleReader(FileReader):

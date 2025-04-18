@@ -5,7 +5,7 @@ from typing import Any, Union
 
 import pandas as pd
 
-from shared.io import Reader, load_json
+from clustering.shared.io import Reader, load_json
 
 
 class JSONReader(Reader):

@@ -1,6 +1,7 @@
 """Dagster definitions module for the clustering pipeline."""
 
 import os
+from enum import Enum
 from types import SimpleNamespace
 from typing import Any
 
@@ -17,12 +18,17 @@ import yaml
 # External ML assets - feature engineering
 # External ML assets - model training and analysis
 # Merging assets
-from clustering.pipeline.assets import (
+from clustering.pipeline.assets.merging.merge import (
     cluster_reassignment,
+    merged_cluster_assignments,
+    merged_clusters,
+    optimized_merged_clusters,
+    save_merged_cluster_assignments,
+)
+from clustering.pipeline.assets.clustering import (
     external_assign_clusters,
     external_dimensionality_reduced_features,
     external_fe_raw_data,
-    external_features_data,
     external_filtered_features,
     external_imputed_features,
     external_normalized_data,
@@ -37,30 +43,90 @@ from clustering.pipeline.assets import (
     internal_filtered_features,
     internal_imputed_features,
     internal_normalized_data,
-    internal_normalized_sales_data,
     internal_optimal_cluster_counts,
     internal_outlier_removed_features,
+    internal_save_cluster_assignments,
+    internal_save_clustering_models,
+    internal_train_clustering_models,
+)
+from clustering.pipeline.assets.preprocessing.external import (
+    external_features_data,
+    preprocessed_external_data,
+)
+from clustering.pipeline.assets.preprocessing.internal import (
+    internal_normalized_sales_data,
     internal_output_sales_table,
     internal_product_category_mapping,
     internal_raw_sales_data,
     internal_sales_by_category,
     internal_sales_with_categories,
-    internal_save_cluster_assignments,
-    internal_save_clustering_models,
-    internal_train_clustering_models,
-    merged_cluster_assignments,
-    merged_clusters,
-    optimized_merged_clusters,
-    preprocessed_external_data,
-    save_merged_cluster_assignments,
 )
 
 # Resources
-from clustering.pipeline.resources import data_io, logger_service
-from clustering.shared.infra import Environment
+from clustering.pipeline.resources.data_io import data_reader, data_writer
 
-# Import Hydra-style config loader from the shared utils
-from clustering.shared.infra.hydra_config import load_config as hydra_load_config
+# Define Environment enum locally
+class Environment(str, Enum):
+    """Environment types for configuration."""
+    
+    DEV = "dev"
+    TEST = "test"
+    STAGING = "staging"
+    PROD = "prod"
+    
+    def __str__(self) -> str:
+        """Return the environment name as a string."""
+        return self.value
+
+# Define config loader function locally
+def hydra_load_config(config_path: str) -> dict[str, Any]:
+    """Load configuration from YAML file with environment variable resolution.
+    
+    Args:
+        config_path: Path to the YAML configuration file
+        
+    Returns:
+        Dictionary containing the configuration data
+    """
+    import os
+    import re
+    
+    # Check if the file exists
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    
+    # Read the file
+    with open(config_path, "r") as file:
+        content = file.read()
+    
+    # Resolve environment variables
+    # Match patterns like ${ENV_VAR} or ${ENV_VAR:default}
+    pattern = r'\$\{([^{}:]+)(?::([^{}]+))?\}'
+    
+    def replace_env_var(match):
+        var_name = match.group(1)
+        default_value = match.group(2) if match.group(2) else None
+        
+        # Get the value from environment variables
+        value = os.environ.get(var_name)
+        
+        # Use default value if not found and a default is provided
+        if value is None and default_value is not None:
+            return default_value
+        # Return the value if found
+        elif value is not None:
+            return value
+        # Raise error if no value and no default
+        else:
+            raise ValueError(f"Environment variable '{var_name}' not found and no default provided")
+    
+    # Replace all environment variables in the content
+    resolved_content = re.sub(pattern, replace_env_var, content)
+    
+    # Parse the YAML
+    config_data = yaml.safe_load(resolved_content)
+    
+    return config_data
 
 # -----------------------------------------------------------------------------
 # Asset selection lists
@@ -264,7 +330,6 @@ def _get_default_config(env: str) -> dict[str, Any]:
     """
     return {
         "job_params": {},
-        "logger": {"level": "INFO", "sink": f"logs/dagster_{env}.log"},
         "readers": {},
         "writers": {},
     }
@@ -294,7 +359,6 @@ def get_resources_by_env(
 
     # Extract configuration sections
     job_params = config_data.get("job_params", {})
-    logger_config = config_data.get("logger", {})
     readers_config = config_data.get("readers", {})
     writers_config = config_data.get("writers", {})
 
@@ -319,54 +383,47 @@ def get_resources_by_env(
         # Parameter resources (both names point to same resource)
         "job_params": params_resource,
         "config": params_resource,
-        # Logger
-        "logger": logger_service.configured(
-            {
-                "sink": logger_config.get("sink", f"logs/dagster_{env_str}.log"),
-                "level": logger_config.get("level", "INFO"),
-            }
-        ),
         # Data readers
-        "internal_ns_sales": data_io.data_reader.configured(readers_config.get("ns_sales", {})),
-        "internal_ns_map": data_io.data_reader.configured(readers_config.get("ns_map", {})),
-        "sales_by_category_reader": data_io.data_reader.configured(
+        "internal_ns_sales": data_reader.configured(readers_config.get("ns_sales", {})),
+        "internal_ns_map": data_reader.configured(readers_config.get("ns_map", {})),
+        "sales_by_category_reader": data_reader.configured(
             readers_config.get("sales_by_category", {})
         ),
-        "external_data_reader": data_io.data_reader.configured(
+        "external_data_reader": data_reader.configured(
             readers_config.get("external_data_source", {})
         ),
-        "input_external_placerai_reader": data_io.data_reader.configured(
+        "input_external_placerai_reader": data_reader.configured(
             readers_config.get("external_placerai", {})
         ),
-        "input_external_urbanicity_template_reader": data_io.data_reader.configured(
+        "input_external_urbanicity_template_reader": data_reader.configured(
             readers_config.get("external_urbanicity_template", {})
         ),
-        "input_external_urbanicity_experiment_reader": data_io.data_reader.configured(
+        "input_external_urbanicity_experiment_reader": data_reader.configured(
             readers_config.get("external_urbanicity_experiment", {})
         ),
         # Data writers
-        "sales_by_category_writer": data_io.data_writer.configured(
+        "sales_by_category_writer": data_writer.configured(
             writers_config.get("sales_by_category", {})
         ),
-        "output_clusters_writer": data_io.data_writer.configured(
+        "output_clusters_writer": data_writer.configured(
             writers_config.get("internal_clusters_output", {})
         ),
-        "output_external_data_writer": data_io.data_writer.configured(
+        "output_external_data_writer": data_writer.configured(
             writers_config.get("external_data_output", {})
         ),
-        "internal_model_output": data_io.data_writer.configured(
+        "internal_model_output": data_writer.configured(
             writers_config.get("model_output", {})
         ),
-        "internal_cluster_assignments": data_io.data_writer.configured(
+        "internal_cluster_assignments": data_writer.configured(
             writers_config.get("cluster_assignments", {})
         ),
-        "external_model_output": data_io.data_writer.configured(
+        "external_model_output": data_writer.configured(
             writers_config.get("external_model_output", {})
         ),
-        "external_cluster_assignments": data_io.data_writer.configured(
+        "external_cluster_assignments": data_writer.configured(
             writers_config.get("external_cluster_assignments", {})
         ),
-        "merged_cluster_assignments": data_io.data_writer.configured(
+        "merged_cluster_assignments": data_writer.configured(
             writers_config.get("merged_cluster_assignments", {})
         ),
     }

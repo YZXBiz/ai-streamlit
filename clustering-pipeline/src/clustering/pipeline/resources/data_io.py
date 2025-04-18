@@ -4,9 +4,9 @@ import inspect
 
 import dagster as dg
 
-from shared.io import Reader, Writer
-import shared.io.readers as readers
-import shared.io.writers as writers
+from clustering.shared.io import Reader, Writer
+import clustering.shared.io.readers as readers
+import clustering.shared.io.writers as writers
 
 
 @dg.resource(

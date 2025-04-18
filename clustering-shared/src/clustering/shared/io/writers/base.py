@@ -6,7 +6,7 @@ from pathlib import Path
 import polars as pl
 import pydantic as pdt
 
-from shared.common.filesystem import ensure_directory
+from clustering.shared.common.filesystem import ensure_directory
 
 
 class Writer(pdt.BaseModel, ABC):

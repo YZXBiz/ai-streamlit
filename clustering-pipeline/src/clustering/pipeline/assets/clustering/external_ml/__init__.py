@@ -1,7 +1,7 @@
 """External ML assets for clustering pipeline."""
 
 # Export the feature engineering assets
-from pipeline.assets.clustering.external_ml.feature_engineering import (
+from .feature_engineering import (
     external_dimensionality_reduced_features,
     external_fe_raw_data,
     external_filtered_features,
@@ -11,7 +11,7 @@ from pipeline.assets.clustering.external_ml.feature_engineering import (
 )
 
 # Export the model training and prediction assets
-from pipeline.assets.clustering.external_ml.model_training import (
+from .model_training import (
     external_assign_clusters,
     external_optimal_cluster_counts,
     external_save_cluster_assignments,

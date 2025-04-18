@@ -2,8 +2,9 @@
 
 __version__ = "0.1.0"
 
-# Expose key modules
-from clustering.shared import infra, io, schemas
+# Direct imports for convenience
+from clustering.shared.io.readers.pickle_reader import PickleReader
+from clustering.shared.io.writers.pickle_writer import PickleWriter
 
-__all__ = ["infra", "io", "schemas"]
+__all__ = ["PickleReader", "PickleWriter"]
 

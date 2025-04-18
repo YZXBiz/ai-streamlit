@@ -22,3 +22,24 @@ services:
     volumes:
       - ./mlruns:/mlruns
     command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlruns
+
+  # PostgreSQL database for Dagster
+  postgres:
+    image: postgres:13
+    container_name: dagster-postgres
+    environment:
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: dagster
+      POSTGRES_DB: dagster
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dagster"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

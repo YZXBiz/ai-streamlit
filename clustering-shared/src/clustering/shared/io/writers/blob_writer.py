@@ -8,7 +8,7 @@ import polars as pl
 from azure.core.exceptions import AzureError, ServiceRequestError
 from azure.storage.blob import BlobClient
 
-from shared.io.writers.base import Writer
+from clustering.shared.io.writers.base import Writer
 
 
 class BlobWriter(Writer):

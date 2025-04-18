@@ -1,9 +1,9 @@
-"""Pipeline for clustering data using Dagster."""
+"""Pipeline module for clustering project."""
 
-from clustering.pipeline.definitions import create_definitions, defs, get_definitions
+__version__ = "1.0.0"
 
-# Don't import defs directly to avoid initialization during import
-# which can cause issues with Dagster's repository loading
-__all__ = ["create_definitions", "get_definitions", "defs"]
+# Import the assets module
+from clustering.pipeline import assets
 
-__version__ = "0.1.0"
+# Just expose the assets sub-modules without circular imports
+__all__ = ["assets"]

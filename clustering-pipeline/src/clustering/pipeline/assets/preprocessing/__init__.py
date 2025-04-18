@@ -1,11 +1,11 @@
 """Preprocessing assets for the clustering pipeline."""
 
-from pipeline.assets.preprocessing.external import (
+from .external import (
     external_features_data,
     preprocessed_external_data,
 )
 
-from pipeline.assets.preprocessing.internal import (
+from .internal import (
     internal_normalized_sales_data,
     internal_output_sales_table,
     internal_product_category_mapping,

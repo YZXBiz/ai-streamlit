@@ -8,9 +8,7 @@ import numpy as np
 import polars as pl
 from sklearn.metrics import pairwise_distances
 
-from shared.io.readers.pickle_reader import PickleReader
-from shared.io.writers.pickle_writer import PickleWriter
-
+from clustering.shared.io.readers.pickle_reader import PickleReader
 
 @dg.asset(
     io_manager_key="io_manager",

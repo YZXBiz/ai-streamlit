@@ -6,7 +6,7 @@ import pickle
 import polars as pl
 import snowflake.connector
 
-from shared.io.writers.base import Writer
+from clustering.shared.io.writers.base import Writer
 
 
 class SnowflakeWriter(Writer):
