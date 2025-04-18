@@ -89,18 +89,28 @@ docs = [
     "sphinx-rtd-theme>=3.0.2",
     "nbconvert>=7.16.6",
 ]
-cli = ["cli"]
-pipeline = ["pipeline"]
-dashboard = ["dashboard"]
-shared = ["shared"]
-all = ["cli", "pipeline", "dashboard", "shared"]
+cli = ["clustering-cli"]
+pipeline = ["clustering-pipeline"]
+dashboard = ["clustering-dashboard"]
+shared = ["clustering-shared"]
+all = [
+    "clustering-cli",
+    "clustering-pipeline",
+    "clustering-dashboard",
+    "clustering-shared",
+]
 
 # =========================================
 # Build Configuration
 # =========================================
 
 [tool.hatch.build.targets.wheel]
-packages = ["pipeline", "shared", "cli", "dashboard"]
+packages = [
+    "clustering-pipeline",
+    "clustering-shared",
+    "clustering-cli",
+    "clustering-dashboard",
+]
 
 # =========================================
 # UV Configuration
@@ -108,13 +118,18 @@ packages = ["pipeline", "shared", "cli", "dashboard"]
 
 [tool.uv.sources]
 # kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
-shared = { workspace = true }
-pipeline = { workspace = true }
-cli = { workspace = true }
-dashboard = { workspace = true }
+clustering-shared = { workspace = true }
+clustering-pipeline = { workspace = true }
+clustering-cli = { workspace = true }
+clustering-dashboard = { workspace = true }
 
 [tool.uv.workspace]
-members = ["dashboard", "cli", "shared", "pipeline"]
+members = [
+    "clustering-dashboard",
+    "clustering-cli",
+    "clustering-shared",
+    "clustering-pipeline",
+]
 
 # =========================================
 # Code Quality & Linting Configuration
@@ -246,4 +261,4 @@ exclude_lines = [
 # Dagster Configuration
 # =========================================
 [tool.dagster]
-module_name = "pipeline.definitions"
+module_name = "clustering.pipeline.definitions"

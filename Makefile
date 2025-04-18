@@ -1,5 +1,5 @@
 ################################################################################
-# Store Clustering - Data Pipeline Project Makefile
+# STORE CLUSTERING - DATA PIPELINE PROJECT MAKEFILE
 ################################################################################
 #
 # Author: Jackson Yang <Jackson.Yang@cvshealth.com>
@@ -13,18 +13,18 @@
 ################################################################################
 
 ################################################################################
-# CONFIGURATION
+# GENERAL CONFIGURATION
 ################################################################################
 
 # Package information
-PACKAGE_NAME := pipeline
+PACKAGE_NAME := clustering-pipeline
 VERSION := 1.0.0
 AUTHOR := Jackson Yang
 
 # Directory paths
-SRC_DIR := pipeline/src
+SRC_DIR := clustering-pipeline/src
 TESTS_DIR := tests
-DAGSTER_CONFIG_DIR := $(SRC_DIR)/$(PACKAGE_NAME)/dagster/resources/configs
+DAGSTER_CONFIG_DIR := $(SRC_DIR)/clustering/pipeline/resources/configs
 DOCS_DIR := docs
 
 # Include .env file if it exists
@@ -47,10 +47,6 @@ ENV ?= dev
 # Set UV_LINK_MODE if not already defined, default to copy
 UV_LINK_MODE ?= copy
 
-# Set PYTHONPATH to include the project root and shared module
-ROOT_DIR := $(shell pwd)
-export PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/shared:$(PYTHONPATH)
-
 # Export environment variables for child processes
 export DAGSTER_HOME = $(DAGSTER_HOME_DIR)
 export DATA_DIR
@@ -59,14 +55,15 @@ export EXTERNAL_DATA_DIR
 export MERGING_DATA_DIR
 export UV_LINK_MODE
 
-# Python command
-PYTHON := uv run
+# Default target
+.DEFAULT_GOAL := help
 
 ################################################################################
-# HELP TARGET
+# HELP AND INFORMATION
 ################################################################################
 
-.PHONY: help
+.PHONY: help print-env version
+
 help: ## Display this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mStore Clustering Makefile Help\033[0m\n"} \
 		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } \
@@ -92,16 +89,6 @@ help: ## Display this help message
 	@echo "  Author:  $(AUTHOR)"
 	@echo ""
 
-# Default target
-.DEFAULT_GOAL := help
-
-################################################################################
-# SETUP TARGETS
-################################################################################
-
-##@ Setup
-
-.PHONY: print-env setup-hooks
 print-env: ## Display current environment variable values
 	@echo "==> Current environment configuration:"
 	@echo "- DAGSTER_HOME: $(DAGSTER_HOME_DIR)"
@@ -112,6 +99,53 @@ print-env: ## Display current environment variable values
 	@echo "- LOGS_DIR: $(LOGS_DIR)"
 	@echo "- DAGSTER_ENV: $(DAGSTER_ENV)"
 	@echo "- ENV: $(ENV)"
+
+version: ## Display version and author information
+	@echo "=================================================="
+	@echo "  $(PACKAGE_NAME) version $(VERSION)"
+	@echo "  Developed by $(AUTHOR)"
+	@echo "  Copyright (c) 2025 CVS Health"
+	@echo "=================================================="
+
+################################################################################
+# DEPENDENCY MANAGEMENT
+################################################################################
+
+.PHONY: install update docs-deps
+
+install: ## Install uv package manager and project dependencies
+	@echo "==> Checking if uv is installed..."
+	@if ! command -v uv >/dev/null 2>&1; then \
+		echo "Installing uv package manager..."; \
+		curl -Ls https://astral.sh/uv/install.sh | bash; \
+		echo "✓ uv installed successfully"; \
+	else \
+		echo "✓ uv is already installed"; \
+	fi
+	@echo "==> Installing project dependencies"
+	@cd clustering-pipeline && uv sync --all-packages
+	@echo "✓ All dependencies installed successfully"
+
+update: ## Update all project dependencies to latest versions
+	@echo "==> Updating all dependencies"
+	@cd clustering-pipeline && uv lock --upgrade && uv sync --all-packages
+	@echo "✓ Dependencies updated successfully"
+
+docs-deps: ## Install documentation dependencies
+	@echo "==> Installing documentation dependencies"
+	@cd clustering-pipeline && uv add --group docs sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-autobuild
+	@echo "✓ Documentation dependencies installed"
+
+################################################################################
+# DEVELOPMENT
+################################################################################
+
+.PHONY: dev setup-hooks dashboard dashboard-install
+
+dev: ## Start Dagster development server without creating directories
+	@echo "==> Starting Dagster development server"
+	@cd clustering-pipeline && DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 python -m dagster dev -m clustering.pipeline.definitions --host 0.0.0.0
+	@echo "✓ Dagster development server stopped"
 
 setup-hooks: ## Set up pre-commit hooks for development
 	@echo "==> Setting up pre-commit hooks"
@@ -126,63 +160,37 @@ setup-hooks: ## Set up pre-commit hooks for development
 	@echo "  Git will now run the hooks on each commit."
 	@echo "  To run hooks manually: make check-all"
 
-################################################################################
-# DEPENDENCY MANAGEMENT
-################################################################################
+dashboard: ## Run the clustering dashboard
+	@echo "==> Starting Clustering Dashboard"
+	@cd clustering-dashboard && make run
+	@echo "✓ Dashboard server stopped"
 
-##@ Dependencies
-
-.PHONY: install update docs-deps 
-install: ## Install uv package manager and project dependencies
-	@echo "==> Checking if uv is installed..."
-	@if ! command -v uv >/dev/null 2>&1; then \
-		echo "Installing uv package manager..."; \
-		curl -Ls https://astral.sh/uv/install.sh | bash; \
-		echo "✓ uv installed successfully"; \
-	else \
-		echo "✓ uv is already installed"; \
-	fi
-	@echo "==> Installing project dependencies"
-	@cd pipeline && uv sync --all-packages
-	@echo "✓ All dependencies installed successfully"
-
-update: ## Update all project dependencies to latest versions
-	@echo "==> Updating all dependencies"
-	@cd pipeline && uv lock --upgrade && uv sync --all-packages
-	@echo "✓ Dependencies updated successfully"
-
-docs-deps: ## Install documentation dependencies
-	@echo "==> Installing documentation dependencies"
-	@cd pipeline && uv add --group docs sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-autobuild
-	@echo "✓ Documentation dependencies installed"
+dashboard-install: ## Install the dashboard package
+	@echo "==> Installing dashboard package"
+	@cd clustering-dashboard && make install
+	@echo "✓ Dashboard package installed"
 
 ################################################################################
-# DEVELOPMENT TARGETS
+# CODE QUALITY
 ################################################################################
 
-##@ Development
-
-.PHONY: dev format lint type-check check-all version dashboard
-dev: install-shared ## Start Dagster development server without creating directories
-	@echo "==> Starting Dagster development server"
-	@cd pipeline && DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m $(PACKAGE_NAME).definitions --host 0.0.0.0
-	@echo "✓ Dagster development server stopped"
+.PHONY: format lint type-check check-all pre-commit pre-commit-all
 
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
-	@cd pipeline && $(PYTHON) -m ruff format .
+	@cd clustering-pipeline && python -m ruff format .
 	@echo "✓ Code formatting complete"
 
 lint: ## Lint code and auto-fix issues where possible
 	@echo "==> Linting code with ruff"
-	@cd pipeline && $(PYTHON) -m ruff check . --fix
+	@cd clustering-pipeline && python -m ruff check . --fix
 	@echo "✓ Code linting complete"
 
 type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
-	@cd pipeline && $(PYTHON) -m mypy .
+	@cd clustering-pipeline && python -m mypy .
 	@echo "==> Running pyright type checker"
-	-@cd pipeline && $(PYTHON) -m pyright .
+	-@cd clustering-pipeline && python -m pyright .
 	@echo "✓ Type checking complete (warnings may be present)"
 
 check-all: format lint type-check ## Run all code quality checks including pre-commit hooks
@@ -194,67 +202,153 @@ check-all: format lint type-check ## Run all code quality checks including pre-c
 	fi
 	@echo "✓ All code quality checks completed successfully"
 
-version: ## Display version and author information
-	@echo "=================================================="
-	@echo "  $(PACKAGE_NAME) version $(VERSION)"
-	@echo "  Developed by $(AUTHOR)"
-	@echo "  Copyright (c) 2025 CVS Health"
-	@echo "=================================================="
+pre-commit: ## Run pre-commit hooks on staged files
+	@echo "==> Running pre-commit hooks on staged files"
+	@pre-commit run
+	@echo "✓ Pre-commit hooks completed"
 
-dashboard: ## Run the clustering dashboard
-	@echo "==> Starting Clustering Dashboard"
-	@cd dashboard && make run
-	@echo "✓ Dashboard server stopped"
-
-dashboard-install: ## Install the dashboard package
-	@echo "==> Installing dashboard package"
-	@cd dashboard && make install
-	@echo "✓ Dashboard package installed"
+pre-commit-all: ## Run pre-commit hooks on all files
+	@echo "==> Running pre-commit hooks on all files"
+	@pre-commit run --all-files
+	@echo "✓ Pre-commit hooks completed for all files"
 
 ################################################################################
-# TESTING TARGETS
+# TESTING
 ################################################################################
-
-##@ Testing
 
 .PHONY: test test-unit test-integration dagster-test
-test: install-shared ## Run tests with coverage reporting
+
+test: ## Run tests with coverage reporting
 	@echo "==> Running tests with coverage"
-	@cd pipeline && $(PYTHON) -m pytest $(TESTS_DIR) --cov=src --cov-report=term --cov-report=xml -v
+	@cd clustering-pipeline && python -m pytest $(TESTS_DIR) --cov=src --cov-report=term --cov-report=xml -v
 	@echo "✓ Tests completed"
 
-test-unit: install-shared ## Run only unit tests
+test-unit: ## Run only unit tests
 	@echo "==> Running unit tests"
-	@cd pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/core $(TESTS_DIR)/io -v
+	@cd clustering-pipeline && python -m pytest $(TESTS_DIR)/core $(TESTS_DIR)/io -v
 	@echo "✓ Unit tests completed"
 
-test-integration: install-shared ## Run only integration tests
+test-integration: ## Run only integration tests
 	@echo "==> Running integration tests"
-	@cd pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/integration -v
+	@cd clustering-pipeline && python -m pytest $(TESTS_DIR)/integration -v
 	@echo "✓ Integration tests completed"
 
-dagster-test: install-shared ## Run Dagster-specific tests
+dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
-	@cd pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/dagster -v
+	@cd clustering-pipeline && python -m pytest $(TESTS_DIR)/dagster -v
 	@echo "✓ Dagster tests completed"
 
 ################################################################################
-# BUILD & CLEAN TARGETS
+# DOCUMENTATION
 ################################################################################
 
-##@ Build and Deploy
+.PHONY: docs docs-server
 
-.PHONY: build clean
+docs: docs-deps ## Build documentation
+	@echo "==> Building documentation"
+	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 make html
+	@echo "✓ Documentation built successfully. Open docs/build/html/index.html to view"
+
+docs-server: docs-deps ## Start documentation server (http://localhost:8000)
+	@echo "==> Starting documentation server"
+	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 python -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
+	@echo "✓ Documentation server running at http://localhost:8000"
+
+################################################################################
+# DAGSTER COMMANDS
+################################################################################
+
+.PHONY: dagster-ui dagster-job-%
+
+dagster-ui: ## Start the Dagster UI web interface
+	@echo "==> Starting Dagster UI with $(DAGSTER_ENV) environment"
+	@cd clustering-pipeline && python -m clustering.pipeline.cli.ui --env $(DAGSTER_ENV)
+	@echo "✓ Dagster UI started. Access at http://localhost:3000"
+
+dagster-job-%: ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
+	@echo "==> Running Dagster job: $*"
+	@cd clustering-pipeline && python -m dagster job execute -m clustering.pipeline.definitions -j $*
+	@echo "✓ Job $* completed"
+
+################################################################################
+# PIPELINE WORKFLOWS
+################################################################################
+
+.PHONY: run-internal-% run-external-% run-merging run-full run-job full-pipeline
+
+run-internal-%: ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
+	@echo "==> Running internal $* pipeline"
+	@cd clustering-pipeline && python -m dagster job execute -m clustering.pipeline.definitions -j internal_$*_job
+	@echo "✓ Internal $* pipeline completed"
+
+run-external-%: ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-ml)
+	@echo "==> Running external $* pipeline"
+	@cd clustering-pipeline && python -m dagster job execute -m clustering.pipeline.definitions -j external_$*_job
+	@echo "✓ External $* pipeline completed"
+
+run-merging: ## Run only the cluster merging job
+	@echo "==> Running merging job"
+	@cd clustering-pipeline && python -m dagster job execute -m clustering.pipeline.definitions -j merging_job
+	@echo "✓ Merging job completed"
+
+run-full: ## Run the complete pipeline (internal, external, and merging)
+	@echo "==> Running full pipeline job"
+	@cd clustering-pipeline && python -m dagster job execute -m clustering.pipeline.definitions -j full_pipeline_job
+	@echo "✓ Full pipeline completed"
+
+run-job: ## Run a specific job with environment (usage: make run-job JOB=job_name ENV=prod)
+	@echo "==> Running job $(JOB) in $(ENV) environment"
+	@if [ -z "$(JOB)" ]; then \
+		echo "Error: JOB parameter is required. Usage: make run-job JOB=job_name ENV=env_name"; \
+		exit 1; \
+	fi
+	@cd clustering-pipeline && python -m clustering.cli.commands run $(JOB) --env $(ENV)
+	@echo "✓ Job $(JOB) completed"
+
+full-pipeline: ## Run the full pipeline with specified environment (usage: make full-pipeline ENV=prod)
+	@echo "==> Running full pipeline in $(ENV) environment"
+	@python -m clustering.cli.commands run full_pipeline_job --env $(ENV)
+	@echo "✓ Full pipeline completed"
+
+################################################################################
+# MEMORY OPTIMIZATION
+################################################################################
+
+.PHONY: run-memory-optimized run-visualization
+
+run-memory-optimized: ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
+	@echo "==> Running job with memory optimization"
+	@if [ -z "$(JOB)" ]; then \
+		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
+		exit 1; \
+	fi
+	@cd clustering-pipeline && DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
+	 python -m dagster job execute -m clustering.pipeline.definitions -j $(JOB)
+	@echo "✓ Memory-optimized job $(JOB) completed"
+
+run-visualization: ## Run visualization job with memory optimization
+	@echo "==> Running visualization job with memory optimization"
+	@cd clustering-pipeline && DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
+	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \
+	 python -m dagster job execute -m clustering.pipeline.definitions -j internal_visualization
+	@echo "✓ Visualization job completed"
+
+################################################################################
+# BUILD AND CLEANUP
+################################################################################
+
+.PHONY: build clean clean-temp
+
 build: ## Build the Python package for distribution
 	@echo "==> Building package for distribution"
-	@cd pipeline && uv build --all-packages
-	@echo "✓ Build complete. Files available in the pipeline/dist/ directory"
+	@cd clustering-pipeline && uv build --all-packages
+	@echo "✓ Build complete. Files available in the clustering-pipeline/dist/ directory"
 
 clean: ## Clean up all build artifacts and temporary files
 	@echo "==> Cleaning build artifacts and cache files"
-	@cd pipeline && rm -rf build/
-	@cd pipeline && rm -rf dist/
-	@cd pipeline && rm -rf *.egg-info/
+	@cd clustering-pipeline && rm -rf build/
+	@cd clustering-pipeline && rm -rf dist/
+	@cd clustering-pipeline && rm -rf *.egg-info/
 	@rm -rf .coverage
 	@rm -rf coverage.xml
 	@rm -rf .pytest_cache/
@@ -271,121 +365,3 @@ clean-temp: ## Clean only temporary dagster files
 	@echo "==> Cleaning temporary Dagster files"
 	@find . -name ".tmp_dagster*" -type d -exec rm -rf {} +
 	@echo "✓ Temporary files cleaned"
-
-################################################################################
-# DAGSTER COMMANDS
-################################################################################
-
-##@ Dagster Commands
-
-.PHONY: dagster-ui dagster-job-%
-dagster-ui: ## Start the Dagster UI web interface
-	@echo "==> Starting Dagster UI with $(DAGSTER_ENV) environment"
-	@cd pipeline && $(PYTHON) -m $(PACKAGE_NAME).cli.ui --env $(DAGSTER_ENV)
-	@echo "✓ Dagster UI started. Access at http://localhost:3000"
-
-dagster-job-%: ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
-	@echo "==> Running Dagster job: $*"
-	@cd pipeline && $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j $*
-	@echo "✓ Job $* completed"
-
-################################################################################
-# PIPELINE WORKFLOWS
-################################################################################
-
-##@ Pipeline Workflows
-
-# Direct Dagster CLI commands
-.PHONY: run-internal-% run-external-% run-merging run-full run-job full-pipeline
-run-internal-%: ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
-	@echo "==> Running internal $* pipeline"
-	@cd pipeline && $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j internal_$*_job
-	@echo "✓ Internal $* pipeline completed"
-
-run-external-%: ## Run external pipeline jobs (usage: make run-external-preprocessing OR run-external-ml)
-	@echo "==> Running external $* pipeline"
-	@cd pipeline && $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j external_$*_job
-	@echo "✓ External $* pipeline completed"
-
-run-merging: ## Run only the cluster merging job
-	@echo "==> Running merging job"
-	@cd pipeline && $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j merging_job
-	@echo "✓ Merging job completed"
-
-run-full: ## Run the complete pipeline (internal, external, and merging)
-	@echo "==> Running full pipeline job"
-	@cd pipeline && $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j full_pipeline_job
-	@echo "✓ Full pipeline completed"
-
-# Custom CLI commands
-run-job: ## Run a specific job with environment (usage: make run-job JOB=job_name ENV=prod)
-	@echo "==> Running job $(JOB) in $(ENV) environment"
-	@if [ -z "$(JOB)" ]; then \
-		echo "Error: JOB parameter is required. Usage: make run-job JOB=job_name ENV=env_name"; \
-		exit 1; \
-	fi
-	@cd pipeline && $(PYTHON) -m $(PACKAGE_NAME).cli.commands run $(JOB) --env $(ENV)
-	@echo "✓ Job $(JOB) completed"
-
-full-pipeline: ## Run the full pipeline with specified environment (usage: make full-pipeline ENV=prod)
-	@echo "==> Running full pipeline in $(ENV) environment"
-	@$(PYTHON) -m cli.commands run full_pipeline_job --env $(ENV)
-	@echo "✓ Full pipeline completed"
-
-################################################################################
-# MEMORY MANAGEMENT
-################################################################################
-
-##@ Memory Management
-
-.PHONY: run-memory-optimized run-visualization
-run-memory-optimized: ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
-	@echo "==> Running job with memory optimization"
-	@if [ -z "$(JOB)" ]; then \
-		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
-		exit 1; \
-	fi
-	@cd pipeline && DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
-	 $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j $(JOB)
-	@echo "✓ Memory-optimized job $(JOB) completed"
-
-run-visualization: ## Run visualization job with memory optimization
-	@echo "==> Running visualization job with memory optimization"
-	@cd pipeline && DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
-	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \
-	 $(PYTHON) -m dagster job execute -m $(PACKAGE_NAME).definitions -j internal_visualization
-	@echo "✓ Visualization job completed"
-
-################################################################################
-# DOCUMENTATION
-################################################################################
-
-##@ Documentation
-
-.PHONY: docs docs-server
-docs: docs-deps ## Build documentation
-	@echo "==> Building documentation"
-	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(MAKE) html
-	@echo "✓ Documentation built successfully. Open docs/build/html/index.html to view"
-
-docs-server: docs-deps ## Start documentation server (http://localhost:8000)
-	@echo "==> Starting documentation server"
-	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(PYTHON) -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
-	@echo "✓ Documentation server running at http://localhost:8000"
-
-################################################################################
-# PRE-COMMIT HOOKS
-################################################################################
-
-##@ Pre-commit
-
-.PHONY: pre-commit pre-commit-all
-pre-commit: ## Run pre-commit hooks on staged files
-	@echo "==> Running pre-commit hooks on staged files"
-	@pre-commit run
-	@echo "✓ Pre-commit hooks completed"
-
-pre-commit-all: ## Run pre-commit hooks on all files
-	@echo "==> Running pre-commit hooks on all files"
-	@pre-commit run --all-files
-	@echo "✓ Pre-commit hooks completed for all files"
