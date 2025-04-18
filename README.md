@@ -2,7 +2,7 @@
 
 ![Dagster](https://img.shields.io/badge/orchestration-Dagster-green)
 ![Python](https://img.shields.io/badge/language-Python_3.10-blue)
-![License](https://img.shields.io/badge/license-Proprietary-red)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 A data pipeline for clustering stores based on sales data and external data sources, built with Dagster.
 
@@ -36,14 +36,12 @@ A data pipeline for clustering stores based on sales data and external data sour
   - [Documentation](#-documentation)
   - [Security & Privacy](#-security--privacy)
   - [FAQ](#-faq)
-  - [CI/CD Pipeline](#ci-cd-pipeline)
 
 ## 👥 Project Information
 
-**Author**: Jackson Yang
-**Email**: Jackson.Yang@cvshealth.com
-**Organization**: CVS Health
-**License**: Copyright © 2025 CVS Health. All rights reserved.
+**Author**: Jackson Yang  
+**Email**: Jackson.Yang@cvshealth.com  
+**License**: MIT  
 
 ## 🎯 Project Purpose
 
@@ -76,18 +74,30 @@ The primary goal is to identify meaningful store segments that can inform busine
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/testing-dagster.git
-   cd testing-dagster
+   git clone https://github.com/yourusername/clustering-dagster.git
+   cd clustering-dagster
    ```
 
-2. Install dependencies:
+2. Install dependencies using uv:
    ```bash
-   make install
+   uv pip install -e .
+   ```
+
+   Or install with optional dependencies:
+   ```bash
+   # Install development dependencies
+   uv pip install -e ".[dev]"
+   
+   # Install documentation dependencies
+   uv pip install -e ".[docs]"
+   
+   # Install all dependencies
+   uv pip install -e ".[all]"
    ```
 
 3. Verify installation:
    ```bash
-   make version
+   clustering --version
    ```
 
 ### Installing as a Package
@@ -95,14 +105,14 @@ The primary goal is to identify meaningful store segments that can inform busine
 To install this project as a Python package:
 
 ```bash
-# Install specific version (recommended)
-uv add clustering-pipeline==1.0.0
+# Install from PyPI
+uv pip install clustering
 
-# Install from the local directory
-uv add -e .
+# Install specific version (recommended)
+uv pip install clustering==0.1.0
 
 # Or install directly from GitHub
-uv add git+https://github.com/yourusername/testing-dagster.git@v1.0.0
+uv pip install git+https://github.com/yourusername/clustering-dagster.git@v0.1.0
 ```
 
 ### Uninstallation
@@ -111,7 +121,7 @@ To remove the package:
 
 ```bash
 # Remove the package
-uv remove clustering-pipeline
+uv pip uninstall clustering
 
 # Remove all related configuration (optional)
 rm -rf ~/.clustering
@@ -136,7 +146,7 @@ clustering completion fish > ~/.config/fish/completions/clustering.fish
 
 ### Environment Setup
 
-After installing the package with `uv add`, you'll need to create some configuration files before running the CLI:
+After installing the package, you'll need to create some configuration files before running the CLI:
 
 1. **Create Environment File**:
 
@@ -188,8 +198,6 @@ After installing the package with `uv add`, you'll need to create some configura
    # - The data directories exist
    # - DAGSTER_HOME is set correctly
    ```
-
-These steps ensure your environment is properly configured to run the clustering pipeline CLI.
 
 ### Data Directory Structure
 
@@ -255,12 +263,6 @@ Each directory contains intermediate files produced by the pipeline, such as:
    - Data source and destination paths
    - Logging configuration
 
-   To use a specific environment:
-
-   ```bash
-   make full-pipeline ENV=prod
-   ```
-
 ## 📊 Usage
 
 ### Using the CLI
@@ -276,9 +278,6 @@ clustering --help
 
 # View help for a specific command
 clustering run --help
-
-# Access man pages (if installed)
-man clustering
 ```
 
 Example output:
@@ -304,28 +303,28 @@ The project includes several run configurations:
 
 1. **Development Server**:
    ```bash
-   make dev
+   clustering ui
    ```
    This launches the Dagster UI at http://localhost:3000
 
 2. **Full Pipeline**:
    ```bash
-   make run-full
+   clustering run full_pipeline_job
    ```
    This runs the complete pipeline including internal preprocessing, model training, external data integration, and cluster merging.
 
 3. **Individual Pipeline Components**:
    ```bash
-   make run-internal-preprocessing  # Run internal data preprocessing
-   make run-internal-ml             # Run internal ML pipeline
-   make run-external-preprocessing  # Run external data preprocessing
-   make run-external-ml             # Run external ML pipeline
-   make run-merging                 # Run cluster merging
+   clustering run internal_preprocessing_job  # Run internal data preprocessing
+   clustering run internal_ml_job             # Run internal ML pipeline
+   clustering run external_preprocessing_job  # Run external data preprocessing
+   clustering run external_ml_job             # Run external ML pipeline
+   clustering run merging_job                 # Run cluster merging
    ```
 
 4. **Memory-Optimized Mode**:
    ```bash
-   make run-memory-optimized JOB=full_pipeline_job
+   clustering run full_pipeline_job --memory-optimized
    ```
 
 ### Common Workflows
@@ -359,19 +358,19 @@ The CLI provides detailed error messages and exit codes:
 Common error scenarios and solutions:
 
 1. **Configuration Errors**:
-   ```bash
+   ```
    Error: No configuration found for environment 'prod'
    Solution: Ensure .env.prod exists or use --env dev
    ```
 
 2. **Pipeline Failures**:
-   ```bash
+   ```
    Error: Job 'internal_preprocessing_job' failed
    Solution: Check logs at ~/.clustering/logs/
    ```
 
 3. **Permission Issues**:
-   ```bash
+   ```
    Error: Unable to access data directory
    Solution: Verify permissions and paths in config
    ```
@@ -403,37 +402,51 @@ External Data → Preprocessing → Feature Engineering → Model Training
 
 ### Code Quality
 
-Maintain code quality with the provided tools:
+Maintain code quality with the following tools configured in the project:
 
 ```bash
-make format         # Format code with ruff
-make lint           # Lint code and auto-fix issues
-make type-check     # Run type checking with mypy and pyright
-make check-all      # Run all code quality checks
+# Format code with ruff
+ruff format .
+
+# Lint code and auto-fix issues
+ruff check --fix .
+
+# Run type checking
+mypy src/
+pyright src/
 ```
 
 ### Testing
 
-Run tests with:
+Run tests with pytest:
 
 ```bash
-make test           # Run all tests with coverage
-make dagster-test   # Run Dagster-specific tests
+# Run all tests with coverage
+pytest --cov=src tests/
+
+# Run specific test files
+pytest tests/test_pipeline.py
 ```
 
 ## 📚 Documentation
 
-Build and view documentation with:
+Build and view documentation:
 
 ```bash
-make docs           # Build documentation
+# Install documentation dependencies
+uv pip install -e ".[docs]"
+
+# Build documentation
+sphinx-build -b html docs/source docs/build/html
 ```
+
 Open `docs/build/html/index.html` in your browser to view.
 
 Or start the documentation server:
 
 ```bash
-make docs-server    # Start documentation server at http://localhost:8000
+# Start documentation server
+sphinx-autobuild docs/source docs/build/html
 ```
 
 ## 🔒 Security & Privacy
@@ -444,10 +457,10 @@ Verify package integrity during installation:
 
 ```bash
 # Download and verify package signature
-uv add clustering-pipeline --require-hashes
+uv pip install clustering --require-hashes
 
 # View package metadata
-uv pip show clustering-pipeline
+uv pip show clustering
 ```
 
 ### Data Collection
@@ -460,45 +473,14 @@ This CLI does not collect any telemetry or usage data by default. All data proce
 A: The pipeline automatically evaluates different cluster counts based on silhouette scores, Calinski-Harabasz Index, and Davies-Bouldin Index. You can configure the range with `min_clusters` and `max_clusters` in the config file.
 
 **Q: Can I run the pipeline with limited memory?**
-A: Yes, use `make run-memory-optimized JOB=job_name` to run with memory optimization enabled.
+A: Yes, use the `--memory-optimized` flag when running jobs to enable memory optimization.
 
 **Q: How do I add a new data source?**
 A: Add a new reader configuration in the environment config file and create a corresponding asset in the appropriate preprocessing module.
 
-## CI/CD Pipeline
+**Q: Where can I find the project's dependencies?**
+A: All dependencies are listed in the `pyproject.toml` file, categorized into core dependencies and optional dependencies.
 
-This project uses GitLab CI/CD for continuous integration and deployment. The pipeline is organized in a modular structure in the `gitlab-ci/` directory:
-
-### Structure
-
-- **`.gitlab-ci.yml`**: Root configuration file that includes the main configuration
-- **`gitlab-ci/main.yml`**: Main configuration file defining stages, variables, and cache settings
-- **`gitlab-ci/jobs/`**: Directory containing individual job configurations:
-  - **`lint.yml`**: Linting job using Ruff and MyPy
-  - **`test.yml`**: Testing job using pytest with coverage reporting
-  - **`build.yml`**: Docker build and push job
-  - **`deploy.yml`**: Deployment jobs for dev and production environments
-
-### Stages
-
-1. **Lint**: Runs static code analysis using Ruff and type checking with MyPy
-2. **Test**: Runs unit tests with pytest and collects coverage reports
-3. **Build**: Builds a Docker image and pushes it to the GitLab Container Registry
-4. **Deploy**: Deploys the application to the appropriate environment
-
-### Environment Deployments
-
-- **Development**: Automatically triggered for all branches except `main` and `production`
-- **Production**: Manually triggered for the `main` or `production` branches
-
-### Setup Requirements
-
-To use this CI/CD pipeline, you need to:
-
-1. Set up a GitLab project with runners enabled
-2. Configure the following CI/CD variables in your GitLab project settings:
-   - `DEPLOY_TOKEN`: Authentication token for deployment webhook
-   - `DEPLOY_WEBHOOK_URL`: URL endpoint for triggering deployments
-
-For local development, you can still use the Makefile commands for testing and running the application.
+**Q: How do I contribute to this project?**
+A: Fork the repository, make your changes, and submit a pull request. Ensure your code passes all linting and testing checks before submitting.
 

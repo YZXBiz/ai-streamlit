@@ -1,0 +1,63 @@
+# =========================================
+# Build System
+# =========================================
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# =========================================
+# Project Metadata
+# =========================================
+
+[project]
+name = "cli"
+version = "0.1.0"
+description = "Command-line interface for the clustering project"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# =========================================
+# Dependencies
+# =========================================
+
+dependencies = [
+    # Core CLI dependencies
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "pydantic>=2.10.3",
+    "pydantic-settings>=2.6.1",
+    # Local packages
+    "shared @ {root:uri}/shared",
+    "pipeline @ {root:uri}/pipeline",
+]
+
+# =========================================
+# Entry Points
+# =========================================
+
+[project.scripts]
+clustering = "cli.commands:main"
+
+# =========================================
+# Build Configuration
+# =========================================
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cli"]
+
+# =========================================
+# Code Quality
+# =========================================
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
