@@ -8,12 +8,20 @@ services:
     env_file:
       - .env
     volumes:
-      - ./configs:/app/configs
+      - ./data:/app/data
       - ./logs:/app/logs
+      - ./configs:/app/configs
       - ./outputs:/app/outputs
       - ./reports:/app/reports
       - ./cache:/app/cache
+      - ./dagster_home:/app/dagster_home
     command: configs/internal_preprocessing.yml
+    environment:
+      - DAGSTER_HOME=/app/dagster_home
+      - PYTHONPATH=/app
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.16.0
@@ -36,7 +44,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "dagster"]
+      test: [ "CMD", "pg_isready", "-U", "dagster" ]
       interval: 10s
       timeout: 5s
       retries: 5

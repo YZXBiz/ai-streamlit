@@ -1,34 +1,38 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     curl \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv for package management
-RUN curl -fsSL https://pkg.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install --force uv
+# Install uv directly instead of installing Rust + building uv
+RUN curl -fsSL https://astral.sh/uv/install.sh | bash
 
-# Copy just the requirements first to leverage Docker caching
-COPY pyproject.toml .
+# Copy dependency files first for better layer caching
+COPY pyproject.toml uv.lock ./
+COPY clustering-pipeline/pyproject.toml clustering-pipeline/
+COPY clustering-cli/pyproject.toml clustering-cli/
+COPY clustering-shared/pyproject.toml clustering-shared/
+COPY clustering-dashboard/pyproject.toml clustering-dashboard/
 
-# Install dependencies
-RUN uv pip install -e .
+# Install dependencies for all packages
+RUN uv pip install -e ".[all]"
+
+# Create necessary directories (only those that aren't mounted volumes)
+RUN mkdir -p cache
 
 # Copy the rest of the application
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p logs configs outputs reports cache
-
 # Set environment variables
 ENV PYTHONPATH=/app
 
+# Create wrapper script for consistent execution (matching Makefile pattern)
+RUN echo '#!/bin/bash\nexec uv run "$@"' > /usr/local/bin/run-python && \
+    chmod +x /usr/local/bin/run-python
+
 # Command to run when the container starts
-ENTRYPOINT ["uv", "run", "-m", "clustering"]
+ENTRYPOINT ["run-python", "-m", "clustering"]
 CMD ["--help"]

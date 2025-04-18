@@ -1,14 +1,63 @@
-"""Pytest fixtures for testing."""
+"""Project-wide pytest fixtures."""
 
 import os
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import polars as pl
 import pytest
 import yaml
+
+
+@pytest.fixture(autouse=True)
+def setup_test_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set up the test environment with common configurations.
+    
+    This fixture runs automatically for all tests.
+
+    Args:
+        monkeypatch: Pytest's monkeypatch fixture.
+    """
+    # Set common environment variables for testing
+    test_env_vars = {
+        "ENV": "test",
+        "DAGSTER_HOME": str(Path(tempfile.gettempdir()) / "dagster_home_test"),
+        "DATA_DIR": str(Path(tempfile.gettempdir()) / "test_data"),
+    }
+    
+    for key, value in test_env_vars.items():
+        monkeypatch.setenv(key, value)
+    
+    # Create necessary directories
+    for directory in [test_env_vars["DAGSTER_HOME"], test_env_vars["DATA_DIR"]]:
+        Path(directory).mkdir(exist_ok=True, parents=True)
+
+
+@pytest.fixture
+def common_test_data() -> dict[str, Any]:
+    """Provide common test data shared across all test packages.
+
+    Returns:
+        dict: Dictionary containing common test data.
+    """
+    return {
+        "store_ids": [f"STORE_{i}" for i in range(1, 11)],
+        "categories": ["Health", "Beauty", "Grocery", "Pharmacy", "General"],
+        "test_dates": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    }
+
+
+@pytest.fixture
+def package_root_dir() -> Path:
+    """Get the root directory of the project.
+    
+    Returns:
+        Path: Path to the project root directory.
+    """
+    return Path(__file__).parent.parent
 
 
 @pytest.fixture

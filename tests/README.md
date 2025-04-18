@@ -1,41 +1,58 @@
-# Testing the Clustering Package
+# Testing Organization for Multi-Package Structure
 
-This directory contains tests for the clustering package.
+This directory contains tests for the clustering project's multi-package architecture.
 
-## Structure
+## Test Structure
 
-- `core/`: Unit tests for core components (schemas, models, utils)
-- `io/`: Tests for IO functionality (readers, writers, blob storage, etc.)
-- `dagster/`: Tests for Dagster-specific components (assets, jobs, resources)
-- `integration/`: Integration tests for workflow combinations
+### Package-Based Organization
+
+Tests are organized to mirror our multi-package structure:
+
+- `clustering-shared/`: Tests for shared functionality used across packages
+  - `core/`: Core domain models, utilities, and common functionality
+  - `io/`: IO operations, readers, writers, data access
+
+- `clustering-pipeline/`: Tests for pipeline-specific functionality
+  - `dagster/`: Dagster assets, jobs, resources, and pipeline definitions
+  - `models/`: Machine learning models, algorithms, and related components
+
+- `clustering-cli/`: Tests for CLI tools and command-line interfaces
+
+### Test Types
+
+- `unit/`: Focused tests for individual components (default location for most tests)
+- `integration/`: Tests that verify interactions between multiple components
+- `e2e/`: End-to-end tests that verify complete workflows
 
 ## Running Tests
 
-To run all tests:
+You can run tests for specific packages or components:
 
 ```bash
+# Run all tests
 make test
-```
 
-To run tests for a specific component:
+# Run tests for a specific package
+make test-shared
+make test-pipeline
+make test-cli
 
-```bash
-pytest tests/core/test_schemas.py -v
-```
-
-To run tests with code coverage:
-
-```bash
-pytest tests/ --cov=src/clustering --cov-report=term --cov-report=html
+# Run specific test types
+make test-unit
+make test-integration
 ```
 
 ## Writing Tests
 
-When writing new tests:
+1. Place tests in the appropriate package directory
+2. Use fixtures from the package-specific `conftest.py` when possible
+3. Follow package-specific patterns and conventions
+4. Name test files with `test_` prefix
 
-1. Place tests in the appropriate directory based on component type
-2. Use fixtures from `conftest.py` when possible
-3. Follow existing naming conventions
+## Fixtures and Common Utilities
+
+- Root-level `conftest.py` contains project-wide fixtures
+- Each package directory has its own `conftest.py` for package-specific fixtures
 
 ## Test Data
 

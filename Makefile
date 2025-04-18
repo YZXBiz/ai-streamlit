@@ -4,7 +4,6 @@
 #
 # Author: Jackson Yang <Jackson.Yang@cvshealth.com>
 # Version: 1.0.0
-# Copyright (c) 2025 CVS Health
 #
 # Description:
 #   This Makefile provides targets for developing, testing, and running the
@@ -109,7 +108,6 @@ version: ## Display version and author information
 	@echo "=================================================="
 	@echo "  $(PACKAGE_NAME) version $(VERSION)"
 	@echo "  Developed by $(AUTHOR)"
-	@echo "  Copyright (c) 2025 CVS Health"
 	@echo "=================================================="
 
 ##@ Environment Setup
@@ -225,26 +223,46 @@ pre-commit-all: ## Run pre-commit hooks on all files
 # TESTING
 ################################################################################
 
-.PHONY: test test-unit test-integration dagster-test
+.PHONY: test test-unit test-integration test-shared test-pipeline test-cli test-e2e dagster-test
 
-test: ## Run tests with coverage reporting
-	@echo "==> Running tests with coverage"
-	@cd clustering-pipeline && $(PYTHON) -m pytest $(TESTS_DIR) --cov=src --cov-report=term --cov-report=xml -v
+test: ## Run all tests with coverage reporting
+	@echo "==> Running all tests with coverage"
+	@$(PYTHON) -m pytest tests/ --cov=clustering-shared/src --cov=clustering-pipeline/src --cov=clustering-cli/src --cov-report=term --cov-report=xml -v
 	@echo "✓ Tests completed"
 
 test-unit: ## Run only unit tests
 	@echo "==> Running unit tests"
-	@cd clustering-pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/core $(TESTS_DIR)/io -v
+	@$(PYTHON) -m pytest tests/*/unit -v
 	@echo "✓ Unit tests completed"
 
 test-integration: ## Run only integration tests
 	@echo "==> Running integration tests"
-	@cd clustering-pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/integration -v
+	@$(PYTHON) -m pytest tests/integration -v
 	@echo "✓ Integration tests completed"
+
+test-e2e: ## Run end-to-end tests
+	@echo "==> Running end-to-end tests"
+	@$(PYTHON) -m pytest tests/e2e -v
+	@echo "✓ End-to-end tests completed"
+
+test-shared: ## Run tests for shared package
+	@echo "==> Running tests for clustering-shared package"
+	@$(PYTHON) -m pytest tests/clustering-shared -v
+	@echo "✓ Shared package tests completed"
+
+test-pipeline: ## Run tests for pipeline package 
+	@echo "==> Running tests for clustering-pipeline package"
+	@$(PYTHON) -m pytest tests/clustering-pipeline -v
+	@echo "✓ Pipeline package tests completed"
+
+test-cli: ## Run tests for CLI package
+	@echo "==> Running tests for clustering-cli package"
+	@$(PYTHON) -m pytest tests/clustering-cli -v
+	@echo "✓ CLI package tests completed"
 
 dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
-	@cd clustering-pipeline && $(PYTHON) -m pytest $(TESTS_DIR)/dagster -v
+	@$(PYTHON) -m pytest tests/clustering-pipeline/dagster -v
 	@echo "✓ Dagster tests completed"
 
 ##@ Documentation
