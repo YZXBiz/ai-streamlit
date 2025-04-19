@@ -64,3 +64,6 @@ outputs/*/
 .env.*
 
 dagster_home/
+
+# Storage files
+storage/
