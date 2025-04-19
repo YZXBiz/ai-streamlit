@@ -969,6 +969,8 @@ dashboard = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "clustering-cli" },
+    { name = "clustering-dashboard" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pyright" },
@@ -1013,6 +1015,8 @@ provides-extras = ["cli", "dashboard", "all"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "clustering-cli", editable = "clustering-cli" },
+    { name = "clustering-dashboard", editable = "clustering-dashboard" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pre-commit", specifier = ">=3.5.0" },
     { name = "pyright", specifier = ">=1.1.399" },

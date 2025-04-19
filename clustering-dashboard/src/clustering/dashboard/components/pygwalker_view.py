@@ -6,7 +6,6 @@ following modern visualization principles.
 
 import pandas as pd
 import streamlit as st
-from importlib.util import find_spec
 
 from pygwalker.api.streamlit import StreamlitRenderer
 
@@ -37,9 +36,7 @@ def render_pygwalker(df: pd.DataFrame) -> None:
     viz_app.explorer()
 
     # Add a tip for users
-    st.caption(
-        "Tip: You can export visualizations by clicking the export button in the chart view"
-    )
+    st.caption("Tip: You can export visualizations by clicking the export button in the chart view")
 
 
 def render_pygwalker_with_spec(df: pd.DataFrame, spec: str) -> None:
@@ -93,14 +90,14 @@ def get_pyg_renderer(df: pd.DataFrame, spec: str | None = None) -> object:
 def pygwalker_view(df: pd.DataFrame, title: str = "Data Explorer") -> None:
     """
     Create an interactive data visualization interface using PyGWalker.
-    
+
     Args:
         df: DataFrame to visualize
         title: Title of the visualization section
     """
-    
+
     st.header(title)
-    
+
     # Initialize the renderer
     walker = StreamlitRenderer(df, spec="./gw_config.json", debug=False)
     walker.explorer()

@@ -75,6 +75,7 @@ clustering = "clustering.cli.commands:main"
 # =========================================
 
 [project.optional-dependencies]
+# Optional extras for users who only need specific interfaces
 cli = ["clustering-cli"]
 dashboard = ["clustering-dashboard"]
 all = ["clustering-cli", "clustering-dashboard"]
@@ -93,6 +94,9 @@ dev = [
     # Testing
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    # Also include optional components for convenience during development
+    "clustering-cli",
+    "clustering-dashboard",
 ]
 docs = [
     "sphinx>=8.1.3",
@@ -100,18 +104,6 @@ docs = [
     "sphinx-autodoc-typehints>=3.0.1",
     "sphinx-rtd-theme>=3.0.2",
     "nbconvert>=7.16.6",
-]
-
-# =========================================
-# Build Configuration
-# =========================================
-
-[tool.hatch.build.targets.wheel]
-packages = [
-    "clustering-pipeline",
-    "clustering-shared",
-    "clustering-cli",
-    "clustering-dashboard",
 ]
 
 # =========================================
@@ -136,12 +128,27 @@ clustering-cli = { workspace = true }
 clustering-dashboard = { workspace = true }
 
 # =========================================
+# Build Configuration
+# =========================================
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "clustering-pipeline",
+    "clustering-shared",
+    "clustering-cli",
+    "clustering-dashboard",
+]
+
+# =========================================
 # Code Quality & Linting Configuration
 # =========================================
 
 [tool.ruff]
+# Basic configuration
 target-version = "py310"
 line-length = 100
+fix = true               # Automatically fix violations when possible
+unsafe-fixes = true      # Ensure unsafe fixes are also attempted
 # Exclude directories not relevant to the core code
 exclude = [
     ".git",
@@ -171,6 +178,10 @@ select = [
     "UP", # pyupgrade
     "D",  # pydocstyle
 ]
+# Explicitly make type annotation modernization rules fixable and ensure they're selected
+fixable = ["UP006", "UP007", "UP035"]
+# Force the type hint update rules to be applied
+extend-select = ["UP006", "UP007", "UP035"]
 ignore = [
     "D203", # one-blank-line-before-class (conflicts with no-blank-line-before-class)
     "D212", # multi-line-summary-first-line (conflicts with multi-line-summary-second-line)
@@ -179,12 +190,6 @@ ignore = [
     "N806", # Upper case letters are not allowed in function names
     "E501", # Line too long (handled by formatter)
 ]
-
-[tool.ruff.lint.isort]
-known-first-party = ["clustering"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -209,6 +214,18 @@ convention = "google"
 "src/clustering/core/sql_templates.py" = ["E501"]
 "src/clustering/dagster/assets/clustering/internal.py" = ["E501"]
 "src/clustering/dagster/definitions.py" = ["E501"]
+
+# Isort settings
+[tool.ruff.lint.isort]
+known-first-party = ["clustering"]
+
+# Docstring style
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Modern Python type annotations
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = false
 
 # =========================================
 # Type Checking Configuration

@@ -188,7 +188,7 @@ def test_pickle_writer_model_output(sample_model_output: dict) -> None:
     try:
         # Create pickle writer but not used directly
         # The direct writer usage is tested in other tests
-        
+
         # Write data - note we need to bypass validation for non-DataFrame data
         with open(temp_path, "wb") as file:
             import pickle

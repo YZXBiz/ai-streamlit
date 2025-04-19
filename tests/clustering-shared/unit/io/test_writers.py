@@ -235,7 +235,7 @@ class TestParquetWriter:
             # Compressed file should be smaller
             # We don't actually use the file sizes for comparison in this test
             # This is just to show that compression would be used in a real scenario
-            
+
             # Read back and verify both have same content
             result1 = pl.read_parquet(temp_path)
             result2 = pl.read_parquet(temp_path2)

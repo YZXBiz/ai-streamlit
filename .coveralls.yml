@@ -1,0 +1,4 @@
+service_name: github-actions
+repo_token: YOUR_REPO_TOKEN_HERE # Replace this with your actual token when deploying
+parallel: true
+flag_name: clustering-cli 

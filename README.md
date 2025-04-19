@@ -3,6 +3,7 @@
 ![Dagster](https://img.shields.io/badge/orchestration-Dagster-green)
 ![Python](https://img.shields.io/badge/language-Python_3.10-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Coverage Status](https://coveralls.io/repos/github/YOUR_USERNAME/clustering-dagster/badge.svg?branch=main)](https://coveralls.io/github/YOUR_USERNAME/clustering-dagster?branch=main)
 
 A data pipeline for clustering stores based on sales data and external data sources, built with Dagster.
 
@@ -418,15 +419,33 @@ pyright src/
 
 ### Testing
 
-Run tests with pytest:
+Tests are organized by component:
 
 ```bash
-# Run all tests with coverage
-pytest --cov=src tests/
+# Run all tests
+make test
 
-# Run specific test files
-pytest tests/test_pipeline.py
+# Run specific test categories
+make test-unit        # Run all unit tests
+make test-integration # Run integration tests
+make test-cli         # Run CLI package tests
+make test-shared      # Run shared package tests
+make test-pipeline    # Run pipeline tests
 ```
+
+#### Code Coverage
+
+The project uses Coveralls to track code coverage:
+
+```bash
+# Generate coverage reports
+make test-cli-coverage
+
+# Generate HTML coverage report (viewable in browser)
+make test-cli-html
+```
+
+The coverage badge in the README shows the current coverage status. You can view detailed coverage reports on the [Coveralls dashboard](https://coveralls.io/github/YOUR_USERNAME/clustering-dagster).
 
 ## 📚 Documentation
 

@@ -1,13 +1,14 @@
 """Command-line interface for the clustering project."""
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import click
 import pandas as pd
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
+import builtins
 
 console = Console()
 
@@ -23,7 +24,7 @@ def cli():
 @click.option("--env", default="dev", help="Environment to run in.")
 @click.option("--config", type=click.Path(exists=True), help="Path to configuration file.")
 @click.option("--param", multiple=True, help="Additional parameters in key=value format.")
-def run(job_name: str, env: str, config: Optional[str] = None, param: Optional[List[str]] = None):
+def run(job_name: str, env: str, config: str | None = None, param: list[str] | None = None):
     """Run a pipeline job.
 
     Args:
@@ -70,9 +71,7 @@ def run(job_name: str, env: str, config: Optional[str] = None, param: Optional[L
 )
 @click.option("--data", type=click.Path(exists=True), help="Path to data file to validate.")
 @click.option("--schema", help="Schema name for data validation.")
-def validate(
-    config: Optional[str] = None, data: Optional[str] = None, schema: Optional[str] = None
-):
+def validate(config: str | None = None, data: str | None = None, schema: str | None = None):
     """Validate configuration or data files.
 
     Args:
@@ -129,9 +128,7 @@ def validate(
     "--format", type=click.Choice(["csv", "json", "excel"]), default="csv", help="Output format."
 )
 @click.option("--filter", help="Filter expression for the results.")
-def export(
-    job_id: str, output: Optional[str] = None, format: str = "csv", filter: Optional[str] = None
-):
+def export(job_id: str, output: str | None = None, format: str = "csv", filter: str | None = None):
     """Export job results to a file.
 
     Args:
@@ -158,7 +155,7 @@ def export(
 @click.option(
     "--output", type=click.Choice(["table", "json"]), default="table", help="Output format."
 )
-def status(job_id: Optional[str] = None, output: str = "table"):
+def status(job_id: str | None = None, output: str = "table"):
     """Check status of a job or all jobs.
 
     Args:
@@ -216,7 +213,7 @@ def status(job_id: Optional[str] = None, output: str = "table"):
     "--output", type=click.Choice(["table", "json"]), default="table", help="Output format."
 )
 def list(
-    type: Optional[str] = None, status: Optional[str] = None, limit: int = 10, output: str = "table"
+    type: str | None = None, status: str | None = None, limit: int = 10, output: str = "table"
 ):
     """List available jobs or job runs.
 
@@ -284,7 +281,7 @@ def dashboard(host: str, port: int, env: str):
 
 
 # Helper functions for the CLI commands
-def run_job(job_name: str, env: str = "dev", params: Dict[str, Any] = None) -> Dict[str, Any]:
+def run_job(job_name: str, env: str = "dev", params: dict[str, Any] = None) -> dict[str, Any]:
     """Run a job with the specified name and parameters.
 
     This is a mock implementation for testing. In a real implementation,
@@ -304,7 +301,7 @@ def run_job(job_name: str, env: str = "dev", params: Dict[str, Any] = None) -> D
     return {"status": "success", "job_id": f"{job_name}-123"}
 
 
-def validate_config(config_path: str) -> Dict[str, Any]:
+def validate_config(config_path: str) -> dict[str, Any]:
     """Validate a configuration file.
 
     Args:
@@ -344,7 +341,7 @@ def validate_config(config_path: str) -> Dict[str, Any]:
         return {"valid": False, "message": f"Validation error: {str(e)}", "errors": [str(e)]}
 
 
-def validate_data(data_path: str, schema: Optional[str] = None) -> Dict[str, Any]:
+def validate_data(data_path: str, schema: str | None = None) -> dict[str, Any]:
     """Validate a data file.
 
     Args:
@@ -372,10 +369,10 @@ def validate_data(data_path: str, schema: Optional[str] = None) -> Dict[str, Any
 
 def export_results(
     job_id: str,
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
     format: str = "csv",
-    filter_expr: Optional[str] = None,
-) -> Dict[str, Any]:
+    filter_expr: str | None = None,
+) -> dict[str, Any]:
     """Export job results to a file.
 
     Args:
@@ -432,7 +429,7 @@ def export_results(
         return {"success": False, "message": f"Error exporting results: {str(e)}"}
 
 
-def get_job_status(job_id: str) -> Dict[str, Any]:
+def get_job_status(job_id: str) -> dict[str, Any]:
     """Get status information for a specific job.
 
     Args:
@@ -451,7 +448,7 @@ def get_job_status(job_id: str) -> Dict[str, Any]:
     }
 
 
-def get_all_jobs_status() -> List[Dict[str, Any]]:
+def get_all_jobs_status() -> builtins.list[dict[str, Any]]:
     """Get status information for all jobs.
 
     Returns:
@@ -481,8 +478,8 @@ def get_all_jobs_status() -> List[Dict[str, Any]]:
 
 
 def list_jobs(
-    job_type: Optional[str] = None, status: Optional[str] = None, limit: int = 10
-) -> List[Dict[str, Any]]:
+    job_type: str | None = None, status: str | None = None, limit: int = 10
+) -> builtins.list[dict[str, Any]]:
     """List jobs with optional filtering.
 
     Args:
