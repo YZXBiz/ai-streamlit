@@ -1,8 +1,6 @@
 """JSON writer for data output."""
 
 import json
-from pathlib import Path
-from typing import Any, Optional
 
 import polars as pl
 
@@ -45,4 +43,4 @@ class JSONWriter(FileWriter):
                         json.dump(records, f)
             else:
                 # Other orient options would be implemented here if needed
-                raise ValueError(f"Orient option '{self.orient}' not supported") 
+                raise ValueError(f"Orient option '{self.orient}' not supported")

@@ -59,10 +59,22 @@ readers:
     kind: "CSVReader"
     config:
       path: /workspaces/clustering-dagster/data/internal/ns_map.csv
+      ignore_errors: true
+      delimiter: ","
+      null_values: ["", "NA", "N/A", "None", "null"]
+      encoding: "utf8"
+      try_parse_dates: false  # Avoid type inference issues
+      comment_char: null
   ns_sales:
     kind: "CSVReader"
     config:
       path: /workspaces/clustering-dagster/data/internal/ns_sales.csv
+      ignore_errors: true
+      delimiter: ","
+      null_values: ["", "NA", "N/A", "None", "null"] 
+      encoding: "utf8"
+      try_parse_dates: false  # Avoid type inference issues
+      comment_char: null
   sales_by_category: # read in feature engineering
     kind: "PickleReader"
     config:

@@ -57,5 +57,14 @@ class PickleWriter(FileWriter):
         Args:
             data: DataFrame or dictionary of DataFrames to write
         """
+        # Convert polars DataFrame(s) to pandas before pickling for better compatibility
+        if isinstance(data, pl.DataFrame):
+            data_to_pickle = data.to_pandas()
+        elif isinstance(data, dict):
+            data_to_pickle = {key: df.to_pandas() for key, df in data.items()}
+        else:
+            # This shouldn't happen as validation should catch it, but just in case
+            raise ValueError(f"Unsupported data type: {type(data)}")
+
         with open(self.path, "wb") as file:
-            pickle.dump(data, file, protocol=self.protocol)
+            pickle.dump(data_to_pickle, file, protocol=self.protocol)

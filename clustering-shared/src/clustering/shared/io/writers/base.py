@@ -28,10 +28,13 @@ class Writer(pdt.BaseModel, ABC):
         # Step 2: Prepare for writing
         self._prepare_for_writing()
 
-        # Step 3: Write data to destination
-        self._write_to_destination(data)
+        # Step 3: Pre-process the data
+        processed_data = self._pre_process(data)
 
-        # Step 4: Post-process
+        # Step 4: Write data to destination
+        self._write_to_destination(processed_data)
+
+        # Step 5: Post-process
         self._post_process()
 
     def _validate_data(self, data: pl.DataFrame) -> None:
@@ -56,6 +59,20 @@ class Writer(pdt.BaseModel, ABC):
         specific preparation logic.
         """
         pass
+
+    def _pre_process(self, data: pl.DataFrame) -> pl.DataFrame:
+        """Pre-process the data before writing.
+
+        This hook method can be overridden by subclasses to implement
+        specific pre-processing logic.
+
+        Args:
+            data: DataFrame to pre-process
+
+        Returns:
+            Processed DataFrame
+        """
+        return data
 
     @abstractmethod
     def _write_to_destination(self, data: pl.DataFrame) -> None:

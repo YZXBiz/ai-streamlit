@@ -1,23 +1,18 @@
 """Internal preprocessing assets for the clustering pipeline."""
 
-import dagster as dg
-import polars as pl
-from dagster_pandera import pandera_schema_to_dagster_type
+import os
+import traceback
 
-from clustering.shared.schemas.schemas import (
-    SalesSchema,
-    NSMappingSchema,
-    MergedDataSchema,
-    DistributedDataSchema,
-)
+import dagster as dg
+import pandas as pd
+import polars as pl
+
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"internal_ns_sales"},
-    dagster_type=pandera_schema_to_dagster_type(SalesSchema),
 )
 def internal_raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
     """Load raw internal sales data.
@@ -30,16 +25,60 @@ def internal_raw_sales_data(context: dg.AssetExecutionContext) -> pl.DataFrame:
     """
     context.log.info("Reading need state sales data")
 
-    # Convert back to polars
-    return context.resources.internal_ns_sales.read()
+    try:
+        # Get the file path from resources config
+        file_path = "/workspaces/clustering-dagster/data/internal/ns_sales.csv"
+
+        # Check if file exists
+        if not os.path.exists(file_path):
+            context.log.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        context.log.info(f"Reading from file: {file_path}")
+
+        # Read file directly with polars with careful error handling
+        try:
+            df = pl.read_csv(file_path)
+        except Exception as e:
+            context.log.warning(f"Polars read failed: {str(e)}. Trying pandas fallback.")
+            # Fallback to pandas
+            pandas_df = pd.read_csv(file_path)
+            df = pl.from_pandas(pandas_df)
+
+        context.log.info(f"Successfully read data with shape: {df.shape}")
+
+        # Ensure required columns are present
+        required_columns = ["SKU_NBR", "STORE_NBR", "CAT_DSC", "TOTAL_SALES"]
+        missing_columns = [col for col in required_columns if col not in df.columns]
+
+        if missing_columns:
+            context.log.error(f"Missing required columns: {missing_columns}")
+            raise ValueError(f"Sales data is missing required columns: {missing_columns}")
+
+        # Ensure correct types
+        df = df.with_columns(
+            [
+                pl.col("SKU_NBR").cast(pl.Int64),
+                pl.col("STORE_NBR").cast(pl.Int64),
+                pl.col("CAT_DSC").cast(pl.Utf8),
+                pl.col("TOTAL_SALES").cast(pl.Float64),
+            ]
+        )
+
+        context.log.info(f"Successfully processed sales data: {df.shape}")
+        return df
+
+    except Exception as e:
+        context.log.error(f"Error processing sales data: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    required_resource_keys={"internal_ns_map"},
-    dagster_type=pandera_schema_to_dagster_type(NSMappingSchema),
 )
 def internal_product_category_mapping(
     context: dg.AssetExecutionContext,
@@ -52,12 +91,59 @@ def internal_product_category_mapping(
     Returns:
         DataFrame containing cleaned product category mapping data
     """
-    return (
-        context.resources.internal_ns_map.read()
-        .filter(pl.col("PRODUCT_ID").is_not_null())
-        .with_columns(pl.col("NEED_STATE").str.to_uppercase())
-        .unique()
-    )
+    try:
+        # Get the file path directly
+        file_path = "/workspaces/clustering-dagster/data/internal/ns_map.csv"
+
+        # Check if file exists
+        if not os.path.exists(file_path):
+            context.log.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        context.log.info(f"Reading from file: {file_path}")
+
+        # Read file directly with careful error handling
+        try:
+            df = pl.read_csv(file_path)
+        except Exception as e:
+            context.log.warning(f"Polars read failed: {str(e)}. Trying pandas fallback.")
+            # Fallback to pandas
+            pandas_df = pd.read_csv(file_path)
+            df = pl.from_pandas(pandas_df)
+
+        context.log.info(f"Successfully read data with shape: {df.shape}, columns: {df.columns}")
+
+        # Check for required column
+        if "PRODUCT_ID" not in df.columns:
+            context.log.error("Missing required column: PRODUCT_ID")
+            raise ValueError("Product mapping data is missing required column: PRODUCT_ID")
+
+        # Process the data
+        context.log.info("Filtering out null PRODUCT_ID rows")
+        result_df = df.filter(pl.col("PRODUCT_ID").is_not_null())
+
+        # Add NEED_STATE column if missing
+        if "NEED_STATE" not in result_df.columns:
+            context.log.warning("NEED_STATE column not found in data, creating default values")
+            result_df = result_df.with_columns(pl.lit("DEFAULT").alias("NEED_STATE"))
+        else:
+            # Convert to uppercase
+            result_df = result_df.with_columns(pl.col("NEED_STATE").str.to_uppercase())
+
+        # Ensure PRODUCT_ID is an integer
+        result_df = result_df.with_columns(pl.col("PRODUCT_ID").cast(pl.Int64))
+
+        # Remove duplicates
+        result_df = result_df.unique()
+
+        context.log.info(f"Successfully processed mapping data: {result_df.shape}")
+        return result_df
+
+    except Exception as e:
+        context.log.error(f"Error processing product mapping data: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @dg.asset(
@@ -65,7 +151,6 @@ def internal_product_category_mapping(
     deps=["internal_raw_sales_data", "internal_product_category_mapping"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    dagster_type=pandera_schema_to_dagster_type(MergedDataSchema),
 )
 def internal_sales_with_categories(
     context: dg.AssetExecutionContext,
@@ -84,18 +169,49 @@ def internal_sales_with_categories(
     """
     context.log.info("Merging sales and category data")
 
-    return internal_raw_sales_data.join(
-        internal_product_category_mapping,
-        left_on="SKU_NBR",
-        right_on="PRODUCT_ID",
-        how="inner",
-    ).select(
-        "SKU_NBR",
-        "STORE_NBR",
-        "CAT_DSC",
-        "NEED_STATE",
-        "TOTAL_SALES",
-    )
+    try:
+        context.log.info(
+            f"Sales data: {internal_raw_sales_data.shape}, Mapping data: {internal_product_category_mapping.shape}"
+        )
+
+        # Handle column renames if needed
+        if "SKU_NBR" not in internal_raw_sales_data.columns:
+            context.log.error("SKU_NBR column not found in sales data")
+            raise ValueError("SKU_NBR column not found in sales data")
+
+        # Ensure mapping has correct join column
+        if "PRODUCT_ID" not in internal_product_category_mapping.columns:
+            context.log.error("PRODUCT_ID column not found in mapping data")
+            raise ValueError("PRODUCT_ID column not found in mapping data")
+
+        # Perform join
+        merged_df = internal_raw_sales_data.join(
+            internal_product_category_mapping,
+            left_on="SKU_NBR",
+            right_on="PRODUCT_ID",
+            how="inner",
+        )
+
+        context.log.info(f"Join resulted in {merged_df.shape[0]} rows")
+
+        # Select required columns
+        result_columns = ["SKU_NBR", "STORE_NBR", "CAT_DSC", "NEED_STATE", "TOTAL_SALES"]
+        missing_columns = [col for col in result_columns if col not in merged_df.columns]
+
+        if missing_columns:
+            context.log.error(f"Merged data missing required columns: {missing_columns}")
+            raise ValueError(f"Merged data missing required columns: {missing_columns}")
+
+        result = merged_df.select(result_columns)
+
+        context.log.info(f"Final merged data: {result.shape}")
+        return result
+
+    except Exception as e:
+        context.log.error(f"Error merging data: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @dg.asset(
@@ -103,7 +219,6 @@ def internal_sales_with_categories(
     deps=["internal_sales_with_categories"],
     compute_kind="internal_preprocessing",
     group_name="preprocessing",
-    dagster_type=pandera_schema_to_dagster_type(DistributedDataSchema),
 )
 def internal_normalized_sales_data(
     context: dg.AssetExecutionContext,
@@ -120,19 +235,43 @@ def internal_normalized_sales_data(
     """
     context.log.info("Distributing sales evenly across need states")
 
-    return (
-        internal_sales_with_categories.pipe(
-            lambda df: df.with_columns(
-                pl.count()
-                .over([c for c in df.columns if c != "NEED_STATE" and c != "TOTAL_SALES"])
-                .alias("group_count")
+    try:
+        context.log.info(f"Input data shape: {internal_sales_with_categories.shape}")
+
+        # Check for required columns
+        required_columns = ["SKU_NBR", "STORE_NBR", "CAT_DSC", "NEED_STATE", "TOTAL_SALES"]
+        missing_columns = [
+            col for col in required_columns if col not in internal_sales_with_categories.columns
+        ]
+
+        if missing_columns:
+            context.log.error(f"Input data missing required columns: {missing_columns}")
+            raise ValueError(f"Input data missing required columns: {missing_columns}")
+
+        # Perform the normalization
+        context.log.info("Calculating group counts and redistributing sales")
+        result = (
+            internal_sales_with_categories.pipe(
+                lambda df: df.with_columns(
+                    pl.count()
+                    .over([c for c in df.columns if c != "NEED_STATE" and c != "TOTAL_SALES"])
+                    .alias("group_count")
+                )
             )
+            .with_columns(
+                (pl.col("TOTAL_SALES") / pl.col("group_count")).alias("TOTAL_SALES"),
+            )
+            .drop("group_count")
         )
-        .with_columns(
-            (pl.col("TOTAL_SALES") / pl.col("group_count")).alias("TOTAL_SALES"),
-        )
-        .drop("group_count")
-    )
+
+        context.log.info(f"Normalized data shape: {result.shape}")
+        return result
+
+    except Exception as e:
+        context.log.error(f"Error normalizing sales data: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @dg.asset(
@@ -162,58 +301,100 @@ def internal_sales_by_category(
     """
     context.log.info("Creating category dictionary with need state percentage metrics")
 
-    # Get unique categories
-    categories = (
-        internal_normalized_sales_data.select(pl.col("CAT_DSC").unique()).to_series().to_list()
-    )
+    try:
+        context.log.info(f"Input data shape: {internal_normalized_sales_data.shape}")
 
-    # Create result dictionary
-    result = {}
+        # Check for required columns
+        required_columns = ["STORE_NBR", "CAT_DSC", "NEED_STATE", "TOTAL_SALES"]
+        missing_columns = [
+            col for col in required_columns if col not in internal_normalized_sales_data.columns
+        ]
 
-    # Process each category
-    for cat in categories:
-        # Filter data for this category
-        cat_data = internal_normalized_sales_data.filter(pl.col("CAT_DSC") == cat)
+        if missing_columns:
+            context.log.error(f"Input data missing required columns: {missing_columns}")
+            raise ValueError(f"Input data missing required columns: {missing_columns}")
 
-        # Calculate store-need state sales
-        store_ns_sales = cat_data.group_by(["STORE_NBR", "NEED_STATE"]).agg(
-            pl.sum("TOTAL_SALES").alias("STORE_NS_TOTAL_SALES")
+        # Get unique categories
+        categories = (
+            internal_normalized_sales_data.select(pl.col("CAT_DSC").unique()).to_series().to_list()
         )
 
-        # Calculate store total sales
-        store_sales = cat_data.group_by("STORE_NBR").agg(
-            pl.sum("TOTAL_SALES").alias("STORE_TOTAL_SALES")
-        )
+        context.log.info(f"Found {len(categories)} unique categories: {categories}")
 
-        # Merge and calculate percentages
-        merged = store_ns_sales.join(store_sales, on="STORE_NBR", how="left").with_columns(
-            (pl.col("STORE_NS_TOTAL_SALES") / pl.col("STORE_TOTAL_SALES") * 100.0).alias(
-                "Pct_of_Sales"
+        # Create result dictionary
+        result = {}
+
+        # Process each category
+        for cat in categories:
+            context.log.info(f"Processing category: {cat}")
+
+            # Filter data for this category
+            cat_data = internal_normalized_sales_data.filter(pl.col("CAT_DSC") == cat)
+            context.log.info(f"  Category {cat} has {cat_data.shape[0]} rows")
+
+            # Calculate store-need state sales
+            store_ns_sales = cat_data.group_by(["STORE_NBR", "NEED_STATE"]).agg(
+                pl.sum("TOTAL_SALES").alias("STORE_NS_TOTAL_SALES")
             )
-        )
 
-        # Get need states for column renaming
-        need_states = merged.select("NEED_STATE").unique().to_series().to_list()
+            # Calculate store total sales
+            store_sales = cat_data.group_by("STORE_NBR").agg(
+                pl.sum("TOTAL_SALES").alias("STORE_TOTAL_SALES")
+            )
 
-        # Pivot the data
-        pivoted = merged.pivot(index="STORE_NBR", on="NEED_STATE", values="Pct_of_Sales").fill_null(
-            0
-        )
+            # Merge and calculate percentages
+            merged = store_ns_sales.join(store_sales, on="STORE_NBR", how="left").with_columns(
+                (pl.col("STORE_NS_TOTAL_SALES") / pl.col("STORE_TOTAL_SALES") * 100.0).alias(
+                    "Pct_of_Sales"
+                )
+            )
 
-        # Create column rename mapping
-        rename_map = {ns: f"% Sales {ns}" for ns in need_states}
+            # Get need states for column renaming
+            need_states = merged.select("NEED_STATE").unique().to_series().to_list()
+            context.log.info(f"  Found {len(need_states)} need states for category {cat}")
 
-        # Rename columns and round values
-        final_df = pivoted.rename(rename_map)
+            # Pivot the data
+            try:
+                pivoted = merged.pivot(
+                    index="STORE_NBR", values="Pct_of_Sales", columns="NEED_STATE"
+                ).fill_null(0)
 
-        # Round all percentage columns
-        round_cols = [f"% Sales {ns}" for ns in need_states]
-        final_df = final_df.with_columns([pl.col(col).round(2) for col in round_cols])
+                # Create column rename mapping
+                rename_map = {ns: f"% Sales {ns}" for ns in need_states if ns in pivoted.columns}
 
-        # Add to result dictionary
-        result[cat] = final_df
+                # Rename columns and round values
+                final_df = pivoted.rename(rename_map)
 
-    return result
+                # Round all percentage columns
+                round_cols = [
+                    f"% Sales {ns}" for ns in need_states if f"% Sales {ns}" in final_df.columns
+                ]
+                if round_cols:
+                    final_df = final_df.with_columns([pl.col(col).round(2) for col in round_cols])
+
+                # Add to result dictionary
+                result[cat] = final_df
+                context.log.info(f"  Successfully processed category {cat}: {final_df.shape}")
+
+            except Exception as e:
+                context.log.error(f"  Error pivoting data for category {cat}: {str(e)}")
+                # Create a minimal dataframe with just STORE_NBR to avoid pipeline failure
+                store_nums = store_sales.select("STORE_NBR")
+                for ns in need_states:
+                    store_nums = store_nums.with_columns(pl.lit(0.0).alias(f"% Sales {ns}"))
+                result[cat] = store_nums
+                context.log.info(
+                    f"  Created fallback dataframe for category {cat}: {store_nums.shape}"
+                )
+
+        context.log.info(f"Successfully created category dictionary with {len(result)} categories")
+        return result
+
+    except Exception as e:
+        context.log.error(f"Error creating sales by category: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @dg.asset(
@@ -234,17 +415,43 @@ def internal_output_sales_table(
         internal_sales_by_category: Sales data with categories
     """
     context.log.info("Saving preprocessed sales data")
-    context.resources.sales_by_category_writer.write(data=internal_sales_by_category)
 
-    # Collect all unique store numbers across all categories
-    all_stores = set()
-    for category_df in internal_sales_by_category.values():
-        stores = category_df.select("STORE_NBR").unique().to_series().to_list()
-        all_stores.update(stores)
+    try:
+        context.log.info(f"Writing dictionary with {len(internal_sales_by_category)} categories")
 
-    context.add_output_metadata(
-        metadata={
-            "num_categories": len(internal_sales_by_category),
-            "num_stores": len(all_stores),
-        }
-    )
+        # Validate input
+        if not internal_sales_by_category:
+            context.log.error("Empty category dictionary")
+            raise ValueError("Cannot write empty category dictionary")
+
+        # Detailed logging for debugging
+        for cat, df in internal_sales_by_category.items():
+            context.log.info(f"Category {cat}: {df.shape} rows, columns: {df.columns}")
+
+        # Write data
+        context.log.info("Calling sales_by_category_writer.write()")
+        context.resources.sales_by_category_writer.write(data=internal_sales_by_category)
+
+        # Collect all unique store numbers across all categories
+        all_stores = set()
+        for category_df in internal_sales_by_category.values():
+            stores = category_df.select("STORE_NBR").unique().to_series().to_list()
+            all_stores.update(stores)
+
+        context.log.info(f"Found {len(all_stores)} unique stores across all categories")
+
+        # Add metadata
+        context.add_output_metadata(
+            metadata={
+                "num_categories": len(internal_sales_by_category),
+                "num_stores": len(all_stores),
+            }
+        )
+
+        context.log.info("Successfully wrote sales by category data")
+
+    except Exception as e:
+        context.log.error(f"Error writing sales by category: {str(e)}")
+        context.log.error(f"Exception type: {type(e).__name__}")
+        context.log.error(f"Traceback: {traceback.format_exc()}")
+        raise

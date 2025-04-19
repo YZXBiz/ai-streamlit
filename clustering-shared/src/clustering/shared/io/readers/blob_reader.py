@@ -1,11 +1,10 @@
 """Azure Blob Storage reader implementation."""
 
-import os
 import pickle
 from io import BytesIO
 
 import polars as pl
-from azure.storage.blob import BlobClient
+from azure.storage.blob import BlobServiceClient
 
 from clustering.shared.io.readers.base import Reader
 
@@ -16,25 +15,50 @@ class BlobReader(Reader):
     Supports reading CSV, Parquet, and Pickle files from Azure Blob Storage.
     """
 
-    blob_name: str
+    connection_string: str
+    container_name: str
+    blob_path: str
+    file_format: str
     max_concurrency: int = 8
 
-    def read(self) -> pl.DataFrame:
+    def _validate_source(self) -> None:
+        """Validate the blob storage connection and file format.
+
+        Raises:
+            ValueError: If the file format is not supported
+        """
+        valid_formats = ["csv", "parquet", "json", "excel", "pickle"]
+        if self.file_format not in valid_formats:
+            raise ValueError(
+                f"Unsupported file format: {self.file_format}. "
+                f"Supported formats are: {', '.join(valid_formats)}"
+            )
+
+    def _get_blob_service_client(self) -> BlobServiceClient:
+        """Get the Azure Blob Service client.
+
+        Returns:
+            BlobServiceClient: The Azure Blob Service client
+        """
+        return BlobServiceClient.from_connection_string(self.connection_string)
+
+    def _read_from_source(self) -> pl.DataFrame:
         """Read data from Azure Blob Storage.
 
         Returns:
             DataFrame containing the data
-        """
-        # Create blob client
-        account_url = os.getenv("ACCOUNT_URL", "https://account.blob.core.windows.net")
-        container_name = os.getenv("CONTAINER_NAME", "container")
 
-        blob_client = BlobClient(
-            account_url=account_url,
-            container_name=container_name,
-            blob_name=self.blob_name,
-            credential=None,  # Use DefaultAzureCredential by default
-        )
+        Raises:
+            RuntimeError: If there's an error downloading from blob storage
+        """
+        # Get blob service client
+        blob_service_client = self._get_blob_service_client()
+
+        # Get container client
+        container_client = blob_service_client.get_container_client(self.container_name)
+
+        # Get blob client
+        blob_client = container_client.get_blob_client(self.blob_path)
 
         try:
             # Download the blob content with parallelism
@@ -42,23 +66,22 @@ class BlobReader(Reader):
         except Exception as e:
             raise RuntimeError(f"Failed to download blob: {e}")
 
-        # Determine the file format from the blob name extension
-        file_extension = os.path.splitext(self.blob_name)[1].lower()
-
-        # Process based on file type
-        if file_extension == ".csv":
+        # Process based on file format specified
+        if self.file_format == "csv":
             data = pl.read_csv(BytesIO(blob_data))
-        elif file_extension == ".parquet":
+        elif self.file_format == "parquet":
             data = pl.read_parquet(BytesIO(blob_data))
-        elif file_extension in [".pkl", ".pickle"]:
+        elif self.file_format == "json":
+            data = pl.read_json(BytesIO(blob_data))
+        elif self.file_format == "excel":
+            data = pl.read_excel(BytesIO(blob_data))
+        elif self.file_format == "pickle":
             data = pickle.loads(blob_data)
             # Convert to Polars DataFrame if needed
             if not isinstance(data, pl.DataFrame):
                 data = pl.from_pandas(data) if hasattr(data, "to_pandas") else pl.DataFrame(data)
         else:
-            raise ValueError("Unsupported file format. Please use a CSV, Parquet, or Pickle file.")
-
-        if self.limit is not None:
-            data = data.head(self.limit)
+            # This should never happen due to validation in _validate_source
+            raise ValueError(f"Unsupported file format: {self.file_format}")
 
         return data

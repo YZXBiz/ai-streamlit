@@ -1,8 +1,6 @@
 """JSON reader for data input."""
 
 import json
-from pathlib import Path
-from typing import Any
 
 import polars as pl
 
@@ -24,21 +22,23 @@ class JSONReader(FileReader):
         # For lines=True, we need to handle JSON lines (newline-delimited JSON)
         with open(self.path, "r") as f:
             content = f.read()
-        
+
         if self.lines:
             # For JSON lines, each line is a JSON object
             if not content.strip():
                 # Handle empty file
                 return pl.DataFrame()
-                
+
             # Parse each line as separate JSON object and create DataFrame
-            json_objects = [json.loads(line) for line in content.strip().split('\n') if line.strip()]
+            json_objects = [
+                json.loads(line) for line in content.strip().split("\n") if line.strip()
+            ]
             return pl.DataFrame(json_objects)
         else:
             # For regular JSON, assume array of objects
             if not content.strip():
                 # Handle empty file
                 return pl.DataFrame()
-                
+
             # Parse JSON and create DataFrame
             return pl.DataFrame(json.loads(content))
