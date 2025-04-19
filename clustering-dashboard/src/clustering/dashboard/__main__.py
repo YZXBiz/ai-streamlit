@@ -8,7 +8,7 @@ import streamlit.web.cli as stcli
 
 def main() -> None:
     """Run the dashboard as a module.
-    
+
     This function sets up the Streamlit CLI arguments and launches the dashboard.
     """
     # Get the directory containing this file
@@ -31,4 +31,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main() 
+    main()

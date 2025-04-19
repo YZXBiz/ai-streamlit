@@ -48,6 +48,10 @@ dependencies = [
     "psutil>=6.1.0",
     "setuptools>=75.6.0",
     "pre-commit>=4.2.0",
+
+    # === Core Project Modules ===
+    "clustering-pipeline",
+    "clustering-shared",
 ]
 
 # =========================================
@@ -71,6 +75,15 @@ clustering = "clustering.cli.commands:main"
 # =========================================
 
 [project.optional-dependencies]
+cli = ["clustering-cli"]
+dashboard = ["clustering-dashboard"]
+all = ["clustering-cli", "clustering-dashboard"]
+
+# =========================================
+# Development Dependencies
+# =========================================
+
+[dependency-groups]
 dev = [
     # Linting & formatting
     "mypy>=1.15.0",
@@ -87,16 +100,6 @@ docs = [
     "sphinx-autodoc-typehints>=3.0.1",
     "sphinx-rtd-theme>=3.0.2",
     "nbconvert>=7.16.6",
-]
-cli = ["clustering-cli"]
-pipeline = ["clustering-pipeline"]
-dashboard = ["clustering-dashboard"]
-shared = ["clustering-shared"]
-all = [
-    "clustering-cli",
-    "clustering-pipeline",
-    "clustering-dashboard",
-    "clustering-shared",
 ]
 
 # =========================================
@@ -115,12 +118,8 @@ packages = [
 # UV Configuration
 # =========================================
 
-[tool.uv.sources]
-# kaleido = { url = "https://files.pythonhosted.org/packages/0b/37/4e2f4d23e93e29b7813f1c1a7fcde9ef29554e6e7db26d77ce8f4f9b8c84/kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl" }
-clustering-shared = { workspace = true }
-clustering-pipeline = { workspace = true }
-clustering-cli = { workspace = true }
-clustering-dashboard = { workspace = true }
+[tool.uv]
+default-groups = ["dev", "docs"]
 
 [tool.uv.workspace]
 members = [
@@ -130,6 +129,12 @@ members = [
     "clustering-pipeline",
 ]
 
+[tool.uv.sources]
+clustering-shared = { workspace = true }
+clustering-pipeline = { workspace = true }
+clustering-cli = { workspace = true }
+clustering-dashboard = { workspace = true }
+
 # =========================================
 # Code Quality & Linting Configuration
 # =========================================
@@ -137,6 +142,23 @@ members = [
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+# Exclude directories not relevant to the core code
+exclude = [
+    ".git",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "experiments",
+    "data",
+    "cache",
+    "logs",
+    "dagster_home",
+    "storage",
+    "docs/build",
+    "documents",
+]
 
 [tool.ruff.lint]
 select = [

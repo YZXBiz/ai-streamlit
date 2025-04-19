@@ -546,7 +546,7 @@ def create_time_series_plot(
         try:
             df = df.copy()
             df[date_col] = pd.to_datetime(df[date_col])
-        except:
+        except (ValueError, TypeError, pd.errors.ParserError):
             st.error(f"Could not convert {date_col} to datetime format")
             return
 

@@ -15,7 +15,7 @@ import yaml
 @pytest.fixture(autouse=True)
 def setup_test_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set up the test environment with common configurations.
-    
+
     This fixture runs automatically for all tests.
 
     Args:
@@ -27,10 +27,10 @@ def setup_test_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         "DAGSTER_HOME": str(Path(tempfile.gettempdir()) / "dagster_home_test"),
         "DATA_DIR": str(Path(tempfile.gettempdir()) / "test_data"),
     }
-    
+
     for key, value in test_env_vars.items():
         monkeypatch.setenv(key, value)
-    
+
     # Create necessary directories
     for directory in [test_env_vars["DAGSTER_HOME"], test_env_vars["DATA_DIR"]]:
         Path(directory).mkdir(exist_ok=True, parents=True)
@@ -53,7 +53,7 @@ def common_test_data() -> dict[str, Any]:
 @pytest.fixture
 def package_root_dir() -> Path:
     """Get the root directory of the project.
-    
+
     Returns:
         Path: Path to the project root directory.
     """
@@ -163,18 +163,20 @@ def temp_csv_file() -> Generator[Path, None, None]:
     Yields:
         Path: Path to the temporary CSV file.
     """
-    data = pd.DataFrame({
-        "SKU_NBR": [1001, 1002, 1003],
-        "STORE_NBR": [501, 502, 503],
-        "CAT_DSC": ["Health", "Beauty", "Grocery"],
-        "TOTAL_SALES": [1500.50, 2200.75, 3100.25]
-    })
-    
+    data = pd.DataFrame(
+        {
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "TOTAL_SALES": [1500.50, 2200.75, 3100.25],
+        }
+    )
+
     with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as temp:
         temp_path = Path(temp.name)
         data.to_csv(temp_path, index=False)
-    
+
     yield temp_path
-    
+
     if temp_path.exists():
         os.unlink(temp_path)

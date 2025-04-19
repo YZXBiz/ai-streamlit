@@ -23,17 +23,17 @@ def get_project_root() -> Path:
     # Start from this file's location
     current_file = Path(__file__).resolve()
     potential_root = current_file.parent
-    
+
     # Check parent directories for Makefile
     while potential_root != potential_root.parent:
-        if (potential_root / 'Makefile').exists():
+        if (potential_root / "Makefile").exists():
             return potential_root
         potential_root = potential_root.parent
-    
+
     # Fallback: Check from current working directory
     current_dir = Path.cwd()
-    if (current_dir / 'Makefile').exists():
+    if (current_dir / "Makefile").exists():
         return current_dir
-    
+
     # Last resort: fixed path from module
-    return Path(__file__).resolve().parent.parent.parent.parent 
+    return Path(__file__).resolve().parent.parent.parent.parent

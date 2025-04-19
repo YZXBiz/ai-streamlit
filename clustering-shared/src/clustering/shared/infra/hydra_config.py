@@ -72,10 +72,10 @@ def to_object(config: Config, resolve: bool = True) -> T.Dict[str, T.Any] | list
 # For backwards compatibility
 def load_config(path: str) -> T.Dict[str, T.Any] | None:
     """Load configuration from YAML file and resolve environment variables.
-    
+
     Args:
         path: Path to YAML config file
-        
+
     Returns:
         Dict of configuration values with resolved environment variables
     """

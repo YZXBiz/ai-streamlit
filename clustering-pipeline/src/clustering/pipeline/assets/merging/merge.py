@@ -1,7 +1,6 @@
 """Cluster merging assets for the clustering pipeline."""
 
 import os
-from typing import Any
 
 import dagster as dg
 import numpy as np
@@ -9,6 +8,7 @@ import polars as pl
 from sklearn.metrics import pairwise_distances
 
 from clustering.shared.io.readers.pickle_reader import PickleReader
+
 
 @dg.asset(
     io_manager_key="io_manager",
@@ -152,40 +152,52 @@ def merged_clusters(
 
         # Automatically remap external store numbers to match internal ones
         context.log.warning("Remapping external store numbers to match internal ones")
-        
+
         # Get the store numbers from each dataset
-        internal_store_nums = internal_clusters.select('STORE_NBR').to_series().to_list()
-        
+        internal_store_nums = internal_clusters.select("STORE_NBR").to_series().to_list()
+
         # Create a remapped version of the external data with matching store numbers
         if len(internal_store_nums) > 0 and external_clusters.height > 0:
             # Take as many store numbers as we need from internal dataset
             store_mapping = {}
-            for i, ext_store in enumerate(external_clusters.select('STORE_NBR').to_series().to_list()):
+            for i, ext_store in enumerate(
+                external_clusters.select("STORE_NBR").to_series().to_list()
+            ):
                 if i < len(internal_store_nums):
                     store_mapping[ext_store] = internal_store_nums[i]
                 else:
                     break
-                    
+
             # Create a mapping function for the transform
             def map_store_nbr(store_nbr):
                 return store_mapping.get(store_nbr, store_nbr)
-                
+
             # Create a remapped version of external clusters
-            remapped_external = external_clusters.with_columns(
-                pl.col('STORE_NBR').map_elements(map_store_nbr).alias('STORE_NBR_remapped')
-            ).drop('STORE_NBR').rename({'STORE_NBR_remapped': 'STORE_NBR'})
-            
-            context.log.info(f"Remapped external stores: {remapped_external.select('STORE_NBR').head(5)}")
-            
+            remapped_external = (
+                external_clusters.with_columns(
+                    pl.col("STORE_NBR").map_elements(map_store_nbr).alias("STORE_NBR_remapped")
+                )
+                .drop("STORE_NBR")
+                .rename({"STORE_NBR_remapped": "STORE_NBR"})
+            )
+
+            context.log.info(
+                f"Remapped external stores: {remapped_external.select('STORE_NBR').head(5)}"
+            )
+
             # Try the join again with remapped data
             merged = internal_clusters.join(
                 remapped_external, on="STORE_NBR", how="inner", suffix="_external"
             )
-            
+
             context.log.info(f"Successfully joined {merged.height} stores after remapping")
         else:
             # For testing purposes, create a mock result with at least one row
-            testing_mode = context.op_config.get("allow_mock_merge", False) if context.op_config is not None else False
+            testing_mode = (
+                context.op_config.get("allow_mock_merge", False)
+                if context.op_config is not None
+                else False
+            )
             if testing_mode or os.getenv("DAGSTER_TESTING", "").lower() == "true":
                 context.log.warning("Creating mock merged data for testing purposes")
 

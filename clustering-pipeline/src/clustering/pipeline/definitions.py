@@ -65,51 +65,53 @@ from clustering.pipeline.assets.preprocessing.internal import (
 # Resources
 from clustering.pipeline.resources.data_io import data_reader, data_writer
 
+
 # Define Environment enum locally
 class Environment(str, Enum):
     """Environment types for configuration."""
-    
+
     DEV = "dev"
     TEST = "test"
     STAGING = "staging"
     PROD = "prod"
-    
+
     def __str__(self) -> str:
         """Return the environment name as a string."""
         return self.value
 
+
 # Define config loader function locally
 def hydra_load_config(config_path: str) -> dict[str, Any]:
     """Load configuration from YAML file with environment variable resolution.
-    
+
     Args:
         config_path: Path to the YAML configuration file
-        
+
     Returns:
         Dictionary containing the configuration data
     """
     import os
     import re
-    
+
     # Check if the file exists
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
-    
+
     # Read the file
     with open(config_path, "r") as file:
         content = file.read()
-    
+
     # Resolve environment variables
     # Match patterns like ${ENV_VAR} or ${ENV_VAR:default}
-    pattern = r'\$\{([^{}:]+)(?::([^{}]+))?\}'
-    
+    pattern = r"\$\{([^{}:]+)(?::([^{}]+))?\}"
+
     def replace_env_var(match):
         var_name = match.group(1)
         default_value = match.group(2) if match.group(2) else None
-        
+
         # Get the value from environment variables
         value = os.environ.get(var_name)
-        
+
         # Use default value if not found and a default is provided
         if value is None and default_value is not None:
             return default_value
@@ -119,14 +121,15 @@ def hydra_load_config(config_path: str) -> dict[str, Any]:
         # Raise error if no value and no default
         else:
             raise ValueError(f"Environment variable '{var_name}' not found and no default provided")
-    
+
     # Replace all environment variables in the content
     resolved_content = re.sub(pattern, replace_env_var, content)
-    
+
     # Parse the YAML
     config_data = yaml.safe_load(resolved_content)
-    
+
     return config_data
+
 
 # -----------------------------------------------------------------------------
 # Asset selection lists
@@ -411,9 +414,7 @@ def get_resources_by_env(
         "output_external_data_writer": data_writer.configured(
             writers_config.get("external_data_output", {})
         ),
-        "internal_model_output": data_writer.configured(
-            writers_config.get("model_output", {})
-        ),
+        "internal_model_output": data_writer.configured(writers_config.get("model_output", {})),
         "internal_cluster_assignments": data_writer.configured(
             writers_config.get("cluster_assignments", {})
         ),

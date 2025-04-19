@@ -1,1 +1,1 @@
-"""Core component tests for the clustering package.""" 
+"""Core component tests for the clustering package."""

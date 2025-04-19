@@ -1,1 +1,1 @@
-"""Tests for Dagster components in the clustering package.""" 
+"""Tests for Dagster components in the clustering package."""

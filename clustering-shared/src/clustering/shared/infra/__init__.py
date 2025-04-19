@@ -7,15 +7,15 @@ from clustering.shared.infra.logging import LoggerService
 
 class Environment(str, Enum):
     """Environment enum for configuration."""
-    
+
     DEV = "dev"
     TEST = "test"
     STAGING = "staging"
     PROD = "prod"
-    
+
     def __str__(self) -> str:
         """Convert to string for configuration usage.
-        
+
         Returns:
             Environment value as string
         """

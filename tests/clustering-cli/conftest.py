@@ -2,9 +2,8 @@
 
 import os
 import tempfile
-from collections.abc import Generator, Callable
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -61,4 +60,4 @@ def temp_output_dir() -> Generator[Path, None, None]:
     """
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        yield temp_path 
+        yield temp_path

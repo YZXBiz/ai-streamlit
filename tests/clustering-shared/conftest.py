@@ -8,7 +8,6 @@ from pathlib import Path
 import pandas as pd
 import polars as pl
 import pytest
-import yaml
 
 
 @pytest.fixture
@@ -60,19 +59,21 @@ def temp_csv_file() -> Generator[Path, None, None]:
     Yields:
         Path: Path to the temporary CSV file.
     """
-    data = pd.DataFrame({
-        "SKU_NBR": [1001, 1002, 1003],
-        "STORE_NBR": [501, 502, 503],
-        "CAT_DSC": ["Health", "Beauty", "Grocery"],
-        "TOTAL_SALES": [1500.50, 2200.75, 3100.25]
-    })
-    
+    data = pd.DataFrame(
+        {
+            "SKU_NBR": [1001, 1002, 1003],
+            "STORE_NBR": [501, 502, 503],
+            "CAT_DSC": ["Health", "Beauty", "Grocery"],
+            "TOTAL_SALES": [1500.50, 2200.75, 3100.25],
+        }
+    )
+
     with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as temp:
         temp_path = Path(temp.name)
         data.to_csv(temp_path, index=False)
-    
+
     yield temp_path
-    
+
     if temp_path.exists():
         os.unlink(temp_path)
 
@@ -94,4 +95,4 @@ def mock_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     }
 
     for key, value in env_vars.items():
-        monkeypatch.setenv(key, value) 
+        monkeypatch.setenv(key, value)

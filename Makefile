@@ -127,17 +127,17 @@ install: ## Install uv package manager and project dependencies
 		echo "✓ uv is already installed"; \
 	fi
 	@echo "==> Installing project dependencies"
-	@cd clustering-pipeline && uv sync --all-packages
+	@uv sync
 	@echo "✓ All dependencies installed successfully"
 
 update: ## Update all project dependencies to latest versions
 	@echo "==> Updating all dependencies"
-	@cd clustering-pipeline && uv lock --upgrade && uv sync --all-packages
+	@uv lock --upgrade && uv sync
 	@echo "✓ Dependencies updated successfully"
 
 docs-deps: ## Install documentation dependencies
 	@echo "==> Installing documentation dependencies"
-	@cd clustering-pipeline && uv add --group docs sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-autobuild
+	@uv sync --group docs
 	@echo "✓ Documentation dependencies installed"
 
 setup-hooks: ## Set up pre-commit hooks for development
@@ -160,9 +160,9 @@ setup-hooks: ## Set up pre-commit hooks for development
 
 .PHONY: dev dashboard dashboard-install
 
-dev: ## Start Dagster development server without creating directories
+dev: ## Start Dagster development server
 	@echo "==> Starting Dagster development server"
-	@cd clustering-pipeline && DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m clustering.pipeline.definitions --host 0.0.0.0
+	@DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m clustering.pipeline.definitions --host 0.0.0.0
 	@echo "✓ Dagster development server stopped"
 
 dashboard: ## Run the clustering dashboard
@@ -184,19 +184,19 @@ dashboard-install: ## Install the dashboard package
 
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
-	@cd clustering-pipeline && $(PYTHON) -m ruff format .
+	@$(PYTHON) -m ruff format .
 	@echo "✓ Code formatting complete"
 
 lint: ## Lint code and auto-fix issues where possible
 	@echo "==> Linting code with ruff"
-	@cd clustering-pipeline && $(PYTHON) -m ruff check . --fix
+	@$(PYTHON) -m ruff check . --fix
 	@echo "✓ Code linting complete"
 
 type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
-	@cd clustering-pipeline && $(PYTHON) -m mypy .
+	@$(PYTHON) -m mypy .
 	@echo "==> Running pyright type checker"
-	-@cd clustering-pipeline && $(PYTHON) -m pyright .
+	-@$(PYTHON) -m pyright .
 	@echo "✓ Type checking complete (warnings may be present)"
 
 check-all: format lint type-check ## Run all code quality checks including pre-commit hooks
@@ -373,14 +373,14 @@ run-visualization: ## Run visualization job with memory optimization
 
 build: ## Build the Python package for distribution
 	@echo "==> Building package for distribution"
-	@cd clustering-pipeline && uv build --all-packages
+	@uv build --all-packages
 	@echo "✓ Build complete. Files available in the clustering-pipeline/dist/ directory"
 
 clean: ## Clean up all build artifacts and temporary files
 	@echo "==> Cleaning build artifacts and cache files"
-	@cd clustering-pipeline && rm -rf build/
-	@cd clustering-pipeline && rm -rf dist/
-	@cd clustering-pipeline && rm -rf *.egg-info/
+	@rm -rf build/
+	@rm -rf dist/
+	@rm -rf *.egg-info/
 	@rm -rf .coverage
 	@rm -rf coverage.xml
 	@rm -rf .pytest_cache/

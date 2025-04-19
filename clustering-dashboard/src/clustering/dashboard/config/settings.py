@@ -5,7 +5,7 @@ configuration management, validation, and environment variable overrides.
 """
 
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

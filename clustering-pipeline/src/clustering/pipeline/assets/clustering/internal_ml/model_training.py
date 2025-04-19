@@ -203,7 +203,7 @@ def internal_train_clustering_models(
         Dictionary of trained clustering models organized by category
     """
     trained_models = {}
-    
+
     # Create a temp directory for experiment files
     temp_dir = tempfile.mkdtemp(prefix="pycaret_internal_experiments_")
     context.log.info(f"Using temporary directory for experiments: {temp_dir}")
@@ -263,15 +263,15 @@ def internal_train_clustering_models(
             num_clusters=cluster_count,
             verbose=False,
         )
-        
+
         # Save the experiment using PyCaret's built-in function that handles lambda functions
         experiment_path = os.path.join(temp_dir, f"{category}_experiment")
         exp.save_experiment(experiment_path)
-        
+
         # Get metrics before we reset the experiment
         try:
             metrics = exp.pull().iloc[0].to_dict()
-        except:
+        except (AttributeError, IndexError, KeyError):
             metrics = {}
             context.log.warning(f"Could not extract metrics from experiment for {category}")
 
@@ -334,7 +334,7 @@ def internal_save_clustering_models(
     if internal_train_clustering_models:
         # Create a dictionary where each key is a category and the value is a DataFrame
         model_dataframes = {}
-        
+
         for category, model_info in internal_train_clustering_models.items():
             # Create a dictionary with string metadata from the model info
             model_metadata = {
@@ -343,36 +343,40 @@ def internal_save_clustering_models(
                 "features": str(model_info["features"]),
                 "experiment_path": model_info["experiment_path"],
             }
-            
+
             # Add metrics if available
             if "metrics" in model_info and model_info["metrics"]:
                 for k, v in model_info["metrics"].items():
                     model_metadata[f"metric_{k}"] = v
-            
+
             # Create a DataFrame with a single row containing the metadata
             model_dataframes[category] = pl.DataFrame([model_metadata])
-        
+
         # Save the DataFrame dictionary (can't save the actual model objects directly)
         context.log.info(f"Saving {len(model_dataframes)} model metadata entries to storage")
         model_output.write(model_dataframes)
-        
+
         # Save model paths to the context for reference
-        context.add_output_metadata({
-            "model_paths": {
-                category: info["experiment_path"] 
-                for category, info in internal_train_clustering_models.items()
-            },
-            "categories": list(internal_train_clustering_models.keys()),
-            "num_models": len(internal_train_clustering_models),
-        })
+        context.add_output_metadata(
+            {
+                "model_paths": {
+                    category: info["experiment_path"]
+                    for category, info in internal_train_clustering_models.items()
+                },
+                "categories": list(internal_train_clustering_models.keys()),
+                "num_models": len(internal_train_clustering_models),
+            }
+        )
     else:
         # Create an empty DataFrame
-        empty_df = pl.DataFrame({
-            "num_clusters": [],
-            "num_samples": [],
-            "features": [],
-            "experiment_path": [],
-        })
+        empty_df = pl.DataFrame(
+            {
+                "num_clusters": [],
+                "num_samples": [],
+                "features": [],
+                "experiment_path": [],
+            }
+        )
         model_output.write({"default": empty_df})
         context.log.warning("No models to save, writing empty metadata DataFrame")
 
@@ -384,7 +388,11 @@ def internal_save_clustering_models(
     description="Assigns clusters to data points using trained models",
     group_name="cluster_assignment",
     compute_kind="internal_cluster_assignment",
-    deps=["internal_dimensionality_reduced_features", "internal_train_clustering_models", "internal_fe_raw_data"],
+    deps=[
+        "internal_dimensionality_reduced_features",
+        "internal_train_clustering_models",
+        "internal_fe_raw_data",
+    ],
     required_resource_keys={"config"},
 )
 def internal_assign_clusters(
@@ -409,7 +417,9 @@ def internal_assign_clusters(
     """
     assigned_data = {}
 
-    context.log.info("Assigning clusters using dimensionality reduced features and applying to raw data")
+    context.log.info(
+        "Assigning clusters using dimensionality reduced features and applying to raw data"
+    )
 
     for category, df in internal_dimensionality_reduced_features.items():
         # Check if we have a trained model for this category
@@ -428,25 +438,25 @@ def internal_assign_clusters(
         model_info = internal_train_clustering_models[category]
         model = model_info["model"]
         experiment_path = model_info["experiment_path"]
-        
+
         context.log.info(f"Loading experiment from {experiment_path}")
-        
+
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
-        
+
         # Load the experiment using PyCaret's load_experiment function
         # This correctly handles lambda functions using cloudpickle
         exp = load_experiment(experiment_path, data=pandas_df)
 
         # Use assign_model instead of predict_model since we're using the same data
         predictions = exp.assign_model(model)
-        
+
         # Get just the cluster assignments
         cluster_assignments = predictions[["Cluster"]]
-        
+
         # Get the original raw data for this category
         original_data = internal_fe_raw_data[category].to_pandas()
-        
+
         # Ensure the indices match
         if len(original_data) != len(cluster_assignments):
             context.log.warning(
@@ -455,11 +465,11 @@ def internal_assign_clusters(
             )
             # In a real implementation, you might want more sophisticated matching
             continue
-        
+
         # Add cluster assignments to the original data
         original_data_with_clusters = original_data.copy()
         original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
-        
+
         # Convert back to Polars and store
         assigned_data[category] = pl.from_pandas(original_data_with_clusters)
 
@@ -512,21 +522,21 @@ def internal_save_cluster_assignments(
     # Since we can only save one DataFrame per writer,
     # combine all category DataFrames into a single one with a category column
     combined_data = []
-    
+
     for category, df in internal_assign_clusters.items():
         context.log.info(f"Processing cluster assignments for category: {category}")
         # Add a category column to identify the source
         category_df = df.with_columns(pl.lit(category).alias("category"))
         combined_data.append(category_df)
-    
+
     if combined_data:
         # Combine all dataframes
         all_assignments = pl.concat(combined_data)
-        
+
         # Write the combined data
         context.log.info(f"Saving combined assignments with {len(all_assignments)} records")
         assignments_output.write(all_assignments)
-        
+
         context.log.info(
             f"Successfully saved assignments for {len(internal_assign_clusters)} categories"
         )

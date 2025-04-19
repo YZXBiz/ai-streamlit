@@ -10,8 +10,8 @@ import polars as pl
     group_name="preprocessing",
     required_resource_keys={
         "input_external_placerai_reader",
-        "input_external_urbanicity_template_reader", 
-        "input_external_urbanicity_experiment_reader"
+        "input_external_urbanicity_template_reader",
+        "input_external_urbanicity_experiment_reader",
     },
 )
 def external_features_data(
@@ -53,18 +53,20 @@ def external_features_data(
     if len(dataframes) == 0:
         context.log.error("No valid external data sources found")
         raise ValueError("Failed to read any valid external data")
-    
+
     if len(dataframes) == 1:
         context.log.info("Only one external data source. No merging needed.")
         return dataframes[0]
 
     # Start with the first dataframe
-    context.log.info(f"Merging {len(dataframes)} external data sources with outer join on STORE_NBR")
+    context.log.info(
+        f"Merging {len(dataframes)} external data sources with outer join on STORE_NBR"
+    )
     base_df = dataframes[0]
-    
+
     # Join with each subsequent dataframe using coalesce=True to avoid duplicate STORE_NBR columns
     for i, df in enumerate(dataframes[1:], 1):
-        context.log.info(f"Joining with data source {i+1} with coalesced join key")
+        context.log.info(f"Joining with data source {i + 1} with coalesced join key")
         base_df = base_df.join(df, on="STORE_NBR", how="outer", coalesce=True)
 
     context.log.info(

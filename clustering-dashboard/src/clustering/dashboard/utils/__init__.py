@@ -1,7 +1,5 @@
 """Utility functions for the clustering dashboard."""
 
-from typing import Literal
-
 import plotly.colors as pc
 
 # Import visualization utilities for easier access
@@ -24,6 +22,30 @@ from clustering.dashboard.utils.visualization_utils import (
     export_dashboard_state,
     import_dashboard_state,
 )
+
+# Export all imported functions
+__all__ = [
+    "get_color_scale",
+    "load_dataset",
+    "format_file_size",
+    "get_file_info",
+    "show_dataframe_info",
+    "plot_missing_values",
+    "display_code",
+    "load_image",
+    "download_dataframe",
+    "create_figure_with_dropdown",
+    "create_sidebar_filters",
+    "apply_filters",
+    "cached_dataframe",
+    "plot_correlation_matrix",
+    "create_time_series_plot",
+    "export_dashboard_state",
+    "import_dashboard_state",
+    "VIRIDIS_DARK",
+    "DIVERGING_COLORS",
+    "QUALITATIVE_COLORS",
+]
 
 # Define a dark version of the Viridis colorscale for better contrast
 VIRIDIS_DARK = [

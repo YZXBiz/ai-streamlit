@@ -5,9 +5,10 @@ This module provides common fixtures and configuration for e2e tests.
 
 import os
 import sys
-import pytest
-from pathlib import Path
 from collections.abc import Generator
+from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture(scope="session")
@@ -30,16 +31,16 @@ def setup_test_env(add_project_to_path: None) -> Generator[None, None, None]:
     """Set up the testing environment."""
     # Save original environment variables
     original_env = os.environ.copy()
-    
+
     # Set testing environment variables
     os.environ["ENV"] = "test"
     os.environ["TEST_MODE"] = "true"
-    
+
     # Ensure logs are set to a test-friendly level
     os.environ["LOG_LEVEL"] = "ERROR"
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)
@@ -53,8 +54,8 @@ def temp_workspace(tmp_path: Path) -> Path:
     (data_dir / "internal").mkdir(parents=True)
     (data_dir / "external").mkdir(parents=True)
     (data_dir / "output").mkdir(parents=True)
-    
+
     # Set data directory in environment
     os.environ["DATA_DIR"] = str(data_dir)
-    
-    return tmp_path 
+
+    return tmp_path

@@ -203,7 +203,7 @@ def external_train_clustering_models(
     """
     trained_models = {}
     category = "default"  # Use a single default category for external data
-    
+
     # Create a temp directory for experiment files
     temp_dir = tempfile.mkdtemp(prefix="pycaret_experiments_")
     context.log.info(f"Using temporary directory for experiments: {temp_dir}")
@@ -263,15 +263,15 @@ def external_train_clustering_models(
         num_clusters=cluster_count,
         verbose=False,
     )
-    
+
     # Save the experiment using PyCaret's built-in function that handles lambda functions
     experiment_path = os.path.join(temp_dir, f"{category}_experiment")
     exp.save_experiment(experiment_path)
-    
+
     # Get metrics before we reset the experiment
     try:
         metrics = exp.pull().iloc[0].to_dict()
-    except:
+    except (AttributeError, IndexError, KeyError, ValueError):
         metrics = {}
         context.log.warning("Could not extract metrics from experiment")
 
@@ -335,7 +335,7 @@ def external_save_clustering_models(
         # Extract the model category (should be 'default' for external models)
         category = next(iter(external_train_clustering_models.keys()))
         model_info = external_train_clustering_models[category]
-        
+
         # Create a dictionary with string metadata from the model info
         model_metadata = {
             "num_clusters": model_info["num_clusters"],
@@ -343,33 +343,37 @@ def external_save_clustering_models(
             "features": str(model_info["features"]),
             "experiment_path": model_info["experiment_path"],
         }
-        
+
         # Add metrics if available
         if "metrics" in model_info and model_info["metrics"]:
             for k, v in model_info["metrics"].items():
                 model_metadata[f"metric_{k}"] = v
-        
+
         # Create a DataFrame with a single row containing the metadata
         model_df = pl.DataFrame([model_metadata])
-        
+
         # Save the DataFrame (can't save the actual model objects directly)
-        context.log.info(f"Saving model metadata to storage")
+        context.log.info("Saving model metadata to storage")
         model_output.write(model_df)
-        
+
         # Save the model path to the context for reference
-        context.add_output_metadata({
-            "model_path": model_info["experiment_path"],
-            "category": category,
-            "num_clusters": model_info["num_clusters"],
-        })
+        context.add_output_metadata(
+            {
+                "model_path": model_info["experiment_path"],
+                "category": category,
+                "num_clusters": model_info["num_clusters"],
+            }
+        )
     else:
         # Create an empty DataFrame with expected schema
-        empty_df = pl.DataFrame({
-            "num_clusters": [],
-            "num_samples": [],
-            "features": [],
-            "experiment_path": [],
-        })
+        empty_df = pl.DataFrame(
+            {
+                "num_clusters": [],
+                "num_samples": [],
+                "features": [],
+                "experiment_path": [],
+            }
+        )
         model_output.write(empty_df)
         context.log.warning("No models to save, writing empty metadata DataFrame")
 
@@ -381,7 +385,11 @@ def external_save_clustering_models(
     description="Assigns clusters to external data points using trained models",
     group_name="cluster_assignment",
     compute_kind="external_cluster_assignment",
-    deps=["external_dimensionality_reduced_features", "external_train_clustering_models", "external_fe_raw_data"],
+    deps=[
+        "external_dimensionality_reduced_features",
+        "external_train_clustering_models",
+        "external_fe_raw_data",
+    ],
     required_resource_keys={"config"},
 )
 def external_assign_clusters(
@@ -405,7 +413,9 @@ def external_assign_clusters(
     Returns:
         DataFrame with cluster assignments added to original data, with outliers assigned to a special cluster
     """
-    context.log.info("Assigning clusters using dimensionality reduced features and applying to raw data")
+    context.log.info(
+        "Assigning clusters using dimensionality reduced features and applying to raw data"
+    )
 
     # Check if we have any trained models
     if not external_train_clustering_models:
@@ -430,7 +440,7 @@ def external_assign_clusters(
     # Check if we need to handle data size mismatch
     original_rows = external_fe_raw_data.height
     reduced_rows = external_dimensionality_reduced_features.height
-    
+
     # Get the default category
     category = "default"
     if category not in external_train_clustering_models:
@@ -441,105 +451,117 @@ def external_assign_clusters(
     model_info = external_train_clustering_models[category]
     model = model_info["model"]
     experiment_path = model_info["experiment_path"]
-    
+
     # Get the number of clusters from the model to determine outlier cluster number
     num_clusters = model_info["num_clusters"]
     # Outlier cluster will be one more than the highest cluster
-    outlier_cluster_num = num_clusters  # If clusters are 0-based (0, 1, ...), outlier will be num_clusters
-    
+    outlier_cluster_num = (
+        num_clusters  # If clusters are 0-based (0, 1, ...), outlier will be num_clusters
+    )
+
     if original_rows != reduced_rows:
         context.log.warning(
             f"Size mismatch detected: original data has {original_rows} rows while "
             f"dimensionality reduced features has {reduced_rows} rows. "
             f"This is likely due to outlier removal during preprocessing."
         )
-        
+
         context.log.info(f"Outliers will be assigned to cluster {outlier_cluster_num}")
-        
+
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = external_dimensionality_reduced_features.to_pandas().reset_index(drop=True)
-        pandas_df['temp_id'] = pandas_df.index
-        
+        pandas_df["temp_id"] = pandas_df.index
+
         context.log.info(f"Loading experiment from {experiment_path}")
-        
+
         # Load the experiment using PyCaret's load_experiment function
         exp = load_experiment(experiment_path, data=pandas_df)
-        
+
         context.log.info("Using model to assign clusters")
 
         # Use assign_model to get cluster assignments
         predictions = exp.assign_model(model)
-        
+
         # Check the format of existing cluster values to ensure consistency
         sample_cluster_val = predictions["Cluster"].iloc[0]
         is_string_format = isinstance(sample_cluster_val, str)
-        
+
         # Get the outlier cluster in the correct format
         if is_string_format and str(sample_cluster_val).startswith("Cluster"):
             outlier_cluster_formatted = f"Cluster {outlier_cluster_num}"
-            context.log.info(f"Using string format for outlier cluster: '{outlier_cluster_formatted}'")
+            context.log.info(
+                f"Using string format for outlier cluster: '{outlier_cluster_formatted}'"
+            )
         else:
             # If clusters are just numbers, convert to same type
             if is_string_format:
                 outlier_cluster_formatted = str(outlier_cluster_num)
             else:
                 outlier_cluster_formatted = outlier_cluster_num
-            context.log.info(f"Using numeric format for outlier cluster: {outlier_cluster_formatted}")
-                
+            context.log.info(
+                f"Using numeric format for outlier cluster: {outlier_cluster_formatted}"
+            )
+
         # Get the cluster assignments with the temp ID
-        cluster_assignments = predictions[['temp_id', 'Cluster']]
-        
+        cluster_assignments = predictions[["temp_id", "Cluster"]]
+
         # Convert original data to pandas
         original_data = external_fe_raw_data.to_pandas()
-        
+
         # Set all clusters to outlier cluster initially (all are considered outliers by default)
         original_data_with_clusters = original_data.copy()
-        original_data_with_clusters['Cluster'] = outlier_cluster_formatted
-        
+        original_data_with_clusters["Cluster"] = outlier_cluster_formatted
+
         # Now update the non-outlier points with their proper clusters
         try:
             # Get the STORE_NBR values from the external_fe_raw_data
             fe_raw_stores = external_fe_raw_data.select("STORE_NBR").to_pandas()
-            
+
             # Set cluster values for matching IDs
             matched_count = 0
             for _, row in cluster_assignments.iterrows():
-                idx = int(row['temp_id'])
-                cluster = row['Cluster']
-                
+                idx = int(row["temp_id"])
+                cluster = row["Cluster"]
+
                 if idx < len(fe_raw_stores):
-                    store_nbr = fe_raw_stores.iloc[idx]['STORE_NBR']
+                    store_nbr = fe_raw_stores.iloc[idx]["STORE_NBR"]
                     # Find this store in the original data and set its cluster
-                    mask = original_data_with_clusters['STORE_NBR'] == store_nbr
-                    original_data_with_clusters.loc[mask, 'Cluster'] = cluster
+                    mask = original_data_with_clusters["STORE_NBR"] == store_nbr
+                    original_data_with_clusters.loc[mask, "Cluster"] = cluster
                     matched_count += 1
                     context.log.info(f"Assigned cluster {cluster} to store {store_nbr}")
-            
+
             context.log.info(f"Matched {matched_count} out of {len(cluster_assignments)} stores")
-                
+
         except Exception as e:
             context.log.error(f"Error matching reduced data to original: {e}")
             # Log all rows in a clear format to help debug
             context.log.info(f"Original data shapes: {original_data.shape}")
             context.log.info(f"Predictions shape: {predictions.shape}")
             context.log.info(f"Cluster assignments shape: {cluster_assignments.shape}")
-        
+
         # Make sure all 'Cluster' values have the same type before converting to Polars
         # This prevents the 'int' object cannot be converted to 'PyString' error
         if is_string_format:
             # Ensure all cluster values are strings
-            original_data_with_clusters['Cluster'] = original_data_with_clusters['Cluster'].astype(str)
+            original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(
+                str
+            )
             context.log.info("Ensuring all cluster values are strings")
         else:
             # Try to convert to integers if possible
             try:
-                original_data_with_clusters['Cluster'] = original_data_with_clusters['Cluster'].astype(int)
+                original_data_with_clusters["Cluster"] = original_data_with_clusters[
+                    "Cluster"
+                ].astype(int)
                 context.log.info("Converted all cluster values to integers")
             except (ValueError, TypeError) as e:
                 # If conversion fails, stick with strings
-                original_data_with_clusters['Cluster'] = original_data_with_clusters['Cluster'].astype(str) 
+                original_data_with_clusters["Cluster"] = original_data_with_clusters[
+                    "Cluster"
+                ].astype(str)
                 context.log.info(f"Failed to convert to integers, using strings: {e}")
-        
+
         # Convert back to Polars
         try:
             assigned_data = pl.from_pandas(original_data_with_clusters)
@@ -548,46 +570,48 @@ def external_assign_clusters(
             # If conversion still fails, try more aggressive type enforcement
             context.log.warning(f"Error converting to Polars: {e}, attempting alternative approach")
             # Convert all columns to string as a last resort
-            original_data_with_clusters['Cluster'] = original_data_with_clusters['Cluster'].astype(str)
+            original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(
+                str
+            )
             assigned_data = pl.from_pandas(original_data_with_clusters)
             context.log.info("Successfully converted to Polars after type conversion")
-        
+
     else:
         # If no size mismatch, proceed with normal approach
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = external_dimensionality_reduced_features.to_pandas()
-        
+
         context.log.info(f"Loading experiment from {experiment_path}")
-        
+
         # Load the experiment using PyCaret's load_experiment function
         exp = load_experiment(experiment_path, data=pandas_df)
-        
+
         context.log.info("Using model to assign clusters")
 
         # Use assign_model instead of predict_model since we're using the same data
         predictions = exp.assign_model(model)
-        
+
         # Get just the cluster assignments
         cluster_assignments = predictions[["Cluster"]]
-        
+
         # Get the original raw data
         original_data = external_fe_raw_data.to_pandas()
-        
+
         # Add cluster assignments to the original data
         original_data_with_clusters = original_data.copy()
         original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
-        
+
         # Check if we need to enforce type consistency
         if isinstance(original_data_with_clusters["Cluster"].iloc[0], str):
-            original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(str)
-        
+            original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(
+                str
+            )
+
         # Convert back to Polars
         assigned_data = pl.from_pandas(original_data_with_clusters)
 
     # Log cluster distribution
-    cluster_counts = (
-        assigned_data.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
-    )
+    cluster_counts = assigned_data.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
     context.log.info(f"Cluster distribution:\n{cluster_counts}")
 
     # Check if any points were assigned to the outlier cluster
@@ -596,10 +620,12 @@ def external_assign_clusters(
         outlier_cluster_check = str(outlier_cluster_formatted)
     else:
         outlier_cluster_check = outlier_cluster_num
-        
+
     outlier_count = assigned_data.filter(pl.col("Cluster") == outlier_cluster_check).height
     if outlier_count > 0:
-        context.log.info(f"Assigned {outlier_count} outlier points to cluster {outlier_cluster_check}")
+        context.log.info(
+            f"Assigned {outlier_count} outlier points to cluster {outlier_cluster_check}"
+        )
 
     # Store metadata about the assignment
     context.add_output_metadata(
@@ -607,7 +633,7 @@ def external_assign_clusters(
             "model_category": category,
             "num_clusters": model_info["num_clusters"],
             "outlier_cluster": outlier_cluster_num,
-            "outlier_count": outlier_count if 'outlier_count' in locals() else 0,
+            "outlier_count": outlier_count if "outlier_count" in locals() else 0,
             "total_records": len(assigned_data),
             "cluster_distribution": dg.MetadataValue.json(cluster_counts.to_dicts()),
             "cluster_assigned": True,
@@ -653,20 +679,22 @@ def external_save_cluster_assignments(
 
     # Add a default category label
     df_with_category = external_assign_clusters.with_columns(pl.lit("default").alias("category"))
-    
+
     # Save to storage
     context.log.info(f"Saving cluster assignments with {len(df_with_category)} records")
     assignments_output.write(df_with_category)
 
     # Get the distribution for logging
-    cluster_dist = external_assign_clusters.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
-    
+    cluster_dist = (
+        external_assign_clusters.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
+    )
+
     context.log.info("Successfully saved external cluster assignments")
     context.add_output_metadata(
         {
-            "status": "success", 
+            "status": "success",
             "records_saved": external_assign_clusters.height,
-            "cluster_distribution": dg.MetadataValue.json(cluster_dist.to_dicts())
+            "cluster_distribution": dg.MetadataValue.json(cluster_dist.to_dicts()),
         }
     )
 
@@ -754,7 +782,7 @@ def external_calculate_cluster_metrics(
 
     # Get model info
     model_info = external_train_clustering_models[category]
-    
+
     # Get metrics that were stored during training
     metrics = model_info.get("metrics", {})
 
@@ -766,7 +794,7 @@ def external_calculate_cluster_metrics(
     # Identify the outlier cluster (highest cluster number)
     num_clusters = model_info["num_clusters"]
     outlier_cluster = num_clusters  # Same as defined in external_assign_clusters
-    
+
     # Count the outliers
     outlier_count = external_assign_clusters.filter(pl.col("Cluster") == outlier_cluster).height
     context.log.info(f"Found {outlier_count} points in outlier cluster {outlier_cluster}")
@@ -893,7 +921,7 @@ def external_generate_cluster_visualizations(
     model_info = external_train_clustering_models[category]
     num_clusters = model_info["num_clusters"]
     outlier_cluster = num_clusters  # Same as defined in external_assign_clusters
-    
+
     # Count the outliers
     outlier_count = external_assign_clusters.filter(pl.col("Cluster") == outlier_cluster).height
     context.log.info(f"Including {outlier_count} outlier points in visualizations")

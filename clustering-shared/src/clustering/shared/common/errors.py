@@ -32,4 +32,4 @@ def get_system_info() -> dict[str, Any]:
         "cpu_count": platform.machine(),
         "architecture": platform.architecture(),
         "processor": platform.processor(),
-    } 
+    }

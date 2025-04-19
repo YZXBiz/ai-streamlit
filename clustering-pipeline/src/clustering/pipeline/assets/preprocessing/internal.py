@@ -1,6 +1,5 @@
 """Internal preprocessing assets for the clustering pipeline."""
 
-
 import dagster as dg
 import polars as pl
 from dagster_pandera import pandera_schema_to_dagster_type
@@ -11,6 +10,7 @@ from clustering.shared.schemas.schemas import (
     MergedDataSchema,
     DistributedDataSchema,
 )
+
 
 @dg.asset(
     io_manager_key="io_manager",
@@ -196,9 +196,9 @@ def internal_sales_by_category(
         need_states = merged.select("NEED_STATE").unique().to_series().to_list()
 
         # Pivot the data
-        pivoted = merged.pivot(
-            index="STORE_NBR", on="NEED_STATE", values="Pct_of_Sales"
-        ).fill_null(0)
+        pivoted = merged.pivot(index="STORE_NBR", on="NEED_STATE", values="Pct_of_Sales").fill_null(
+            0
+        )
 
         # Create column rename mapping
         rename_map = {ns: f"% Sales {ns}" for ns in need_states}

@@ -43,6 +43,7 @@ def timer(func: Callable[..., T]) -> Callable[..., T]:
     Returns:
         Wrapped function
     """
+
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> T:
         start_time = time.time()
@@ -50,6 +51,7 @@ def timer(func: Callable[..., T]) -> Callable[..., T]:
         end_time = time.time()
         print(f"{func.__name__} executed in {end_time - start_time:.4f} seconds")
         return result
+
     return wrapper
 
 
@@ -62,6 +64,7 @@ def profile(func: Callable[..., T]) -> Callable[..., T]:
     Returns:
         Wrapped function
     """
+
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> T:
         # Get initial resource usage
@@ -85,8 +88,11 @@ def profile(func: Callable[..., T]) -> Callable[..., T]:
         print(f"--- Profile for {func.__name__} ---")
         print(f"Time: {execution_time:.4f} seconds")
         print(f"CPU usage: {initial_cpu:.1f}% → {final_cpu:.1f}% (Δ: {cpu_change:.1f}%)")
-        print(f"Memory usage: {initial_mem['percent']:.1f}% → {final_mem['percent']:.1f}% (Δ: {mem_change:.1f}%)")
+        print(
+            f"Memory usage: {initial_mem['percent']:.1f}% → {final_mem['percent']:.1f}% (Δ: {mem_change:.1f}%)"
+        )
         print("----------------------------")
 
         return result
-    return wrapper 
+
+    return wrapper
