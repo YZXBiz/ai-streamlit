@@ -2,7 +2,6 @@
 
 ![Dagster](https://img.shields.io/badge/orchestration-Dagster-green)
 ![Python](https://img.shields.io/badge/language-Python_3.10-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
 [![Coverage Status](https://coveralls.io/repos/github/YOUR_USERNAME/clustering-dagster/badge.svg?branch=main)](https://coveralls.io/github/YOUR_USERNAME/clustering-dagster?branch=main)
 
 A data pipeline for clustering stores based on sales data and external data sources, built with Dagster.

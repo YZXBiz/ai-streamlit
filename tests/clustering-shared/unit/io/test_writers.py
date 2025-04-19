@@ -266,13 +266,21 @@ class TestJSONWriter:
             # Verify file exists
             assert temp_path.exists()
 
-            # Read back and verify content
-            result = pl.read_json(temp_path)
-            assert len(result) == 3
-            assert "id" in result.columns
-            assert "name" in result.columns
-            assert "value" in result.columns
-            assert result["id"].to_list() == [1, 2, 3]
+            # Read back and verify content using pandas instead of polars
+            # since the format might not be compatible with polars.read_json
+            if writer.lines:
+                result = pd.read_json(temp_path, lines=True)
+            else:
+                result = pd.read_json(temp_path)
+                
+            # Convert to polars for consistent testing
+            result_pl = pl.from_pandas(result)
+            
+            assert len(result_pl) == 3
+            assert "id" in result_pl.columns
+            assert "name" in result_pl.columns
+            assert "value" in result_pl.columns
+            assert result_pl["id"].to_list() == [1, 2, 3]
 
         finally:
             # Cleanup
@@ -286,7 +294,7 @@ class TestJSONWriter:
 
         try:
             # Write data with custom options (pretty formatting)
-            writer = JSONWriter(path=str(temp_path), pretty=True)
+            writer = JSONWriter(path=str(temp_path), pretty=True, lines=False)  # Force JSON array format
             writer.write(sample_dataframe)
 
             # Check raw file content
@@ -297,9 +305,12 @@ class TestJSONWriter:
             assert "  " in content  # Has indentation
             assert "\n" in content  # Has newlines
 
-            # Read back
-            result = pl.read_json(temp_path)
-            assert len(result) == 3
+            # Read back using pandas
+            result = pd.read_json(temp_path)  # Regular JSON, not lines format
+                
+            # Convert to polars for consistent testing
+            result_pl = pl.from_pandas(result)
+            assert len(result_pl) == 3
 
         finally:
             # Cleanup

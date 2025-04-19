@@ -259,17 +259,7 @@ test-cli: ## Run tests for CLI package
 	@echo "==> Running tests for clustering-cli package"
 	@$(PYTHON) -m pytest tests/clustering-cli -v
 	@echo "✓ CLI package tests completed"
-
-test-cli-coverage: ## Run CLI tests with coverage reports for Coveralls
-	@echo "==> Running tests for clustering-cli package with coverage"
-	@$(PYTHON) -m pytest tests/clustering-cli -v --cov=clustering-cli/src --cov-report=term --cov-report=xml
-	@echo "✓ CLI package tests completed with coverage reports generated"
-
-test-cli-html: ## Run CLI tests with HTML coverage report
-	@echo "==> Running tests for clustering-cli package with HTML coverage"
-	@$(PYTHON) -m pytest tests/clustering-cli -v --cov=clustering-cli/src --cov-report=html
-	@echo "✓ CLI package tests completed - HTML report available in htmlcov/"
-
+	
 dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
 	@$(PYTHON) -m pytest tests/clustering-pipeline/dagster -v

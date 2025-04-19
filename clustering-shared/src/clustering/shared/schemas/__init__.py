@@ -7,6 +7,8 @@ or framework implementations.
 
 # Import and expose core schemas
 from clustering.shared.schemas.schemas import (
+    DataFrameType,
+    Schema,
     SalesSchema,
     NSMappingSchema,
     MergedDataSchema,
@@ -14,6 +16,8 @@ from clustering.shared.schemas.schemas import (
 )
 
 __all__ = [
+    "DataFrameType",
+    "Schema",
     "SalesSchema",
     "NSMappingSchema",
     "MergedDataSchema",
