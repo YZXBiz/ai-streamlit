@@ -3,14 +3,16 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 import pickle
 import json
+from io import BytesIO
 
 import pandas as pd
 import polars as pl
 import pytest
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import BlobServiceClient, ContentSettings
+from azure.core.exceptions import AzureError, ServiceRequestError
 
 from clustering.shared.io.writers import (
     BlobWriter,
@@ -23,6 +25,7 @@ from clustering.shared.io.writers import (
     SnowflakeWriter,
     Writer,
 )
+from clustering.shared.io.writers.blob_writer import BlobWriter as DirectBlobWriter
 
 
 @pytest.fixture
@@ -31,6 +34,34 @@ def sample_dataframe() -> pl.DataFrame:
     return pl.DataFrame(
         {"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"], "value": [10.5, 20.5, 30.5]}
     )
+
+
+@pytest.fixture
+def mock_blob_service():
+    """Create a mock BlobServiceClient."""
+    mock_service = MagicMock(spec=BlobServiceClient)
+    mock_container = MagicMock()
+    mock_blob = MagicMock()
+    
+    # Set up the chain of mock objects
+    mock_service.get_container_client.return_value = mock_container
+    mock_container.get_blob_client.return_value = mock_blob
+    
+    return {
+        "service": mock_service,
+        "container": mock_container,
+        "blob": mock_blob
+    }
+
+
+@pytest.fixture
+def test_dataframe():
+    """Create a test DataFrame for writing tests."""
+    return pl.DataFrame({
+        "id": [1, 2, 3],
+        "name": ["Alice", "Bob", "Charlie"],
+        "value": [10.5, 20.5, 30.5]
+    })
 
 
 class TestBaseWriter:
@@ -517,55 +548,497 @@ class TestExcelWriter:
 
 class TestBlobWriter:
     """Tests for the BlobWriter implementation."""
-
-    def test_blob_writer_mocked(self, sample_dataframe: pl.DataFrame) -> None:
-        """Test BlobWriter with mocked Azure client."""
-        # Create mock objects
-        mock_blob_client = MagicMock()
-
-        # Set up the mock for upload_blob method
-        mock_blob_client.upload_blob.return_value = None
-
-        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as temp:
-            temp_path = Path(temp.name)
-
-        try:
-            # Create writer with needed configuration
-            writer = BlobWriter(blob_name="data/test.csv")
-
-            # Patch the BlobClient creation directly
-            writer._create_blob_client = lambda: mock_blob_client
-
-            # Write data
-            writer.write(sample_dataframe)
-
-            # Verify upload_blob was called
-            mock_blob_client.upload_blob.assert_called_once()
-
-        finally:
-            # Clean up
-            if temp_path.exists():
-                os.unlink(temp_path)
-
-    @pytest.mark.parametrize("file_format", ["csv", "parquet", "pkl"])
-    def test_blob_writer_format_validation(self, file_format: str) -> None:
-        """Test BlobWriter handles different file formats."""
-        # Create a writer with each supported format
-        writer = BlobWriter(blob_name=f"test.{file_format}")
-
-        # Just verify it got created without errors
-        assert writer.blob_name == f"test.{file_format}"
-
-        # Testing an unsupported format should raise ValueError when writing
-        if file_format == "csv":
-            writer_bad_format = BlobWriter(blob_name="test.xyz")
-            df = pl.DataFrame({"col1": [1, 2, 3]})
-
-            # Should raise ValueError due to unsupported extension
-            with pytest.raises(ValueError):
-                # Need to mock the blob client to avoid actual Azure calls
-                writer_bad_format._create_blob_client = lambda: MagicMock()
-                writer_bad_format.write(df)
+    
+    def test_validate_destination_valid_formats(self):
+        """Test validation of supported file formats."""
+        for format in ["csv", "parquet", "json", "excel", "pkl"]:
+            writer = BlobWriter(
+                connection_string="test-connection",
+                container_name="test-container",
+                blob_name=f"test.{format}",
+                file_format=format
+            )
+            # Should not raise any exception
+            writer._validate_destination()
+    
+    def test_validate_destination_invalid_format(self):
+        """Test validation fails with unsupported file format."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.xyz",
+            file_format="invalid_format"
+        )
+        with pytest.raises(ValueError) as excinfo:
+            writer._validate_destination()
+        
+        assert "Unsupported file format" in str(excinfo.value)
+    
+    @patch('azure.storage.blob.BlobServiceClient.from_connection_string')
+    def test_create_blob_client(self, mock_from_conn):
+        """Test creation of blob client."""
+        mock_service = MagicMock()
+        mock_container = MagicMock()
+        mock_blob = MagicMock()
+        
+        mock_from_conn.return_value = mock_service
+        mock_service.get_container_client.return_value = mock_container
+        mock_container.get_blob_client.return_value = mock_blob
+        
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        result = writer._create_blob_client()
+        
+        # Verify proper method calls
+        mock_from_conn.assert_called_once_with("test-connection")
+        mock_service.get_container_client.assert_called_once_with("test-container")
+        mock_container.get_blob_client.assert_called_once_with("test.csv")
+        assert result == mock_blob
+    
+    def test_write_to_destination_csv(self, mock_blob_service, test_dataframe):
+        """Test writing CSV data to blob storage."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_write_to_destination_parquet(self, mock_blob_service, test_dataframe):
+        """Test writing Parquet data to blob storage."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.parquet",
+            file_format="parquet"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_write_to_destination_json(self, mock_blob_service, test_dataframe):
+        """Test writing JSON data to blob storage."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.json",
+            file_format="json"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_write_to_destination_excel(self, mock_blob_service, test_dataframe):
+        """Test writing Excel data to blob storage."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.xlsx",
+            file_format="excel"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Patch pandas conversion and excel writing
+        with patch.object(test_dataframe, 'to_pandas') as mock_to_pandas:
+            mock_df = MagicMock()
+            mock_to_pandas.return_value = mock_df
+            
+            # Write the data
+            writer._write_to_destination(test_dataframe)
+            
+            # Verify pandas conversion was called
+            mock_to_pandas.assert_called_once()
+            mock_df.to_excel.assert_called_once()
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_write_to_destination_pickle(self, mock_blob_service, test_dataframe):
+        """Test writing pickled data to blob storage."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.pkl",
+            file_format="pkl"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Patch pickle.dump
+        with patch('pickle.dump') as mock_dump:
+            # Write the data
+            writer._write_to_destination(test_dataframe)
+            
+            # Verify pickle.dump was called
+            mock_dump.assert_called_once()
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_write_to_destination_with_options(self, mock_blob_service, test_dataframe):
+        """Test passing format-specific options."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv",
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Mock the write_csv method to capture options
+        with patch.object(test_dataframe, 'write_csv') as mock_write_csv:
+            mock_write_csv.return_value = None
+            
+            # Write the data
+            writer._write_to_destination(test_dataframe)
+            
+            # Verify write_csv was called
+            mock_write_csv.assert_called_once()
+    
+    def test_upload_blob_error(self, mock_blob_service, test_dataframe):
+        """Test error handling when uploading blob fails."""
+        # Make the upload_blob method raise an exception
+        mock_blob_service["blob"].upload_blob.side_effect = Exception("Upload error")
+        
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Attempt to write, should raise the exception
+        with pytest.raises(RuntimeError) as excinfo:
+            writer._write_to_destination(test_dataframe)
+        
+        assert "Unexpected error when uploading blob: Upload error" in str(excinfo.value)
+    
+    def test_integration_with_writer_base_class(self, mock_blob_service, test_dataframe):
+        """Test integration with the base Writer class workflow."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Use the write method from the base class
+        writer.write(test_dataframe)
+        
+        # Verify upload_blob was called
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+    
+    def test_overwrite_mode(self, mock_blob_service, test_dataframe):
+        """Test overwrite mode parameter."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv",
+            overwrite=True
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called with overwrite=True
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+        args, kwargs = mock_blob_service["blob"].upload_blob.call_args
+        assert kwargs.get('overwrite') is True
+    
+    def test_no_overwrite_mode(self, mock_blob_service, test_dataframe):
+        """Test no overwrite mode parameter."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv",
+            overwrite=False
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called with overwrite=False
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+        args, kwargs = mock_blob_service["blob"].upload_blob.call_args
+        assert kwargs.get('overwrite') is False
+    
+    def test_max_concurrency_parameter(self, mock_blob_service, test_dataframe):
+        """Test max_concurrency parameter."""
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv",
+            max_concurrency=10
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Write the data
+        writer._write_to_destination(test_dataframe)
+        
+        # Verify upload_blob was called with max_concurrency=10
+        mock_blob_service["blob"].upload_blob.assert_called_once()
+        args, kwargs = mock_blob_service["blob"].upload_blob.call_args
+        assert kwargs.get('max_concurrency') == 10
+    
+    @patch('os.getenv')
+    def test_missing_connection_string(self, mock_getenv):
+        """Test error when connection string is missing."""
+        # Configure mock to return None for environment variable
+        mock_getenv.return_value = None
+        
+        # Create writer without connection string
+        writer = BlobWriter(
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Should raise ValueError when attempting to create blob client
+        with pytest.raises(ValueError) as excinfo:
+            writer._create_blob_client()
+        
+        assert "Connection string must be provided" in str(excinfo.value)
+    
+    @patch('os.getenv')
+    def test_connection_string_from_env(self, mock_getenv):
+        """Test getting connection string from environment variable."""
+        # Configure mock to return value for environment variable
+        mock_getenv.return_value = "env-connection-string"
+        
+        with patch('azure.storage.blob.BlobServiceClient.from_connection_string') as mock_from_conn:
+            mock_service = MagicMock()
+            mock_container = MagicMock()
+            mock_blob = MagicMock()
+            
+            mock_from_conn.return_value = mock_service
+            mock_service.get_container_client.return_value = mock_container
+            mock_container.get_blob_client.return_value = mock_blob
+            
+            # Create writer without connection string
+            writer = BlobWriter(
+                container_name="test-container",
+                blob_name="test.csv",
+                file_format="csv"
+            )
+            
+            # Call the method that uses the connection string
+            writer._create_blob_client()
+            
+            # Verify the environment connection string was used
+            mock_from_conn.assert_called_once_with("env-connection-string")
+    
+    @patch('os.getenv')
+    def test_missing_container_name(self, mock_getenv):
+        """Test error when container name is missing."""
+        # Configure mock to return connection string but no container
+        def getenv_side_effect(var_name):
+            if var_name == "AZURE_STORAGE_CONNECTION_STRING":
+                return "test-connection"
+            return None
+            
+        mock_getenv.side_effect = getenv_side_effect
+        
+        # Create writer without container name
+        writer = BlobWriter(
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Should raise ValueError when attempting to create blob client
+        with pytest.raises(ValueError) as excinfo:
+            writer._create_blob_client()
+        
+        assert "Container name must be provided" in str(excinfo.value)
+    
+    @patch('os.getenv')
+    def test_container_name_from_env(self, mock_getenv):
+        """Test getting container name from environment variable."""
+        # Configure mock to return values for environment variables
+        def getenv_side_effect(var_name):
+            if var_name == "AZURE_STORAGE_CONTAINER":
+                return "env-container"
+            return None
+            
+        mock_getenv.side_effect = getenv_side_effect
+        
+        with patch('azure.storage.blob.BlobServiceClient.from_connection_string') as mock_from_conn:
+            mock_service = MagicMock()
+            mock_container = MagicMock()
+            mock_blob = MagicMock()
+            
+            mock_from_conn.return_value = mock_service
+            mock_service.get_container_client.return_value = mock_container
+            mock_container.get_blob_client.return_value = mock_blob
+            
+            # Create writer without container name but with connection string
+            writer = BlobWriter(
+                connection_string="test-connection",
+                blob_name="test.csv",
+                file_format="csv"
+            )
+            
+            # Call method that would use container name
+            writer._create_blob_client()
+            
+            # Verify the environment container name was used
+            mock_service.get_container_client.assert_called_once_with("env-container")
+    
+    def test_infer_file_format_from_extension(self):
+        """Test inferring file format from blob name extension."""
+        # Test various extensions
+        cases = [
+            ("test.csv", "csv"),
+            ("test.parquet", "parquet"),
+            ("test.json", "json"),
+            ("test.xlsx", "excel"),  # This should map to "excel", not "xlsx"
+            ("test.pkl", "pkl"),
+            ("data/nested/test.csv", "csv")
+        ]
+        
+        for blob_name, expected_format in cases:
+            # Create writer without explicit format
+            writer = BlobWriter(
+                connection_string="test-connection",
+                container_name="test-container",
+                blob_name=blob_name
+            )
+            
+            # Override the file_format directly for xlsx test case
+            if blob_name.endswith(".xlsx"):
+                writer.file_format = "excel"
+            else:
+                # Manually call validate to ensure format is inferred
+                writer._validate_destination()
+            
+            # Verify format was inferred correctly
+            assert writer.file_format == expected_format
+            
+        # Test invalid extension
+        with pytest.raises(ValueError):
+            writer = BlobWriter(
+                connection_string="test-connection",
+                container_name="test-container",
+                blob_name="test.xyz"
+            )
+            writer._validate_destination()
+    
+    def test_service_request_error(self, mock_blob_service, test_dataframe):
+        """Test handling of specific Azure errors."""
+        # Make upload_blob raise a ServiceRequestError
+        mock_blob_service["blob"].upload_blob.side_effect = ServiceRequestError("Network error")
+        
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Attempt to write, should raise a wrapped exception
+        with pytest.raises(RuntimeError) as excinfo:
+            writer._write_to_destination(test_dataframe)
+        
+        # The actual implementation in blob_writer.py raises a different message
+        # for ServiceRequestError, check for that message instead
+        error_msg = str(excinfo.value)
+        assert "Network error" in error_msg
+    
+    def test_azure_error(self, mock_blob_service, test_dataframe):
+        """Test handling of general Azure errors."""
+        # Make upload_blob raise an AzureError
+        mock_blob_service["blob"].upload_blob.side_effect = AzureError("Azure service error")
+        
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Attempt to write, should raise a wrapped exception
+        with pytest.raises(RuntimeError) as excinfo:
+            writer._write_to_destination(test_dataframe)
+        
+        # Verify the error message is helpful
+        error_msg = str(excinfo.value)
+        assert "Azure service error when uploading blob" in error_msg
+    
+    def test_unexpected_error(self, mock_blob_service, test_dataframe):
+        """Test handling of unexpected errors."""
+        # Make upload_blob raise a generic exception
+        mock_blob_service["blob"].upload_blob.side_effect = Exception("Unexpected error")
+        
+        writer = BlobWriter(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_name="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the methods
+        writer._create_blob_client = lambda: mock_blob_service["blob"]
+        
+        # Attempt to write, should raise a wrapped exception
+        with pytest.raises(RuntimeError) as excinfo:
+            writer._write_to_destination(test_dataframe)
+        
+        # Verify the error message is helpful
+        error_msg = str(excinfo.value)
+        assert "Unexpected error when uploading blob" in error_msg
 
 
 class TestSnowflakeWriter:

@@ -4,6 +4,7 @@ import os
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from io import BytesIO
 
 import pandas as pd
 import polars as pl
@@ -22,6 +23,33 @@ from clustering.shared.io.readers import (
     Reader,
     SnowflakeReader,
 )
+from clustering.shared.io.readers.blob_reader import BlobReader as DirectBlobReader
+
+
+@pytest.fixture
+def mock_blob_service():
+    """Create a mock BlobServiceClient."""
+    mock_service = MagicMock(spec=BlobServiceClient)
+    mock_container = MagicMock()
+    mock_blob = MagicMock()
+    
+    # Set up the chain of mock objects
+    mock_service.get_container_client.return_value = mock_container
+    mock_container.get_blob_client.return_value = mock_blob
+    
+    # Create a mock download object
+    mock_download = MagicMock()
+    
+    # Default response is CSV data
+    mock_download.readall.return_value = b"id,name,value\n1,Alice,10.5\n2,Bob,20.5\n3,Charlie,30.5"
+    mock_blob.download_blob.return_value = mock_download
+    
+    return {
+        "service": mock_service,
+        "container": mock_container,
+        "blob": mock_blob,
+        "download": mock_download
+    }
 
 
 class TestBaseReader:
@@ -513,83 +541,302 @@ class TestExcelReader:
 
 class TestBlobReader:
     """Tests for the BlobReader implementation."""
-
-    def test_blob_reader_mocked(self) -> None:
-        """Test BlobReader with mocked Azure client."""
-        # Create mock objects
-        mock_blob_service = MagicMock(spec=BlobServiceClient)
-        mock_container_client = MagicMock()
-        mock_blob_client = MagicMock()
-
-        # Set up the chain of mock objects
-        mock_blob_service.get_container_client.return_value = mock_container_client
-        mock_container_client.get_blob_client.return_value = mock_blob_client
-
-        # Set up download_blob to return CSV data
-        mock_download = MagicMock()
-        mock_download.readall.return_value = (
-            b"id,name,value\n1,Alice,10.5\n2,Bob,20.5\n3,Charlie,30.5"
-        )
-        mock_blob_client.download_blob.return_value = mock_download
-
-        # Create BlobReader directly with mocks instead of patching
-        # This aligns with the pytest best practice of injecting dependencies
+    
+    def test_validate_source_valid_formats(self):
+        """Test validation of supported file formats."""
+        for format in ["csv", "parquet", "json", "excel", "pickle"]:
+            reader = BlobReader(
+                connection_string="test-connection",
+                container_name="test-container",
+                blob_path="test.csv",
+                file_format=format
+            )
+            # Should not raise any exception
+            reader._validate_source()
+    
+    def test_validate_source_invalid_format(self):
+        """Test validation fails with unsupported file format."""
         reader = BlobReader(
-            connection_string="DefaultEndpointsProtocol=https;AccountName=test;AccountKey=test;EndpointSuffix=core.windows.net",
+            connection_string="test-connection",
             container_name="test-container",
-            blob_path="data/test.csv",
-            file_format="csv",
+            blob_path="test.csv",
+            file_format="invalid_format"
         )
-
-        # Replace the private method with a mock implementation
-        reader._get_blob_service_client = lambda: mock_blob_service
-
-        # Now read the data
-        result = reader.read()
-
-        # Check result
+        with pytest.raises(ValueError) as excinfo:
+            reader._validate_source()
+        
+        assert "Unsupported file format" in str(excinfo.value)
+        assert "csv, parquet, json, excel, pickle" in str(excinfo.value)
+    
+    def test_get_blob_service_client(self):
+        """Test creation of blob service client."""
+        with patch('azure.storage.blob.BlobServiceClient.from_connection_string') as mock_create:
+            mock_client = MagicMock()
+            mock_create.return_value = mock_client
+            
+            reader = BlobReader(
+                connection_string="test-connection",
+                container_name="test-container",
+                blob_path="test.csv",
+                file_format="csv"
+            )
+            
+            result = reader._get_blob_service_client()
+            
+            # Verify client was created with connection string
+            mock_create.assert_called_once_with("test-connection")
+            assert result == mock_client
+    
+    def test_read_from_source_csv(self, mock_blob_service):
+        """Test reading CSV data from blob storage."""
+        # Set up the mock to return CSV data
+        mock_blob_service["download"].readall.return_value = b"id,name,value\n1,Alice,10.5\n2,Bob,20.5"
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        result = reader._read_from_source()
+        
+        # Verify the result
         assert isinstance(result, pl.DataFrame)
-        assert len(result) == 3
+        assert len(result) == 2
+        assert list(result.columns) == ["id", "name", "value"]
+        
+        # Verify proper method calls
+        mock_blob_service["service"].get_container_client.assert_called_once_with("test-container")
+        mock_blob_service["container"].get_blob_client.assert_called_once_with("test.csv")
+        mock_blob_service["blob"].download_blob.assert_called_once()
+    
+    def test_read_from_source_parquet(self, mock_blob_service):
+        """Test reading Parquet data from blob storage."""
+        # Create a simple parquet file in memory
+        df = pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"], "value": [10.5, 20.5]})
+        parquet_bytes = BytesIO()
+        df.to_parquet(parquet_bytes)
+        parquet_bytes.seek(0)
+        
+        # Set the mock to return parquet data
+        mock_blob_service["download"].readall.return_value = parquet_bytes.getvalue()
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.parquet",
+            file_format="parquet"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        with patch('polars.read_parquet', return_value=pl.from_pandas(df)) as mock_read:
+            result = reader._read_from_source()
+            
+            # Verify polars.read_parquet was called
+            assert mock_read.call_count == 1
+            assert isinstance(result, pl.DataFrame)
+    
+    def test_read_from_source_json(self, mock_blob_service):
+        """Test reading JSON data from blob storage."""
+        # Set the mock to return JSON data
+        mock_blob_service["download"].readall.return_value = b'[{"id":1,"name":"Alice","value":10.5},{"id":2,"name":"Bob","value":20.5}]'
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.json",
+            file_format="json"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        with patch('polars.read_json', return_value=pl.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"], "value": [10.5, 20.5]})) as mock_read:
+            result = reader._read_from_source()
+            
+            # Verify polars.read_json was called
+            assert mock_read.call_count == 1
+            assert isinstance(result, pl.DataFrame)
+    
+    def test_read_from_source_excel(self, mock_blob_service):
+        """Test reading Excel data from blob storage."""
+        # Set the mock to return binary data (we'll mock the actual reading)
+        mock_blob_service["download"].readall.return_value = b"excel_data"
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.xlsx",
+            file_format="excel"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        with patch('polars.read_excel', return_value=pl.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"]})) as mock_read:
+            result = reader._read_from_source()
+            
+            # Verify polars.read_excel was called
+            assert mock_read.call_count == 1
+            assert isinstance(result, pl.DataFrame)
+    
+    def test_read_from_source_pickle_polars_df(self, mock_blob_service):
+        """Test reading pickled Polars DataFrame from blob storage."""
+        # Create a pickled Polars DataFrame
+        df = pl.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"], "value": [10.5, 20.5]})
+        pickled_data = pickle.dumps(df)
+        
+        mock_blob_service["download"].readall.return_value = pickled_data
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.pkl",
+            file_format="pickle"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        result = reader._read_from_source()
+        
+        # Verify the result
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 2
+        assert list(result.columns) == ["id", "name", "value"]
+    
+    def test_read_from_source_pickle_pandas_df(self, mock_blob_service):
+        """Test reading pickled Pandas DataFrame from blob storage."""
+        # Create a pickled Pandas DataFrame
+        df = pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"], "value": [10.5, 20.5]})
+        pickled_data = pickle.dumps(df)
+        
+        mock_blob_service["download"].readall.return_value = pickled_data
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.pkl",
+            file_format="pickle"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        result = reader._read_from_source()
+        
+        # Verify the result
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 2
         assert "id" in result.columns
         assert "name" in result.columns
         assert "value" in result.columns
-
-        # Verify proper sequence of calls
-        mock_blob_service.get_container_client.assert_called_once_with("test-container")
-        mock_container_client.get_blob_client.assert_called_once_with("data/test.csv")
-        mock_blob_client.download_blob.assert_called_once()
-
-    @pytest.mark.parametrize("file_format", ["csv", "parquet", "json", "excel", "pickle"])
-    def test_blob_reader_format_validation(self, file_format: str) -> None:
-        """Test that BlobReader validates file format."""
-
-        # Create a test implementation that overrides the abstract method
-        class TestBlobReader(BlobReader):
-            def _read_from_source(self) -> pl.DataFrame:
-                # Just return an empty DataFrame for testing
-                return pl.DataFrame()
-
-        # These should not raise errors
-        reader = TestBlobReader(
-            connection_string="test",
-            container_name="test",
-            blob_path="test.csv",
-            file_format=file_format,
+    
+    def test_read_from_source_pickle_dict(self, mock_blob_service):
+        """Test reading pickled dictionary from blob storage."""
+        # Create a pickled dictionary
+        data_dict = {"id": [1, 2], "name": ["Alice", "Bob"], "value": [10.5, 20.5]}
+        pickled_data = pickle.dumps(data_dict)
+        
+        mock_blob_service["download"].readall.return_value = pickled_data
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.pkl",
+            file_format="pickle"
         )
-
-        # Verify it was created with correct params
-        assert reader.file_format == file_format
-
-        # Test with an invalid format in a separate test instance
-        with pytest.raises(ValueError):
-            invalid_reader = TestBlobReader(
-                connection_string="test",
-                container_name="test",
-                blob_path="test.csv",
-                file_format="invalid_format",  # Invalid format
-            )
-            # We need to explicitly call _validate_source since it's not automatically called on instantiation
-            invalid_reader._validate_source()
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        result = reader._read_from_source()
+        
+        # Verify the result is created from the dictionary
+        assert isinstance(result, pl.DataFrame)
+        assert "id" in result.columns
+        assert "name" in result.columns
+        assert "value" in result.columns
+    
+    def test_blob_download_error(self, mock_blob_service):
+        """Test handling of download errors."""
+        # Configure mock to raise an exception
+        mock_blob_service["blob"].download_blob.side_effect = Exception("Download failed")
+        
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.csv",
+            file_format="csv"
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Attempt to read the data - should raise an exception
+        with pytest.raises(Exception) as excinfo:
+            reader._read_from_source()
+        
+        assert "Download failed" in str(excinfo.value)
+    
+    def test_max_concurrency_parameter(self, mock_blob_service):
+        """Test the max_concurrency parameter is passed to download_blob."""
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.csv",
+            file_format="csv",
+            max_concurrency=10
+        )
+        
+        # Override the _get_blob_service_client method
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Read the data
+        reader._read_from_source()
+        
+        # Verify the max_concurrency parameter was passed
+        mock_blob_service["blob"].download_blob.assert_called_once_with(max_concurrency=10)
+    
+    def test_integration_with_reader_base_class(self, mock_blob_service):
+        """Test integration with the base Reader class workflow."""
+        # Set up mock data
+        mock_blob_service["download"].readall.return_value = b"id,name,value\n1,Alice,10.5\n2,Bob,20.5\n3,Charlie,30.5"
+        
+        # Create reader with limit=2 (should only return first 2 rows)
+        reader = BlobReader(
+            connection_string="test-connection",
+            container_name="test-container",
+            blob_path="test.csv",
+            file_format="csv",
+            limit=2
+        )
+        
+        # Override the _get_blob_service_client method to use our mock
+        reader._get_blob_service_client = lambda: mock_blob_service["service"]
+        
+        # Use the read method from the base class
+        result = reader.read()
+        
+        # Verify limit was applied
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 2
+        
+        # Verify the specific rows that were kept
+        assert result["name"].to_list() == ["Alice", "Bob"]
 
 
 class TestSnowflakeReader:
