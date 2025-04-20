@@ -15,7 +15,7 @@ class SnowflakeWriter(Writer):
     # Required parameters
     table: str
     database: str = "DL_FSCA_SLFSRV"
-    schema: str = "TWA07"
+    sf_schema: str = "TWA07"
 
     # Options
     auto_create_table: bool = True
@@ -67,7 +67,7 @@ class SnowflakeWriter(Writer):
             df=pandas_df,
             table_name=self.table,
             database=self.database,
-            schema=self.schema,
+            schema=self.sf_schema,
             auto_create_table=self.auto_create_table,
             overwrite=self.overwrite,
         )

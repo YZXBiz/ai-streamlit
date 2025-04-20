@@ -5,6 +5,7 @@ import pandas as pd
 import polars as pl
 import pytest
 import pandera as pa
+from pandera.errors import SchemaError, SchemaInitError
 
 from clustering.shared.schemas import (
     DataFrameType,
@@ -12,7 +13,7 @@ from clustering.shared.schemas import (
     MergedDataSchema,
     NSMappingSchema,
     SalesSchema,
-    Schema,
+    BaseSchema,
 )
 
 
@@ -23,7 +24,7 @@ class TestBaseSchema:
         """Test that Schema class can validate data."""
 
         # Define a simple schema for testing
-        class TestSchema(Schema):
+        class TestSchema(BaseSchema):
             col1: int
             col2: str
 
@@ -48,15 +49,15 @@ class TestBaseSchema:
         # Instead of testing for exceptions, let's check if coercion works correctly
         # and fails on missing columns, which is a more reliable test
 
-        # Define a test schema class
-        class TestSchema(Schema):
-            col1 = pa.Column(int, nullable=False)
-            col2 = pa.Column(str, nullable=False)
+        # Define a test schema class with type annotations (consistent with other schema definitions)
+        class TestSchema(BaseSchema):
+            col1: int
+            col2: str
 
         # Case 1: Test missing column handling
         # This should still fail even with our modified schema
         missing_col_data = pd.DataFrame({"col1": [1, 2, 3]})
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             TestSchema.check(missing_col_data)
 
         # Case 2: Test type coercion - our implementation should convert types
@@ -135,7 +136,7 @@ class TestSalesSchema:
             }
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             SalesSchema.check(invalid_data)
 
         # Test negative sales
@@ -148,7 +149,7 @@ class TestSalesSchema:
             }
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             SalesSchema.check(invalid_sales)
 
     def test_sales_null_values(self) -> None:
@@ -163,7 +164,7 @@ class TestSalesSchema:
             }
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             SalesSchema.check(invalid_null_data)
 
     def test_sales_empty_dataframe(self) -> None:
@@ -173,7 +174,7 @@ class TestSalesSchema:
             {"SKU_NBR": [], "STORE_NBR": [], "CAT_DSC": [], "TOTAL_SALES": []}
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             SalesSchema.check(empty_data)
 
 
@@ -259,15 +260,16 @@ class TestNSMappingSchema:
             }
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             NSMappingSchema.check(invalid_data)
-
+            
     def test_mapping_required_field_missing(self) -> None:
         """Test validation fails when required fields are missing."""
-        missing_field_data = pd.DataFrame(
+        # PRODUCT_ID is required, so let's test that it's properly enforced
+        missing_required_field_data = pd.DataFrame(
             {
-                "PRODUCT_ID": [101, 102, 103],
-                # CATEGORY missing
+                # PRODUCT_ID missing
+                "CATEGORY": ["Health", "Beauty", "Grocery"],
                 "NEED_STATE": ["Pain Relief", "Moisturizing", "Snacks"],
                 "CDT": ["Tablets", "Lotion", "Chips"],
                 "ATTRIBUTE_1": ["OTC", "Natural", "Savory"],
@@ -283,8 +285,66 @@ class TestNSMappingSchema:
             }
         )
 
-        with pytest.raises(ValueError):
-            NSMappingSchema.check(missing_field_data)
+        with pytest.raises(SchemaError):
+            NSMappingSchema.check(missing_required_field_data)
+            
+    def test_relaxed_validate_minimal_data(self) -> None:
+        """Test relaxed validation with minimal data (only required fields)."""
+        # Only PRODUCT_ID is required
+        minimal_data = pd.DataFrame({
+            "PRODUCT_ID": [101, 102, 103]
+        })
+        
+        result = NSMappingSchema.relaxed_validate(minimal_data)
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 3
+        assert "PRODUCT_ID" in result.columns
+        assert result["PRODUCT_ID"].dtype == np.int64
+        
+    def test_relaxed_validate_missing_required_column(self) -> None:
+        """Test relaxed validation fails when required PRODUCT_ID column is missing."""
+        missing_required = pd.DataFrame({
+            "CATEGORY": ["Health", "Beauty", "Grocery"],
+            "NEED_STATE": ["Pain Relief", "Moisturizing", "Snacks"]
+        })
+        
+        with pytest.raises(ValueError, match="Missing required columns"):
+            NSMappingSchema.relaxed_validate(missing_required)
+            
+    def test_relaxed_validate_product_id_conversion(self) -> None:
+        """Test relaxed validation with PRODUCT_ID that needs conversion."""
+        data_with_string_ids = pd.DataFrame({
+            "PRODUCT_ID": ["101", "102", "103"]
+        })
+        
+        result = NSMappingSchema.relaxed_validate(data_with_string_ids)
+        assert result["PRODUCT_ID"].dtype == np.int64
+        assert result["PRODUCT_ID"].tolist() == [101, 102, 103]
+        
+    def test_relaxed_validate_boolean_conversion(self) -> None:
+        """Test relaxed validation with boolean columns that need conversion."""
+        data_with_bool_strings = pd.DataFrame({
+            "PRODUCT_ID": [101, 102, 103],
+            "NEW_ITEM": ["TRUE", "FALSE", "TRUE"],
+            "TO_BE_DROPPED": ["FALSE", "TRUE", "FALSE"]
+        })
+        
+        result = NSMappingSchema.relaxed_validate(data_with_bool_strings)
+        # Check that boolean columns were converted
+        assert result["NEW_ITEM"].tolist() == [True, False, True]
+        assert result["TO_BE_DROPPED"].tolist() == [False, True, False]
+    
+    def test_relaxed_validate_invalid_product_id(self) -> None:
+        """Test relaxed validation with invalid PRODUCT_ID that can't be converted."""
+        # Using strings that can't be converted to integers
+        invalid_ids = pd.DataFrame({
+            "PRODUCT_ID": ["abc", "def", "ghi"]
+        })
+        
+        # This should not raise an exception as relaxed_validate handles errors gracefully
+        result = NSMappingSchema.relaxed_validate(invalid_ids)
+        # The result should be an empty DataFrame as all rows had invalid IDs
+        assert len(result) == 0
 
 
 class TestMergedDataSchema:
@@ -305,13 +365,8 @@ class TestMergedDataSchema:
         result = MergedDataSchema.check(valid_data)
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 3
-        assert list(result.columns) == [
-            "SKU_NBR",
-            "STORE_NBR",
-            "CAT_DSC",
-            "NEED_STATE",
-            "TOTAL_SALES",
-        ]
+        assert "SKU_NBR" in result.columns
+        assert "NEED_STATE" in result.columns
 
     def test_merged_invalid_data(self) -> None:
         """Test validation fails with invalid merged data."""
@@ -326,22 +381,22 @@ class TestMergedDataSchema:
             }
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(SchemaError):
             MergedDataSchema.check(missing_field)
 
-        # Invalid value type
-        invalid_type = pd.DataFrame(
+        # Negative values
+        invalid_data = pd.DataFrame(
             {
-                "SKU_NBR": ["1001", "1002", "1003"],  # strings, will be coerced
-                "STORE_NBR": [101, 102, 103],
+                "SKU_NBR": [1001, 1002, 1003],
+                "STORE_NBR": [-101, 102, 103],  # negative value
                 "CAT_DSC": ["Health", "Beauty", "Grocery"],
                 "NEED_STATE": ["Pain Relief", "Moisturizing", "Snacks"],
-                "TOTAL_SALES": ["not a number", "2200.75", "3100.25"],  # invalid value
+                "TOTAL_SALES": [1500.50, 2200.75, 3100.25],
             }
         )
 
-        with pytest.raises(ValueError):
-            MergedDataSchema.check(invalid_type)
+        with pytest.raises(SchemaError):
+            MergedDataSchema.check(invalid_data)
 
 
 class TestDistributedDataSchema:

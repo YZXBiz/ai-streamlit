@@ -4,6 +4,8 @@ import os
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+import pickle
+import json
 
 import pandas as pd
 import polars as pl
@@ -345,6 +347,64 @@ class TestJSONWriter:
             if temp_path.exists():
                 os.unlink(temp_path)
 
+    def test_json_writer_pretty_lines(self, sample_dataframe: pl.DataFrame) -> None:
+        """Test JSON writer with pretty formatting in lines mode."""
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as temp:
+            temp_path = Path(temp.name)
+
+        try:
+            # Write data with pretty formatting in lines mode
+            writer = JSONWriter(
+                path=str(temp_path), 
+                pretty=True,  # Enable pretty formatting
+                lines=True    # Use JSON lines format
+            )
+            writer.write(sample_dataframe)
+
+            # Check raw file content
+            with open(temp_path) as f:
+                content = f.read()
+
+            # Should have pretty formatting with indentation
+            assert "  " in content  # Has indentation
+            assert "\n" in content  # Has newlines
+            
+            # Pretty-printed JSON is hard to parse with pandas in lines mode
+            # so we'll just check that the expected values are present in the content
+            assert '"id": 1' in content
+            assert '"id": 2' in content
+            assert '"id": 3' in content
+            assert '"name": "Alice"' in content
+            assert '"name": "Bob"' in content
+            assert '"name": "Charlie"' in content
+
+        finally:
+            # Cleanup
+            if temp_path.exists():
+                os.unlink(temp_path)
+
+    def test_json_writer_unsupported_orient(self, sample_dataframe: pl.DataFrame) -> None:
+        """Test JSON writer with unsupported orient option."""
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as temp:
+            temp_path = Path(temp.name)
+
+        try:
+            # Create writer with unsupported orient option
+            writer = JSONWriter(
+                path=str(temp_path), 
+                orient="columns",  # Unsupported orient
+                lines=False       # Must be False to test orient option
+            )
+            
+            # Should raise ValueError when writing
+            with pytest.raises(ValueError, match="Orient option .* not supported"):
+                writer.write(sample_dataframe)
+
+        finally:
+            # Cleanup
+            if temp_path.exists():
+                os.unlink(temp_path)
+
 
 class TestPickleWriter:
     """Tests for the PickleWriter implementation."""
@@ -506,3 +566,121 @@ class TestBlobWriter:
                 # Need to mock the blob client to avoid actual Azure calls
                 writer_bad_format._create_blob_client = lambda: MagicMock()
                 writer_bad_format.write(df)
+
+
+class TestSnowflakeWriter:
+    """Tests for the SnowflakeWriter implementation."""
+
+    @pytest.fixture
+    def mock_credentials(self, tmp_path: Path) -> tuple[Path, Path]:
+        """Create mock credential files for testing."""
+        # Create a temporary credentials directory
+        creds_dir = tmp_path / "creds"
+        creds_dir.mkdir(exist_ok=True)
+        
+        # Create a mock private key bytes file
+        pkb_path = creds_dir / "pkb.pkl"
+        with open(pkb_path, "wb") as f:
+            private_key = "MOCK_PRIVATE_KEY"
+            pickle.dump(private_key, f)
+            
+        # Create a mock json credentials file
+        creds_path = creds_dir / "sf_creds.json"
+        creds_data = {
+            "SF_USER_NAME": "test_user",
+            "SF_ACCOUNT": "test_account",
+            "SF_DB": "test_db",
+            "SF_WAREHOUSE": "test_warehouse",
+            "SF_USER_ROLE": "test_role",
+            "SF_INSECURE_MODE": "True"
+        }
+        with open(creds_path, "w") as f:
+            json.dump(creds_data, f)
+            
+        return pkb_path, creds_path
+
+    @patch("snowflake.connector.connect")
+    @patch("snowflake.connector.pandas_tools.write_pandas")
+    def test_snowflake_writer_basic(
+        self, 
+        mock_write_pandas: MagicMock, 
+        mock_connect: MagicMock, 
+        mock_credentials: tuple[Path, Path],
+        sample_dataframe: pl.DataFrame
+    ) -> None:
+        """Test basic Snowflake writing functionality."""
+        # Unpack credential paths
+        pkb_path, creds_path = mock_credentials
+        
+        # Setup mock connection
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
+        
+        # Create and use writer
+        writer = SnowflakeWriter(
+            table="test_table",
+            database="test_database",
+            sf_schema="test_schema",
+            pkb_path=str(pkb_path),
+            creds_path=str(creds_path)
+        )
+        writer.write(sample_dataframe)
+        
+        # Verify connection was created with correct parameters
+        mock_connect.assert_called_once()
+        call_kwargs = mock_connect.call_args.kwargs
+        assert call_kwargs["user"] == "test_user"
+        assert call_kwargs["account"] == "test_account"
+        assert call_kwargs["database"] == "test_db"
+        assert call_kwargs["warehouse"] == "test_warehouse"
+        assert call_kwargs["role"] == "test_role"
+        assert call_kwargs["insecure_mode"] is True
+        
+        # Verify write_pandas was called with correct parameters
+        mock_write_pandas.assert_called_once()
+        write_kwargs = mock_write_pandas.call_args.kwargs
+        assert write_kwargs["table_name"] == "test_table"
+        assert write_kwargs["database"] == "test_database"
+        assert write_kwargs["schema"] == "test_schema"
+        assert write_kwargs["auto_create_table"] is True
+        assert write_kwargs["overwrite"] is True
+        
+        # Verify connection was closed
+        mock_conn.close.assert_called_once()
+        
+    @patch("snowflake.connector.connect")
+    @patch("snowflake.connector.pandas_tools.write_pandas")
+    def test_snowflake_writer_options(
+        self, 
+        mock_write_pandas: MagicMock, 
+        mock_connect: MagicMock, 
+        mock_credentials: tuple[Path, Path],
+        sample_dataframe: pl.DataFrame
+    ) -> None:
+        """Test Snowflake writer with custom options."""
+        # Unpack credential paths
+        pkb_path, creds_path = mock_credentials
+        
+        # Setup mock connection
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
+        
+        # Create and use writer with custom options
+        writer = SnowflakeWriter(
+            table="test_table",
+            database="custom_database",
+            sf_schema="custom_schema",
+            auto_create_table=False,
+            overwrite=False,
+            pkb_path=str(pkb_path),
+            creds_path=str(creds_path)
+        )
+        writer.write(sample_dataframe)
+        
+        # Verify write_pandas was called with custom parameters
+        mock_write_pandas.assert_called_once()
+        write_kwargs = mock_write_pandas.call_args.kwargs
+        assert write_kwargs["database"] == "custom_database"
+        assert write_kwargs["schema"] == "custom_schema"
+        assert write_kwargs["auto_create_table"] is False
+        assert write_kwargs["overwrite"] is False

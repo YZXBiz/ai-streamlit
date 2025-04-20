@@ -38,6 +38,9 @@ class BaseSchema(pa.DataFrameModel):
 
         Returns:
             Validated data, preserving the original type (Pandas or Polars)
+            
+        Raises:
+            ValueError: If validation fails
         """
         is_polars = isinstance(data, pl.DataFrame)
 
@@ -47,22 +50,14 @@ class BaseSchema(pa.DataFrameModel):
         else:
             pandas_data = cast(pd.DataFrame, data)
 
-        try:
-            # Validate with pandera
-            validated_data = cls.validate(pandas_data)
+        # Validate with pandera - let exceptions propagate
+        validated_data = cls.validate(pandas_data)
 
-            # Convert back to original type
-            if is_polars:
-                return pl.from_pandas(validated_data)
+        # Convert back to original type
+        if is_polars:
+            return pl.from_pandas(validated_data)
 
-            return validated_data
-        except Exception as e:
-            print(f"Schema validation error: {str(e)}")
-            # If validation fails, return original data to allow pipeline to continue
-            # with best effort processing
-            if is_polars:
-                return data
-            return pandas_data
+        return validated_data
 
 
 # %% Internal Preprocessing Schemas

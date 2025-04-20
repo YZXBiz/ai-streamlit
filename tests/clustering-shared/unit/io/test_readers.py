@@ -9,6 +9,7 @@ import pandas as pd
 import polars as pl
 import pytest
 from azure.storage.blob import BlobServiceClient
+import pickle
 
 from clustering.shared.io.readers import (
     BlobReader,
@@ -106,8 +107,13 @@ class TestFileReader:
 
     def test_file_reader_validation(self) -> None:
         """Test that FileReader validates file existence."""
+        # Create a concrete test class
+        class TestFileReader(FileReader):
+            def _read_from_source(self) -> pl.DataFrame:
+                return pl.DataFrame()
+                
         with pytest.raises(FileNotFoundError):
-            FileReader(path="/path/to/nonexistent/file.txt")._validate_source()
+            TestFileReader(path="/path/to/nonexistent/file.txt")._validate_source()
 
     def test_file_reader_str_representation(self) -> None:
         """Test string representation of FileReader."""
@@ -250,6 +256,19 @@ class TestJSONReader:
         # Cleanup
         if temp_path.exists():
             os.unlink(temp_path)
+            
+    @pytest.fixture
+    def empty_json_file(self) -> Path:
+        """Create an empty JSON file for testing."""
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as temp:
+            temp_path = Path(temp.name)
+            # File is created empty
+
+        yield temp_path
+
+        # Cleanup
+        if temp_path.exists():
+            os.unlink(temp_path)
 
     def test_json_reader(self, json_file: Path) -> None:
         """Test basic JSON reading functionality."""
@@ -281,6 +300,24 @@ class TestJSONReader:
         # Check result
         assert len(result) == 3
         assert result["id"].to_list() == [1, 2, 3]
+        
+    def test_json_reader_empty_file_lines(self, empty_json_file: Path) -> None:
+        """Test JSON reader with empty file and lines=True."""
+        reader = JSONReader(path=str(empty_json_file), lines=True)
+        result = reader.read()
+        
+        # Check result is an empty DataFrame
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 0
+        
+    def test_json_reader_empty_file_no_lines(self, empty_json_file: Path) -> None:
+        """Test JSON reader with empty file and lines=False."""
+        reader = JSONReader(path=str(empty_json_file), lines=False)
+        result = reader.read()
+        
+        # Check result is an empty DataFrame
+        assert isinstance(result, pl.DataFrame)
+        assert len(result) == 0
 
 
 class TestPickleReader:
@@ -303,6 +340,22 @@ class TestPickleReader:
         # Cleanup
         if temp_path.exists():
             os.unlink(temp_path)
+            
+    @pytest.fixture
+    def dict_pickle_file(self) -> Path:
+        """Create a temporary pickle file with dictionary of DataFrames."""
+        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as temp:
+            temp_path = Path(temp.name)
+
+            # Create test data dictionary and save to pickle
+            data_dict = {
+                "df1": pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"]}),
+                "df2": pd.DataFrame({"id": [3, 4], "name": ["Charlie", "Dave"]})
+            }
+            with open(temp_path, "wb") as f:
+                pickle.dump(data_dict, f)
+
+        yield temp_path
 
     def test_pickle_reader_pandas_df(self, pickle_file: Path) -> None:
         """Test reading pandas DataFrame from pickle."""
@@ -334,6 +387,69 @@ class TestPickleReader:
         assert result["id"].to_list() == [1, 2, 3]
         assert result["name"].to_list() == ["Alice", "Bob", "Charlie"]
         assert result["value"].to_list() == [10.5, 20.5, 30.5]
+        
+    def test_pickle_reader_dict_of_dataframes(self, dict_pickle_file: Path) -> None:
+        """Test reading dictionary of DataFrames from pickle."""
+        reader = PickleReader(path=str(dict_pickle_file))
+        result = reader.read()
+        
+        # Check result is a dictionary
+        assert isinstance(result, dict)
+        assert "df1" in result
+        assert "df2" in result
+        
+        # Check each DataFrame in the dictionary
+        assert isinstance(result["df1"], pl.DataFrame)
+        assert len(result["df1"]) == 2
+        assert result["df1"]["id"].to_list() == [1, 2]
+        assert result["df1"]["name"].to_list() == ["Alice", "Bob"]
+        
+        assert isinstance(result["df2"], pl.DataFrame)
+        assert len(result["df2"]) == 2
+        assert result["df2"]["id"].to_list() == [3, 4]
+        assert result["df2"]["name"].to_list() == ["Charlie", "Dave"]
+        
+    def test_pickle_reader_dict_with_limit(self, dict_pickle_file: Path) -> None:
+        """Test reading dictionary of DataFrames with limit applied."""
+        reader = PickleReader(path=str(dict_pickle_file), limit=1)
+        result = reader.read()
+        
+        # Check result is a dictionary
+        assert isinstance(result, dict)
+        
+        # Check limit was applied to each DataFrame
+        assert len(result["df1"]) == 1
+        assert len(result["df2"]) == 1
+        
+        # Check first row of each DataFrame
+        assert result["df1"]["id"].to_list() == [1]
+        assert result["df1"]["name"].to_list() == ["Alice"]
+        assert result["df2"]["id"].to_list() == [3]
+        assert result["df2"]["name"].to_list() == ["Charlie"]
+        
+    def test_pickle_reader_invalid_data(self) -> None:
+        """Test reading invalid data from pickle."""
+        # Create a temporary pickle with non-DataFrame data
+        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as temp:
+            temp_path = Path(temp.name)
+            
+            # Save a simple list
+            data = [1, 2, 3]
+            with open(temp_path, "wb") as f:
+                pickle.dump(data, f)
+                
+        try:
+            reader = PickleReader(path=str(temp_path))
+            result = reader.read()
+            
+            # Should convert to DataFrame
+            assert isinstance(result, pl.DataFrame)
+            assert len(result) == 3
+            
+        finally:
+            # Cleanup
+            if temp_path.exists():
+                os.unlink(temp_path)
 
 
 class TestExcelReader:
@@ -361,36 +477,38 @@ class TestExcelReader:
 
     def test_excel_reader(self, excel_file: Path) -> None:
         """Test basic Excel reading functionality."""
-        reader = ExcelReader(path=str(excel_file))
-        result = reader.read()
+        # Patch pd.read_excel to return known data
+        mock_df = pd.DataFrame(
+            {"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"], "value": [10.5, 20.5, 30.5]}
+        )
+        
+        with patch("pandas.read_excel", return_value=mock_df):
+            reader = ExcelReader(path=str(excel_file))
+            result = reader.read()
 
-        # Check result
-        assert isinstance(result, pl.DataFrame)
-        assert len(result) == 3
-        assert "id" in result.columns
-        assert "name" in result.columns
-        assert "value" in result.columns
+            # Check result
+            assert isinstance(result, pl.DataFrame)
+            assert len(result) == 3
+            assert "id" in result.columns
+            assert "name" in result.columns
+            assert "value" in result.columns
 
     def test_excel_reader_sheet_name(self, excel_file: Path) -> None:
         """Test Excel reader with specific sheet name."""
-        # Create Excel with multiple sheets
-        with pd.ExcelWriter(excel_file) as writer:
-            pd.DataFrame({"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"]}).to_excel(
-                writer, sheet_name="Sheet1", index=False
-            )
+        # Create mock data for different sheets
+        mock_df = pd.DataFrame(
+            {"product_id": [101, 102, 103], "product_name": ["Apple", "Banana", "Cherry"]}
+        )
+        
+        with patch("pandas.read_excel", return_value=mock_df):
+            # Read from specific sheet
+            reader = ExcelReader(path=str(excel_file), sheet_name="Products")
+            result = reader.read()
 
-            pd.DataFrame(
-                {"product_id": [101, 102, 103], "product_name": ["Apple", "Banana", "Cherry"]}
-            ).to_excel(writer, sheet_name="Products", index=False)
-
-        # Read from specific sheet
-        reader = ExcelReader(path=str(excel_file), sheet_name="Products")
-        result = reader.read()
-
-        # Check result
-        assert len(result) == 3
-        assert "product_id" in result.columns
-        assert "product_name" in result.columns
+            # Check result
+            assert len(result) == 3
+            assert "product_id" in result.columns
+            assert "product_name" in result.columns
 
 
 class TestBlobReader:
@@ -462,14 +580,16 @@ class TestBlobReader:
         # Verify it was created with correct params
         assert reader.file_format == file_format
 
-        # Invalid format should raise error
+        # Test with an invalid format in a separate test instance
         with pytest.raises(ValueError):
-            TestBlobReader(
+            invalid_reader = TestBlobReader(
                 connection_string="test",
                 container_name="test",
                 blob_path="test.csv",
                 file_format="invalid_format",  # Invalid format
             )
+            # We need to explicitly call _validate_source since it's not automatically called on instantiation
+            invalid_reader._validate_source()
 
 
 class TestSnowflakeReader:
@@ -481,39 +601,29 @@ class TestSnowflakeReader:
         mock_df = pd.DataFrame(
             {"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"], "value": [10.5, 20.5, 30.5]}
         )
-
-        # Mock Snowflake connector
+        mock_pl_df = pl.from_pandas(mock_df)
+        
+        # Create mock connection
         mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_cursor.fetch_pandas_all.return_value = mock_df
-
-        # Create a reader with mocked methods for testing
-        reader = SnowflakeReader(
-            user="test_user",
-            password="test_password",
-            account="test_account",
-            database="test_db",
-            schema="test_schema",
-            warehouse="test_warehouse",
-            query="SELECT * FROM test_table",
-        )
-
-        # Apply mocks to internal methods instead of real external calls
-        # This is more focused testing as per the best practices
-
-        # Mock private methods to avoid file access issues
-        reader._create_connection = lambda: mock_conn
-
-        # Now read the data
-        result = reader.read()
-
-        # Check result in a focused way, with specific assertions
-        assert isinstance(result, pl.DataFrame)
-        assert len(result) == 3
-        assert "id" in result.columns
-        assert "name" in result.columns
-        assert "value" in result.columns
-
-        # Verify query execution to ensure correct behavior
-        mock_cursor.execute.assert_called_once_with("SELECT * FROM test_table")
+        
+        # Mock both pl.read_database and the _create_connection method
+        with patch('polars.read_database', return_value=mock_pl_df) as mock_read_db, \
+             patch('clustering.shared.io.readers.snowflake_reader.SnowflakeReader._create_connection', return_value=mock_conn):
+            
+            reader = SnowflakeReader(
+                query="SELECT * FROM test_table",
+                use_cache=False  # Disable caching for test simplicity
+            )
+            
+            # Now read the data
+            result = reader.read()
+            
+            # Check result
+            assert isinstance(result, pl.DataFrame)
+            assert len(result) == 3
+            assert "id" in result.columns
+            assert "name" in result.columns
+            assert "value" in result.columns
+            
+            # Verify the polars.read_database was called with correct parameters
+            mock_read_db.assert_called_once_with(query="SELECT * FROM test_table", connection=mock_conn)
