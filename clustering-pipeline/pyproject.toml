@@ -92,3 +92,27 @@ src = ["src"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+# =========================================
+# Testing Configuration
+# =========================================
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning"]
+markers = [
+    "unit: Mark a test as a unit test",
+    "integration: Mark a test as an integration test",
+    "asset: Mark a test as testing a Dagster asset",
+    "job: Mark a test as testing a Dagster job",
+    "check: Mark a test as testing a Dagster asset check",
+]
+addopts = [
+    "--verbose",
+    "--cov=clustering.pipeline",
+    "--cov-report=term",
+    "--cov-report=html",
+]

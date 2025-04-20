@@ -16,14 +16,21 @@ from dagster import (
     mem_io_manager,
 )
 
-from clustering.pipeline.assets import (
-    external_load_raw_data,
-    external_preprocess_data,
-    external_transform_data,
-    internal_load_raw_data,
-    internal_preprocess_data,
-    internal_transform_data,
-    merge_clusters,
+# Use actual assets that exist in the codebase
+from clustering.pipeline.assets.preprocessing.internal import (
+    internal_raw_sales_data as internal_load_raw_data,
+    internal_normalized_sales_data as internal_preprocess_data,
+)
+from clustering.pipeline.assets.preprocessing.external import (
+    external_features_data as external_load_raw_data,
+    preprocessed_external_data as external_preprocess_data,
+)
+from clustering.pipeline.assets.clustering import (
+    internal_fe_raw_data as internal_transform_data,
+    external_fe_raw_data as external_transform_data,
+)
+from clustering.pipeline.assets.merging.merge import (
+    merged_clusters as merge_clusters,
 )
 
 

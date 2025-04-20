@@ -6,7 +6,7 @@ This page allows users to upload data files or connect to Snowflake.
 import pandas as pd
 import streamlit as st
 
-from clustering.shared.utils.io.readers import SnowflakeReader
+from clustering.shared.io.readers import SnowflakeReader
 
 
 @st.cache_data

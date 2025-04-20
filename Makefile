@@ -262,7 +262,7 @@ test-cli: ## Run tests for CLI package
 	
 dagster-test: ## Run Dagster-specific tests
 	@echo "==> Running Dagster implementation tests"
-	@$(PYTHON) -m pytest tests/clustering-pipeline/dagster -v
+	@$(PYTHON) -m pytest tests/clustering-pipeline/dagster_tests -v
 	@echo "✓ Dagster tests completed"
 
 ##@ Documentation

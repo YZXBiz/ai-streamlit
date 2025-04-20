@@ -23,7 +23,8 @@ from dagster import (
     op,
 )
 from dagster._core.definitions.definitions_class import Definitions
-from dagster._core.test_utils import InProcessExecutionResult
+# Modern way of accessing execution results
+from dagster._core.execution.execute_in_process_result import ExecuteInProcessResult
 
 from clustering.pipeline.definitions import (
     external_preprocessing_job,
@@ -34,7 +35,7 @@ from clustering.pipeline.definitions import (
 
 
 @pytest.fixture
-def run_dagster_job() -> Callable[..., InProcessExecutionResult]:
+def run_dagster_job() -> Callable[..., ExecuteInProcessResult]:
     """Create a fixture for running a Dagster job.
 
     Returns:
@@ -43,7 +44,7 @@ def run_dagster_job() -> Callable[..., InProcessExecutionResult]:
 
     def _run_job(
         job_def: Any, run_config: dict[str, Any] = None, instance: DagsterInstance = None
-    ) -> InProcessExecutionResult:
+    ) -> ExecuteInProcessResult:
         return execute_job(job_def, run_config=run_config or {}, instance=instance)
 
     return _run_job
