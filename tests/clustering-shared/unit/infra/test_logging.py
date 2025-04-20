@@ -1,9 +1,6 @@
 """Tests for the logging service module."""
 
-import os
-from pathlib import Path
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from clustering.shared.infra.logging import LoggerService
 
@@ -39,22 +36,24 @@ class TestLoggerService:
     @patch("loguru.logger.remove")
     @patch("loguru.logger.add")
     @patch("pathlib.Path.mkdir")
-    def test_start(self, mock_mkdir: MagicMock, mock_add: MagicMock, mock_remove: MagicMock) -> None:
+    def test_start(
+        self, mock_mkdir: MagicMock, mock_add: MagicMock, mock_remove: MagicMock
+    ) -> None:
         """Test starting the logging service."""
         service = LoggerService(sink="logs/custom.log")
-        
+
         # Mock datetime to get a consistent timestamp
         with patch("clustering.shared.infra.logging.datetime") as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value = "20230101_120000"
-            
+
             service.start()
-            
+
             # Verify logger.remove was called
             mock_remove.assert_called_once()
-            
+
             # Verify logs directory creation
             mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-            
+
             # Verify logger.add was called with expected parameters
             args, kwargs = mock_add.call_args
             assert kwargs["sink"] == "logs/custom_20230101_120000.log"
@@ -65,10 +64,10 @@ class TestLoggerService:
         """Test retrieving the logger instance."""
         service = LoggerService()
         logger = service.logger()
-        
+
         # Check that we got the loguru logger
         assert logger.__module__ == "loguru._logger"
-        
+
     @patch("loguru.logger.remove")
     @patch("loguru.logger.add")
     @patch("pathlib.Path.mkdir")
@@ -77,4 +76,4 @@ class TestLoggerService:
         service = LoggerService()
         service.stop()
         # Nothing to verify since the stop method is a no-op,
-        # but we're testing for code coverage 
+        # but we're testing for code coverage

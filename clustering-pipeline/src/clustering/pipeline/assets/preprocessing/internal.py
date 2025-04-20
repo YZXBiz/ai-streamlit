@@ -8,7 +8,6 @@ import pandas as pd
 import polars as pl
 
 
-
 @dg.asset(
     io_manager_key="io_manager",
     compute_kind="internal_preprocessing",

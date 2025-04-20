@@ -6,7 +6,6 @@ following modern visualization principles.
 
 import pandas as pd
 import streamlit as st
-
 from pygwalker.api.streamlit import StreamlitRenderer
 
 

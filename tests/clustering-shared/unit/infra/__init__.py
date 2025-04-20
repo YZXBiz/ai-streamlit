@@ -1,1 +1,1 @@
-"""Unit tests for clustering.shared.infra package.""" 
+"""Unit tests for clustering.shared.infra package."""

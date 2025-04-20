@@ -12,7 +12,6 @@ import pandera as pa
 import polars as pl
 from pandera.typing import Series
 
-
 # %% TYPES
 DataFrameType = pd.DataFrame | pl.DataFrame
 SeriesType = pd.Series | pl.Series
@@ -38,7 +37,7 @@ class BaseSchema(pa.DataFrameModel):
 
         Returns:
             Validated data, preserving the original type (Pandas or Polars)
-            
+
         Raises:
             ValueError: If validation fails
         """

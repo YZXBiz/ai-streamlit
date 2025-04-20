@@ -21,3 +21,20 @@ from clustering.dashboard.components.scatter_plot import (
     create_scatter_plot,
     display_scatter_plot_with_controls,
 )
+
+__all__ = [
+    "create_correlation_matrix",
+    "display_correlation_matrix",
+    "display_complete_data_summary",
+    "display_dataset_metrics",
+    "display_datatype_chart",
+    "display_numeric_stats",
+    "display_schema_summary",
+    "metric_card",
+    "metric_row",
+    "create_parallel_coordinates",
+    "display_parallel_coordinates_with_controls",
+    "get_pyg_renderer",
+    "create_scatter_plot",
+    "display_scatter_plot_with_controls",
+]

@@ -4,9 +4,9 @@ This module provides Dagster assets for training clustering models based on
 engineered features.
 """
 
-from typing import Any
 import os
 import tempfile
+from typing import Any
 
 import dagster as dg
 import polars as pl

@@ -4,23 +4,23 @@ import plotly.colors as pc
 
 # Import visualization utilities for easier access
 from clustering.dashboard.utils.visualization_utils import (
-    get_color_scale,
-    load_dataset,
-    format_file_size,
-    get_file_info,
-    show_dataframe_info,
-    plot_missing_values,
-    display_code,
-    load_image,
-    download_dataframe,
-    create_figure_with_dropdown,
-    create_sidebar_filters,
     apply_filters,
     cached_dataframe,
-    plot_correlation_matrix,
+    create_figure_with_dropdown,
+    create_sidebar_filters,
     create_time_series_plot,
+    display_code,
+    download_dataframe,
     export_dashboard_state,
+    format_file_size,
+    get_color_scale,
+    get_file_info,
     import_dashboard_state,
+    load_dataset,
+    load_image,
+    plot_correlation_matrix,
+    plot_missing_values,
+    show_dataframe_info,
 )
 
 # Export all imported functions

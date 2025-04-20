@@ -1,14 +1,14 @@
 """Tests for the profiling module."""
 
-import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from clustering.shared.common.profiling import (
     get_cpu_usage,
     get_memory_usage,
-    timer,
     profile,
+    timer,
 )
 
 
@@ -77,9 +77,7 @@ class TestProfilingUtils:
             (100.0, 100.0),
         ],
     )
-    def test_get_cpu_usage_values(
-        self, cpu_percent: float, expected: float
-    ) -> None:
+    def test_get_cpu_usage_values(self, cpu_percent: float, expected: float) -> None:
         """Test get_cpu_usage with different CPU percentages."""
         with patch("psutil.cpu_percent", return_value=cpu_percent):
             result = get_cpu_usage()
@@ -120,8 +118,8 @@ class TestTimerDecorator:
         ],
     )
     def test_timer_different_durations(
-        self, 
-        mock_time: MagicMock, 
+        self,
+        mock_time: MagicMock,
         mock_print: MagicMock,
         start_time: float,
         end_time: float,
@@ -157,8 +155,18 @@ class TestProfileDecorator:
         mock_cpu_usage.side_effect = [10.0, 15.0]
 
         # Mock memory usage to return dictionaries with different values
-        initial_mem = {"total": 16000000000, "available": 8000000000, "used": 8000000000, "percent": 30.0}
-        final_mem = {"total": 16000000000, "available": 7000000000, "used": 9000000000, "percent": 35.0}
+        initial_mem = {
+            "total": 16000000000,
+            "available": 8000000000,
+            "used": 8000000000,
+            "percent": 30.0,
+        }
+        final_mem = {
+            "total": 16000000000,
+            "available": 7000000000,
+            "used": 9000000000,
+            "percent": 35.0,
+        }
         mock_memory_usage.side_effect = [initial_mem, final_mem]
 
         # Create a test function with the profile decorator
@@ -185,12 +193,13 @@ class TestProfileDecorator:
             "Memory usage: 30.0% → 35.0% (Δ: 5.0%)",
             "----------------------------",
         ]
-        
+
         for i, expected_call in enumerate(expected_calls):
             assert mock_print.call_args_list[i][0][0] == expected_call
 
     def test_profile_preserves_function_metadata(self) -> None:
         """Test that the profile decorator preserves the metadata of the wrapped function."""
+
         # Create a test function with the profile decorator
         @profile
         def test_function() -> str:
@@ -223,27 +232,37 @@ class TestProfileDecorator:
         """Test profile decorator with different resource usage patterns."""
         # Mock time
         mock_time.side_effect = [100, 105]
-        
+
         # Mock CPU usage
         mock_cpu_usage.side_effect = [initial_cpu, final_cpu]
-        
+
         # Mock memory usage
-        initial_mem = {"total": 16000000000, "available": 8000000000, "used": 8000000000, "percent": initial_mem_pct}
-        final_mem = {"total": 16000000000, "available": 7000000000, "used": 9000000000, "percent": final_mem_pct}
+        initial_mem = {
+            "total": 16000000000,
+            "available": 8000000000,
+            "used": 8000000000,
+            "percent": initial_mem_pct,
+        }
+        final_mem = {
+            "total": 16000000000,
+            "available": 7000000000,
+            "used": 9000000000,
+            "percent": final_mem_pct,
+        }
         mock_memory_usage.side_effect = [initial_mem, final_mem]
-        
+
         # Call decorated function
         @profile
         def test_function() -> str:
             return "result"
-            
+
         result = test_function()
         assert result == "result"
-        
+
         # Calculate deltas for verification
         cpu_change = final_cpu - initial_cpu
         mem_change = final_mem_pct - initial_mem_pct
-        
+
         # Verify output
         expected_calls = [
             "--- Profile for test_function ---",
@@ -252,6 +271,6 @@ class TestProfileDecorator:
             f"Memory usage: {initial_mem_pct:.1f}% → {final_mem_pct:.1f}% (Δ: {mem_change:.1f}%)",
             "----------------------------",
         ]
-        
+
         for i, expected_call in enumerate(expected_calls):
-            assert mock_print.call_args_list[i][0][0] == expected_call 
+            assert mock_print.call_args_list[i][0][0] == expected_call

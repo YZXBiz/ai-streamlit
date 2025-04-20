@@ -3,15 +3,15 @@
 import os
 import tempfile
 from pathlib import Path
+
 import pytest
-from unittest.mock import patch, mock_open
 
 from clustering.shared.infra.hydra_config import (
+    load_config,
+    merge_configs,
     parse_file,
     parse_string,
-    merge_configs,
     to_object,
-    load_config,
 )
 
 
@@ -30,9 +30,9 @@ def config_file() -> Path:
               port: 5432
             """
         )
-    
+
     yield temp_path
-    
+
     # Cleanup
     if temp_path.exists():
         os.unlink(temp_path)
@@ -77,13 +77,13 @@ class TestHydraConfig:
           name: TestApp
           version: 1.0.0
         """)
-        
+
         config2 = parse_string("""
         database:
           host: localhost
           port: 5432
         """)
-        
+
         merged = merge_configs([config1, config2])
         assert merged is not None
         assert "app" in merged
@@ -103,7 +103,7 @@ class TestHydraConfig:
           - item1
           - item2
         """)
-        
+
         obj = to_object(config)
         assert isinstance(obj, dict)
         assert "app" in obj
@@ -121,12 +121,12 @@ class TestHydraConfig:
           name: TestApp
           version: "1.0.0"
         """)
-        
+
         # Test simple conversion
         obj = to_object(config)
         assert obj["app"]["name"] == "TestApp"
         assert obj["app"]["version"] == "1.0.0"
-        
+
         # For resolve=False, we should test with a number that would be resolved
         config2 = parse_string("""
         numbers:
@@ -134,11 +134,11 @@ class TestHydraConfig:
           b: 20
           c: ${numbers.a}
         """)
-        
+
         # With resolve=True, c should be 10
         obj_resolved = to_object(config2)
         assert obj_resolved["numbers"]["c"] == 10
-        
+
         # With resolve=False, c should remain as the interpolation string
         obj_unresolved = to_object(config2, resolve=False)
         assert obj_unresolved["numbers"]["c"] == "${numbers.a}"
@@ -158,4 +158,4 @@ class TestHydraConfig:
     def test_load_config_nonexistent(self) -> None:
         """Test loading a nonexistent config file."""
         config = load_config("/nonexistent/path/config.yaml")
-        assert config is None 
+        assert config is None

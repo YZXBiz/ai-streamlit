@@ -1,6 +1,7 @@
 """Infrastructure utilities for the clustering project."""
 
 from enum import Enum
+
 from clustering.shared.infra.hydra_config import load_config
 from clustering.shared.infra.logging import LoggerService
 

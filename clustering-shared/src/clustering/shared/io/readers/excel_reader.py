@@ -1,7 +1,7 @@
 """Excel reader implementation."""
 
-import polars as pl
 import pandas as pd
+import polars as pl
 
 from clustering.shared.io.readers.base import FileReader
 

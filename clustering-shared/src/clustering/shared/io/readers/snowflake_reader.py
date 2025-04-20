@@ -9,8 +9,8 @@ import duckdb
 import polars as pl
 import snowflake.connector
 
-from clustering.shared.io.readers.base import Reader
 from clustering.shared.common.filesystem import get_project_root
+from clustering.shared.io.readers.base import Reader
 
 
 class SnowflakeReader(Reader):

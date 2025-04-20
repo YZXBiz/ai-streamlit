@@ -20,7 +20,7 @@ def main() -> None:
     app_path = os.path.join(current_dir, "app.py")
 
     # Make sure the pages directory is in a place Streamlit can find it
-    pages_dir = os.path.join(current_dir, "pages")
+    os.path.join(current_dir, "pages")
 
     # Run the Streamlit app with the appropriate arguments
     sys.argv = [

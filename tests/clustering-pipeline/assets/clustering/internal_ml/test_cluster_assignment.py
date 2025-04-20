@@ -2,132 +2,238 @@
 
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import polars as pl
 import pytest
-from pycaret.clustering import ClusteringExperiment
 
-from clustering.pipeline.assets.clustering import (
+from clustering.pipeline.assets.clustering.internal_ml.model_training import (
     internal_assign_clusters,
     internal_save_cluster_assignments,
 )
 
 
+@pytest.fixture
+def sample_category_data():
+    """Sample data for different categories (used as dimensionality reduced features here)."""
+    return {
+        "category_a": pl.DataFrame(
+            {
+                "store_id": ["store_0", "store_1", "store_2"],
+                "feature_1": [0.5, 0.7, 0.9],
+                "feature_2": [0.3, 0.6, 0.2],
+            }
+        ),
+        "category_b": pl.DataFrame(
+            {
+                "store_id": ["store_3", "store_4", "store_5"],
+                "feature_1": [0.4, 0.8, 0.6],
+                "feature_2": [0.2, 0.5, 0.7],
+            }
+        ),
+    }
+
+
+# New fixture for the missing input
+@pytest.fixture
+def sample_fe_raw_data():
+    """Sample raw data matching the structure needed for internal_fe_raw_data."""
+    return {
+        "category_a": pl.DataFrame(
+            {
+                "store_id": ["store_0", "store_1", "store_2"],
+                "original_feature_1": [5, 7, 9],
+                "original_feature_2": [3, 6, 2],
+                "some_other_column": ["x", "y", "z"],
+            }
+        ),
+        "category_b": pl.DataFrame(
+            {
+                "store_id": ["store_3", "store_4", "store_5"],
+                "original_feature_1": [4, 8, 6],
+                "original_feature_2": [2, 5, 7],
+                "some_other_column": ["a", "b", "c"],
+            }
+        ),
+    }
+
+
+@pytest.fixture
+def sample_clustering_results():
+    """Sample results from clustering model training."""
+    return {
+        "category_a": {
+            "optimal_clusters": 2,
+            "model": "mocked_model_object_a",
+            "metrics": {"silhouette": 0.8},
+            "experiment_path": "/path/to/exp_a",  # Mock path needed by asset
+        },
+        "category_b": {
+            "optimal_clusters": 3,
+            "model": "mocked_model_object_b",
+            "metrics": {"silhouette": 0.7},
+            "experiment_path": "/path/to/exp_b",  # Mock path needed by asset
+        },
+    }
+
+
+@pytest.fixture
+def sample_cluster_assignments():
+    """Sample cluster assignment results (as expected output from internal_assign_clusters)."""
+    return {
+        "category_a": pl.DataFrame(
+            {
+                "store_id": ["store_0", "store_1", "store_2"],
+                "original_feature_1": [5, 7, 9],
+                "original_feature_2": [3, 6, 2],
+                "some_other_column": ["x", "y", "z"],
+                "Cluster": [0, 1, 0],  # Added cluster column
+            }
+        ),
+        "category_b": pl.DataFrame(
+            {
+                "store_id": ["store_3", "store_4", "store_5"],
+                "original_feature_1": [4, 8, 6],
+                "original_feature_2": [2, 5, 7],
+                "some_other_column": ["a", "b", "c"],
+                "Cluster": [2, 1, 0],  # Added cluster column
+            }
+        ),
+    }
+
+
 class TestInternalAssignClusters:
     """Tests for internal_assign_clusters asset."""
-    
-    @patch("clustering.pipeline.assets.clustering.ClusteringExperiment")
-    def test_assign_clusters(self, mock_exp_class, mock_execution_context, sample_category_data, sample_clustering_results):
+
+    # Patch load_experiment as well, since the asset uses it
+    @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
+    @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
+    def test_assign_clusters(
+        self,
+        mock_exp_class,
+        mock_load_exp,
+        mock_execution_context,
+        sample_category_data,
+        sample_clustering_results,
+        sample_fe_raw_data,
+    ):
         """Test cluster assignment to data points."""
-        # Setup the mock experiment
         mock_exp = MagicMock()
+        # Mock both the class instantiation and the load_experiment function
         mock_exp_class.return_value = mock_exp
-        
-        # Configure the mock to return assignments
-        mock_assignments = pl.DataFrame({
-            "store_id": ["store_0", "store_1", "store_2", "store_3", "store_4"],
-            "cluster": [0, 1, 2, 0, 1],
-            "distance": [0.1, 0.2, 0.15, 0.18, 0.22],
-        })
-        # Convert to pandas for the mock return value
-        mock_exp.assign_model.return_value = mock_assignments.to_pandas()
-        
-        # Execute the asset
+        mock_load_exp.return_value = mock_exp
+
+        def assign_side_effect(model):
+            # assign_model in pycaret might not need the data argument explicitly when called on the experiment object
+            # We need to return the structure expected *before* joining back to raw data
+            if model == "mocked_model_object_a":
+                return pd.DataFrame({"Cluster": [0, 1, 0]})
+            elif model == "mocked_model_object_b":
+                return pd.DataFrame({"Cluster": [2, 1, 0]})
+            return pd.DataFrame()
+
+        mock_exp.assign_model.side_effect = assign_side_effect
+
+        # Execute the asset with all required inputs
         result = internal_assign_clusters(
             mock_execution_context,
-            sample_category_data,
-            sample_clustering_results
+            sample_category_data,  # Represents internal_dimensionality_reduced_features
+            sample_clustering_results,  # Represents internal_train_clustering_models
+            sample_fe_raw_data,  # Represents internal_fe_raw_data
         )
-        
-        # Verify PyCaret experiment was created for each category
-        assert mock_exp_class.call_count >= len(sample_category_data)
-        
-        # Verify assign_model was called with the correct model
-        for call in mock_exp.assign_model.call_args_list:
-            args, kwargs = call
-            # First argument should be the model from sample_clustering_results
-            assert args[0] is not None
-        
-        # Verify the result
+
+        # Verify load_experiment calls
+        assert mock_load_exp.call_count == len(sample_clustering_results)
+
+        # Verify assign_model calls
+        assert mock_exp.assign_model.call_count == len(sample_clustering_results)
+
+        # Verify the result structure - should match raw data + Cluster column
         assert isinstance(result, dict)
-        for category in sample_category_data:
+        for category, expected_raw_df in sample_fe_raw_data.items():
             assert category in result
-            assert isinstance(result[category], pl.DataFrame)
-            assert "store_id" in result[category].columns
-            assert "cluster" in result[category].columns
-    
-    @patch("clustering.pipeline.assets.clustering.ClusteringExperiment")
-    def test_handle_missing_model(self, mock_exp_class, mock_execution_context, sample_category_data):
+            result_df = result[category]
+            assert isinstance(result_df, pl.DataFrame)
+            # Check columns: original raw columns + Cluster
+            expected_cols = set(expected_raw_df.columns) | {"Cluster"}
+            assert set(result_df.columns) == expected_cols
+            # Basic check on row count
+            assert len(result_df) == len(expected_raw_df)
+
+    @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
+    @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
+    def test_handle_missing_model(
+        self,
+        mock_exp_class,
+        mock_load_exp,
+        mock_execution_context,
+        sample_category_data,
+        sample_fe_raw_data,
+    ):
         """Test handling of missing model for a category."""
-        # Setup the mock experiment
         mock_exp = MagicMock()
+        mock_load_exp.return_value = mock_exp
         mock_exp_class.return_value = mock_exp
-        
-        # Create results with missing model for one category
+
         incomplete_results = {
             "category_a": {
                 "optimal_clusters": 3,
                 "model": "mocked_model_object",
                 "metrics": {"silhouette": 0.75},
+                "experiment_path": "/path/to/exp_a",
             },
-            # Missing category_b
         }
-        
-        # Configure the mock to return assignments
-        mock_assignments = pl.DataFrame({
-            "store_id": ["store_0", "store_1", "store_2"],
-            "cluster": [0, 1, 2],
-            "distance": [0.1, 0.2, 0.15],
-        })
-        mock_exp.assign_model.return_value = mock_assignments.to_pandas()
-        
-        # Execute the asset
+
+        mock_assignments_a = pd.DataFrame({"Cluster": [0, 1, 2]})
+        mock_exp.assign_model.return_value = mock_assignments_a
+
+        # Pass all required inputs
         result = internal_assign_clusters(
-            mock_execution_context,
-            sample_category_data,
-            incomplete_results
+            mock_execution_context, sample_category_data, incomplete_results, sample_fe_raw_data
         )
-        
-        # Verify result only contains category with model
+
         assert "category_a" in result
-        assert "category_b" not in result
-        
-        # Verify category in result has correct format
+        assert "category_b" not in result  # Should not be processed
+
         assert isinstance(result["category_a"], pl.DataFrame)
-        assert "store_id" in result["category_a"].columns
-        assert "cluster" in result["category_a"].columns
+        assert "Cluster" in result["category_a"].columns
+        assert set(result["category_a"].columns) == set(
+            sample_fe_raw_data["category_a"].columns
+        ) | {"Cluster"}
 
 
 class TestInternalSaveClusterAssignments:
     """Tests for internal_save_cluster_assignments asset."""
-    
+
     def test_save_assignments(self, mock_execution_context, sample_cluster_assignments):
         """Test saving cluster assignments."""
-        # Execute the asset
-        result = internal_save_cluster_assignments(mock_execution_context, sample_cluster_assignments)
-        
-        # Get the writer that should have been used
-        writer = mock_execution_context.resources.cluster_assignments_writer
-        
-        # Verify write was called
-        assert writer.written_count > 0
-        
-        # Verify data was written
-        assert writer.written_data[0] == sample_cluster_assignments
-        
-        # Verify the result is passed through unchanged
-        assert result == sample_cluster_assignments
-    
+        result = internal_save_cluster_assignments(
+            mock_execution_context, sample_cluster_assignments
+        )
+
+        # Use the correct resource key from the context
+        writer = mock_execution_context.resources.internal_cluster_assignments
+
+        assert writer.write.call_count == 1
+        written_call_args = writer.write.call_args
+        assert "data" in written_call_args.kwargs
+
+        # The asset now combines data before writing
+        written_data = written_call_args.kwargs["data"]
+        assert isinstance(written_data, pl.DataFrame)
+        assert "category" in written_data.columns  # Check for the added category column
+        # Further checks could verify the combined structure if needed
+
+        # Verify the asset returns None
+        assert result is None
+
     def test_empty_assignments(self, mock_execution_context):
         """Test saving empty cluster assignments."""
-        # Create empty assignments
         empty_assignments = {}
-        
-        # Execute the asset
+
         result = internal_save_cluster_assignments(mock_execution_context, empty_assignments)
-        
-        # Verify result is the empty dictionary
-        assert result == empty_assignments
-        
-        # Writer should not have been called for empty data
-        writer = mock_execution_context.resources.cluster_assignments_writer
-        assert writer.written_count == 0 
+
+        assert result is None
+
+        # Use the correct resource key from the context
+        writer = mock_execution_context.resources.internal_cluster_assignments
+        assert writer.write.call_count == 0

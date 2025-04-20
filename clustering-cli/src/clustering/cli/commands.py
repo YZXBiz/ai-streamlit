@@ -1,5 +1,6 @@
 """Command-line interface for the clustering project."""
 
+import builtins
 import json
 from typing import Any
 
@@ -8,7 +9,6 @@ import pandas as pd
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
-import builtins
 
 console = Console()
 

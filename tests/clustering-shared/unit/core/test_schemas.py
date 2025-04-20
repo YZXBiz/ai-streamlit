@@ -4,16 +4,15 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
-import pandera as pa
-from pandera.errors import SchemaError, SchemaInitError
+from pandera.errors import SchemaError
 
 from clustering.shared.schemas import (
+    BaseSchema,
     DataFrameType,
     DistributedDataSchema,
     MergedDataSchema,
     NSMappingSchema,
     SalesSchema,
-    BaseSchema,
 )
 
 
@@ -262,7 +261,7 @@ class TestNSMappingSchema:
 
         with pytest.raises(SchemaError):
             NSMappingSchema.check(invalid_data)
-            
+
     def test_mapping_required_field_missing(self) -> None:
         """Test validation fails when required fields are missing."""
         # PRODUCT_ID is required, so let's test that it's properly enforced
@@ -287,60 +286,58 @@ class TestNSMappingSchema:
 
         with pytest.raises(SchemaError):
             NSMappingSchema.check(missing_required_field_data)
-            
+
     def test_relaxed_validate_minimal_data(self) -> None:
         """Test relaxed validation with minimal data (only required fields)."""
         # Only PRODUCT_ID is required
-        minimal_data = pd.DataFrame({
-            "PRODUCT_ID": [101, 102, 103]
-        })
-        
+        minimal_data = pd.DataFrame({"PRODUCT_ID": [101, 102, 103]})
+
         result = NSMappingSchema.relaxed_validate(minimal_data)
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 3
         assert "PRODUCT_ID" in result.columns
         assert result["PRODUCT_ID"].dtype == np.int64
-        
+
     def test_relaxed_validate_missing_required_column(self) -> None:
         """Test relaxed validation fails when required PRODUCT_ID column is missing."""
-        missing_required = pd.DataFrame({
-            "CATEGORY": ["Health", "Beauty", "Grocery"],
-            "NEED_STATE": ["Pain Relief", "Moisturizing", "Snacks"]
-        })
-        
+        missing_required = pd.DataFrame(
+            {
+                "CATEGORY": ["Health", "Beauty", "Grocery"],
+                "NEED_STATE": ["Pain Relief", "Moisturizing", "Snacks"],
+            }
+        )
+
         with pytest.raises(ValueError, match="Missing required columns"):
             NSMappingSchema.relaxed_validate(missing_required)
-            
+
     def test_relaxed_validate_product_id_conversion(self) -> None:
         """Test relaxed validation with PRODUCT_ID that needs conversion."""
-        data_with_string_ids = pd.DataFrame({
-            "PRODUCT_ID": ["101", "102", "103"]
-        })
-        
+        data_with_string_ids = pd.DataFrame({"PRODUCT_ID": ["101", "102", "103"]})
+
         result = NSMappingSchema.relaxed_validate(data_with_string_ids)
         assert result["PRODUCT_ID"].dtype == np.int64
         assert result["PRODUCT_ID"].tolist() == [101, 102, 103]
-        
+
     def test_relaxed_validate_boolean_conversion(self) -> None:
         """Test relaxed validation with boolean columns that need conversion."""
-        data_with_bool_strings = pd.DataFrame({
-            "PRODUCT_ID": [101, 102, 103],
-            "NEW_ITEM": ["TRUE", "FALSE", "TRUE"],
-            "TO_BE_DROPPED": ["FALSE", "TRUE", "FALSE"]
-        })
-        
+        data_with_bool_strings = pd.DataFrame(
+            {
+                "PRODUCT_ID": [101, 102, 103],
+                "NEW_ITEM": ["TRUE", "FALSE", "TRUE"],
+                "TO_BE_DROPPED": ["FALSE", "TRUE", "FALSE"],
+            }
+        )
+
         result = NSMappingSchema.relaxed_validate(data_with_bool_strings)
         # Check that boolean columns were converted
         assert result["NEW_ITEM"].tolist() == [True, False, True]
         assert result["TO_BE_DROPPED"].tolist() == [False, True, False]
-    
+
     def test_relaxed_validate_invalid_product_id(self) -> None:
         """Test relaxed validation with invalid PRODUCT_ID that can't be converted."""
         # Using strings that can't be converted to integers
-        invalid_ids = pd.DataFrame({
-            "PRODUCT_ID": ["abc", "def", "ghi"]
-        })
-        
+        invalid_ids = pd.DataFrame({"PRODUCT_ID": ["abc", "def", "ghi"]})
+
         # This should not raise an exception as relaxed_validate handles errors gracefully
         result = NSMappingSchema.relaxed_validate(invalid_ids)
         # The result should be an empty DataFrame as all rows had invalid IDs
