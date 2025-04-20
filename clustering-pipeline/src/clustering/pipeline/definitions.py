@@ -1,30 +1,11 @@
 """Dagster definitions module for the clustering pipeline."""
 
 import os
-from enum import Enum
 from types import SimpleNamespace
 from typing import Any
 
 import dagster as dg
 import yaml
-
-# -----------------------------------------------------------------------------
-# Asset imports
-# -----------------------------------------------------------------------------
-# Internal preprocessing assets
-# External preprocessing assets
-# Internal ML assets - feature engineering
-# Internal ML assets - model training and analysis
-# External ML assets - feature engineering
-# External ML assets - model training and analysis
-# Merging assets
-from clustering.pipeline.assets.merging.merge import (
-    cluster_reassignment,
-    merged_cluster_assignments,
-    merged_clusters,
-    optimized_merged_clusters,
-    save_merged_cluster_assignments,
-)
 from clustering.pipeline.assets.clustering import (
     external_assign_clusters,
     external_dimensionality_reduced_features,
@@ -49,6 +30,24 @@ from clustering.pipeline.assets.clustering import (
     internal_save_clustering_models,
     internal_train_clustering_models,
 )
+
+# -----------------------------------------------------------------------------
+# Asset imports
+# -----------------------------------------------------------------------------
+# Internal preprocessing assets
+# External preprocessing assets
+# Internal ML assets - feature engineering
+# Internal ML assets - model training and analysis
+# External ML assets - feature engineering
+# External ML assets - model training and analysis
+# Merging assets
+from clustering.pipeline.assets.merging.merge import (
+    cluster_reassignment,
+    merged_cluster_assignments,
+    merged_clusters,
+    optimized_merged_clusters,
+    save_merged_cluster_assignments,
+)
 from clustering.pipeline.assets.preprocessing.external import (
     external_features_data,
     preprocessed_external_data,
@@ -65,71 +64,8 @@ from clustering.pipeline.assets.preprocessing.internal import (
 # Resources
 from clustering.pipeline.resources.data_io import data_reader, data_writer
 
-
-# Define Environment enum locally
-class Environment(str, Enum):
-    """Environment types for configuration."""
-
-    DEV = "dev"
-    TEST = "test"
-    STAGING = "staging"
-    PROD = "prod"
-
-    def __str__(self) -> str:
-        """Return the environment name as a string."""
-        return self.value
-
-
-# Define config loader function locally
-def hydra_load_config(config_path: str) -> dict[str, Any]:
-    """Load configuration from YAML file with environment variable resolution.
-
-    Args:
-        config_path: Path to the YAML configuration file
-
-    Returns:
-        Dictionary containing the configuration data
-    """
-    import os
-    import re
-
-    # Check if the file exists
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-
-    # Read the file
-    with open(config_path, "r") as file:
-        content = file.read()
-
-    # Resolve environment variables
-    # Match patterns like ${ENV_VAR} or ${ENV_VAR:default}
-    pattern = r"\$\{([^{}:]+)(?::([^{}]+))?\}"
-
-    def replace_env_var(match):
-        var_name = match.group(1)
-        default_value = match.group(2) if match.group(2) else None
-
-        # Get the value from environment variables
-        value = os.environ.get(var_name)
-
-        # Use default value if not found and a default is provided
-        if value is None and default_value is not None:
-            return default_value
-        # Return the value if found
-        elif value is not None:
-            return value
-        # Raise error if no value and no default
-        else:
-            raise ValueError(f"Environment variable '{var_name}' not found and no default provided")
-
-    # Replace all environment variables in the content
-    resolved_content = re.sub(pattern, replace_env_var, content)
-
-    # Parse the YAML
-    config_data = yaml.safe_load(resolved_content)
-
-    return config_data
-
+# Import Environment and load_config from shared module
+from clustering.shared.infra import Environment, load_config
 
 # -----------------------------------------------------------------------------
 # Asset selection lists
@@ -291,7 +227,7 @@ full_pipeline_job = dg.define_asset_job(
 # -----------------------------------------------------------------------------
 
 
-def load_config(env: str = "dev") -> dict[str, Any]:
+def _load_config_file(env: str = "dev") -> dict[str, Any]:
     """Load configuration from YAML file for the specified environment.
 
     Args:
@@ -303,8 +239,8 @@ def load_config(env: str = "dev") -> dict[str, Any]:
     config_path = os.path.join(os.path.dirname(__file__), "resources", "configs", f"{env}.yml")
 
     try:
-        # Use the Hydra-style config loader to resolve environment variables
-        config_data = hydra_load_config(config_path)
+        # Use the shared load_config function to load configuration
+        config_data = load_config(config_path)
 
         if config_data is None:
             print(f"WARNING: Config file {config_path} parsed as None, using empty config")
@@ -358,7 +294,7 @@ def get_resources_by_env(
     env_str = env.value if isinstance(env, Environment) else env
 
     # Load configuration
-    config_data = load_config(env_str)
+    config_data = _load_config_file(env_str)
 
     # Extract configuration sections
     job_params = config_data.get("job_params", {})
