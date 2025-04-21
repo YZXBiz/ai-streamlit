@@ -180,8 +180,9 @@ dashboard-install: ## Install the dashboard package
 # CODE QUALITY & TESTING
 ################################################################################
 
-.PHONY: format lint type-check check-all pre-commit pre-commit-all
+.PHONY: format lint type-check check-all pre-commit pre-commit-all test test-integration test-shared test-pipeline test-cli test-e2e test-smoke dagster-test
 
+# Code Quality
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
 	@$(PYTHON) -m ruff format .
@@ -218,13 +219,7 @@ pre-commit-all: ## Run pre-commit hooks on all files
 	@pre-commit run --all-files
 	@echo "✓ Pre-commit hooks completed for all files"
 
-##@ Testing
-################################################################################
-# TESTING
-################################################################################
-
-.PHONY: test test-integration test-shared test-pipeline test-cli test-e2e test-smoke dagster-test
-
+# Testing
 test: ## Run all tests with coverage reporting
 	@echo "==> Running all tests with coverage"
 	@$(PYTHON) -m pytest tests/ --cov=clustering-shared/src --cov=clustering-pipeline/src --cov=clustering-cli/src --cov-report=term --cov-report=xml -v
@@ -287,7 +282,7 @@ docs-server: docs-deps ## Start documentation server (http://localhost:8000)
 # DAGSTER OPERATIONS
 ################################################################################
 
-.PHONY: dagster-ui dagster-job-%
+.PHONY: dagster-ui dagster-job-% run-internal-% run-external-% run-merging run-full run-job full-pipeline
 
 dagster-ui: ## Start the Dagster UI web interface
 	@echo "==> Starting Dagster UI with $(DAGSTER_ENV) environment"
@@ -299,13 +294,7 @@ dagster-job-%: ## Run a specific Dagster job (usage: make dagster-job-JOB_NAME)
 	@$(PYTHON) -m dagster job execute -m clustering.pipeline.definitions -j $*
 	@echo "✓ Job $* completed"
 
-##@ Pipeline Execution
-################################################################################
-# PIPELINE EXECUTION
-################################################################################
-
-.PHONY: run-internal-% run-external-% run-merging run-full run-job full-pipeline
-
+# Pipeline Execution
 run-internal-%: ## Run internal pipeline jobs (usage: make run-internal-preprocessing OR run-internal-ml)
 	@echo "==> Running internal $* pipeline"
 	@$(PYTHON) -m dagster job execute -m clustering.pipeline.definitions -j internal_$*_job
@@ -339,30 +328,6 @@ full-pipeline: ## Run the full pipeline with specified environment (usage: make 
 	@echo "==> Running full pipeline in $(ENV) environment"
 	@$(PYTHON) -m clustering.cli.commands run full_pipeline_job --env $(ENV)
 	@echo "✓ Full pipeline completed"
-
-##@ Performance Optimization
-################################################################################
-# PERFORMANCE OPTIMIZATION
-################################################################################
-
-.PHONY: run-memory-optimized run-visualization
-
-run-memory-optimized: ## Run a job with memory optimization settings (usage: make run-memory-optimized JOB=job_name)
-	@echo "==> Running job with memory optimization"
-	@if [ -z "$(JOB)" ]; then \
-		echo "Error: JOB parameter is required. Usage: make run-memory-optimized JOB=job_name"; \
-		exit 1; \
-	fi
-	@DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
-	 $(PYTHON) -m dagster job execute -m clustering.pipeline.definitions -j $(JOB)
-	@echo "✓ Memory-optimized job $(JOB) completed"
-
-run-visualization: ## Run visualization job with memory optimization
-	@echo "==> Running visualization job with memory optimization"
-	@DAGSTER_MULTIPROCESS_MEMORY_OPTIMIZED=1 \
-	 DAGSTER_MULTIPROCESS_CHUNK_SIZE=1 \
-	 $(PYTHON) -m dagster job execute -m clustering.pipeline.definitions -j internal_visualization
-	@echo "✓ Visualization job completed"
 
 ##@ Package & Maintenance
 ################################################################################

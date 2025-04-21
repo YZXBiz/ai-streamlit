@@ -1,6 +1,6 @@
-FROM python:3.10-slim
+FROM python:3.10-slim AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 # Install minimal system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,22 +17,49 @@ COPY clustering-cli/pyproject.toml clustering-cli/
 COPY clustering-shared/pyproject.toml clustering-shared/
 COPY clustering-dashboard/pyproject.toml clustering-dashboard/
 
-# Install dependencies for all packages
-RUN uv pip install -e ".[all]"
+# Copy the source code
+COPY clustering-pipeline/src/ clustering-pipeline/src/
+COPY clustering-cli/src/ clustering-cli/src/
+COPY clustering-shared/src/ clustering-shared/src/
+COPY clustering-dashboard/src/ clustering-dashboard/src/
 
-# Create necessary directories (only those that aren't mounted volumes)
-RUN mkdir -p cache
+# Install dependencies and build wheel packages
+RUN uv pip wheel --wheel-dir /wheels -e ".[all]"
 
-# Copy the rest of the application
-COPY . .
+# Production stage
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install minimal system dependencies for runtime only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy wheels from builder stage
+COPY --from=builder /wheels /wheels
+
+# Install from wheels (faster and more reproducible)
+RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+
+# Create necessary directories for runtime
+RUN mkdir -p cache data/internal data/external data/merging logs
+
+# Copy configuration files
+COPY configs/ /app/configs/
 
 # Set environment variables
 ENV PYTHONPATH=/app
+ENV DAGSTER_HOME=/app/dagster_home
 
 # Create wrapper script for consistent execution (matching Makefile pattern)
-RUN echo '#!/bin/bash\nexec uv run "$@"' > /usr/local/bin/run-python && \
+RUN echo '#!/bin/bash\nexec python -m "$@"' > /usr/local/bin/run-python && \
     chmod +x /usr/local/bin/run-python
 
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
 # Command to run when the container starts
-ENTRYPOINT ["run-python", "-m", "clustering"]
+ENTRYPOINT ["run-python", "clustering"]
 CMD ["--help"]

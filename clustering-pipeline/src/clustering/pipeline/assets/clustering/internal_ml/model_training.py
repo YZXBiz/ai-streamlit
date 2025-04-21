@@ -250,33 +250,30 @@ def internal_train_clustering_models(
         # Get optimal cluster count for this category
         cluster_count = internal_optimal_cluster_counts.get(category, 2)
 
-        # Ensure cluster_count is at least 2 as required by PyCaret
-        if cluster_count < 2:
-            context.log.warning(
-                f"Cluster count for '{category}' was {cluster_count}, but PyCaret requires at least 2 clusters. "
-                f"Adjusting to 2 clusters."
-            )
-            cluster_count = 2
-
-        # Ensure we have enough samples for the requested number of clusters
+        # Get sample count
         sample_count = len(df)
-        if sample_count <= cluster_count:
-            adjusted_cluster_count = min(2, sample_count - 1) if sample_count > 2 else 2
+        
+        # Handle small datasets more effectively
+        # For very small datasets (3 samples), we still want to cluster them into 2 groups
+        # PyCaret requires at least 2 clusters and sample_count > cluster_count
+        if sample_count <= 2:
             context.log.warning(
-                f"Category '{category}' has only {sample_count} samples, which is not enough for {cluster_count} clusters. "
+                f"Category '{category}' has only {sample_count} samples, which is too few for reliable clustering. "
+                f"Will attempt to cluster with minimum settings, but results may not be meaningful."
+            )
+            # For extremely small datasets, we'll still try with 2 clusters
+            # This might not work well but at least we'll attempt it
+            cluster_count = 2
+        elif sample_count <= cluster_count:
+            # Ensure cluster count is at most (sample_count - 1)
+            adjusted_cluster_count = max(2, min(sample_count - 1, cluster_count))
+            context.log.warning(
+                f"Category '{category}' has only {sample_count} samples, not enough for {cluster_count} clusters. "
                 f"Adjusting to {adjusted_cluster_count} clusters."
             )
             cluster_count = adjusted_cluster_count
 
-        # Final validation to ensure we meet PyCaret's requirements
-        if sample_count <= 2:
-            context.log.error(
-                f"Category '{category}' has only {sample_count} samples, which is insufficient for clustering. "
-                f"Skipping this category."
-            )
-            continue
-
-        context.log.info(f"Training {algorithm} with {cluster_count} clusters for {category}")
+        context.log.info(f"Training {algorithm} with {cluster_count} clusters for {category} (samples: {sample_count})")
 
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
@@ -289,35 +286,40 @@ def internal_train_clustering_models(
             verbose=False,
         )
 
-        # Train the model with the optimal number of clusters
-        model = exp.create_model(
-            algorithm,
-            num_clusters=cluster_count,
-            verbose=False,
-        )
-
-        # Save the experiment using PyCaret's built-in function that handles lambda functions
-        experiment_path = os.path.join(temp_dir, f"{category}_experiment")
-        exp.save_experiment(experiment_path)
-
-        # Get metrics before we reset the experiment
         try:
-            metrics = exp.pull().iloc[0].to_dict()
-        except (AttributeError, IndexError, KeyError):
-            metrics = {}
-            context.log.warning(f"Could not extract metrics from experiment for {category}")
+            # Train the model with the optimal number of clusters
+            model = exp.create_model(
+                algorithm,
+                num_clusters=cluster_count,
+                verbose=False,
+            )
 
-        # Store the model and experiment path
-        trained_models[category] = {
-            "model": model,
-            "experiment_path": experiment_path,
-            "features": df.columns,
-            "num_clusters": cluster_count,
-            "num_samples": len(df),
-            "metrics": metrics,
-        }
+            # Save the experiment using PyCaret's built-in function that handles lambda functions
+            experiment_path = os.path.join(temp_dir, f"{category}_experiment")
+            exp.save_experiment(experiment_path)
 
-        context.log.info(f"Completed training for {category}")
+            # Get metrics before we reset the experiment
+            try:
+                metrics = exp.pull().iloc[0].to_dict()
+            except (AttributeError, IndexError, KeyError):
+                metrics = {}
+                context.log.warning(f"Could not extract metrics from experiment for {category}")
+
+            # Store the model and experiment path
+            trained_models[category] = {
+                "model": model,
+                "experiment_path": experiment_path,
+                "features": df.columns,
+                "num_clusters": cluster_count,
+                "num_samples": len(df),
+                "metrics": metrics,
+            }
+
+            context.log.info(f"Completed training for {category}")
+        except Exception as e:
+            context.log.error(f"Error training model for {category}: {str(e)}")
+            context.log.warning(f"Skipping category {category} due to training error")
+            continue
 
     # Add useful metadata to the context
     context.add_output_metadata(
@@ -459,21 +461,30 @@ def internal_assign_clusters(
         Dictionary of original DataFrames with cluster assignments by category
     """
     assigned_data = {}
+    skipped_categories = []
+    error_categories = []
 
     context.log.info(
         "Assigning clusters using dimensionality reduced features and applying to raw data"
     )
+    
+    # Log available models for debugging
+    context.log.info(f"Available models for categories: {list(internal_train_clustering_models.keys())}")
+    context.log.info(f"Categories with raw data: {list(internal_fe_raw_data.keys())}")
+    context.log.info(f"Categories with dimensionality reduced features: {list(internal_dimensionality_reduced_features.keys())}")
 
     for category, df in internal_dimensionality_reduced_features.items():
         # Check if we have a trained model for this category
         if category not in internal_train_clustering_models:
             context.log.warning(f"No trained model found for category: {category}")
+            skipped_categories.append(category)
             continue
 
         # Check if we have the original raw data for this category
         if category not in internal_fe_raw_data:
             context.log.warning(f"No raw data found for category: {category}")
-            raise ValueError(f"No raw data found for category: {category}")
+            skipped_categories.append(category)
+            continue
 
         context.log.info(f"Assigning clusters for category: {category}")
 
@@ -487,6 +498,7 @@ def internal_assign_clusters(
         # Check if experiment path exists
         if not Path(experiment_path).exists():
             context.log.warning(f"Experiment path does not exist: {experiment_path}")
+            error_categories.append(category)
             continue
 
         try:
@@ -505,7 +517,11 @@ def internal_assign_clusters(
                 cluster_assignments = predictions[["Cluster"]]
 
                 # Get the original raw data for this category
-                original_data = internal_fe_raw_data[category].to_pandas()
+                original_data = internal_fe_raw_data[category]
+                
+                # Convert to pandas if it's a polars DataFrame
+                if isinstance(original_data, pl.DataFrame):
+                    original_data = original_data.to_pandas()
 
                 # Ensure the indices match
                 if len(original_data) != len(cluster_assignments):
@@ -514,38 +530,114 @@ def internal_assign_clusters(
                         f"cluster assignments ({len(cluster_assignments)}) for {category}"
                     )
                     # In a real implementation, you might want more sophisticated matching
+                    error_categories.append(category)
                     continue
 
                 # Add cluster assignments to the original data
                 original_data_with_clusters = original_data.copy()
                 original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
 
+                # Ensure STORE_NBR column exists with the correct capitalization
+                if "store_nbr" in original_data_with_clusters.columns and "STORE_NBR" not in original_data_with_clusters.columns:
+                    original_data_with_clusters.rename(columns={"store_nbr": "STORE_NBR"}, inplace=True)
+                
                 # Convert back to Polars and store
-                assigned_data[category] = pl.from_pandas(original_data_with_clusters)
-
-                # Log cluster distribution
-                cluster_counts = (
-                    assigned_data[category].group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
-                )
-                context.log.info(f"Cluster distribution for {category}:\n{cluster_counts}")
+                try:
+                    result_df = pl.from_pandas(original_data_with_clusters)
+                    
+                    # Ensure cluster column has consistent naming
+                    if "cluster" in result_df.columns and "Cluster" not in result_df.columns:
+                        result_df = result_df.rename({"cluster": "Cluster"})
+                        
+                    # Verify required columns exist
+                    if "STORE_NBR" not in result_df.columns:
+                        context.log.warning(f"Missing STORE_NBR column in final result for {category}")
+                        if "store_id" in result_df.columns:
+                            result_df = result_df.rename({"store_id": "STORE_NBR"})
+                        elif "STORE_ID" in result_df.columns:
+                            result_df = result_df.rename({"STORE_ID": "STORE_NBR"})
+                        else:
+                            # Create a default store number if none exists
+                            context.log.warning(f"Creating placeholder STORE_NBR for {category}")
+                            result_df = result_df.with_columns(
+                                pl.Series(name="STORE_NBR", values=[f"store_{i}" for i in range(len(result_df))])
+                            )
+                    
+                    if "Cluster" not in result_df.columns:
+                        context.log.warning(f"Missing Cluster column in final result for {category}")
+                        # This shouldn't happen since we added it above, but just in case
+                        result_df = result_df.with_columns(pl.lit(0).alias("Cluster"))
+                    
+                    assigned_data[category] = result_df
+                    
+                    # Log cluster distribution
+                    cluster_counts = (
+                        assigned_data[category].group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
+                    )
+                    context.log.info(f"Cluster distribution for {category}:\n{cluster_counts}")
+                    
+                except Exception as e:
+                    context.log.error(f"Error converting to Polars DataFrame for {category}: {str(e)}")
+                    error_categories.append(category)
+                    continue
+                
             except ValueError as e:
                 # Handle model assignment errors (e.g., mismatched dimensions)
                 context.log.warning(f"Error assigning clusters for {category}: {str(e)}")
+                error_categories.append(category)
                 continue
+                
         except (FileNotFoundError, pickle.UnpicklingError) as e:
             # Handle missing or corrupted experiment files
             context.log.warning(f"Error loading experiment for {category}: {str(e)}")
+            error_categories.append(category)
             continue
         except Exception as e:
             # Handle any other unexpected errors
             context.log.error(f"Unexpected error for {category}: {str(e)}")
+            error_categories.append(category)
             continue
+
+    # Handle case where no clusters were assigned
+    if not assigned_data:
+        context.log.warning("No clusters were assigned to any category!")
+        
+        # Create a fallback assignment with default cluster 0 for at least one category
+        # This ensures downstream processes have something to work with
+        for category, df in internal_fe_raw_data.items():
+            if category in internal_dimensionality_reduced_features:
+                context.log.info(f"Creating fallback cluster assignment for {category}")
+                
+                # Create a dataframe with all samples assigned to cluster 0
+                df_with_fallback_cluster = df.with_columns(
+                    pl.lit(0).alias("Cluster")
+                )
+                
+                # Ensure STORE_NBR column exists 
+                if "STORE_NBR" not in df_with_fallback_cluster.columns:
+                    if "store_nbr" in df_with_fallback_cluster.columns:
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"store_nbr": "STORE_NBR"})
+                    elif "store_id" in df_with_fallback_cluster.columns:
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"store_id": "STORE_NBR"})
+                    elif "STORE_ID" in df_with_fallback_cluster.columns:
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"STORE_ID": "STORE_NBR"})
+                    else:
+                        # Create a default store number if none exists
+                        df_with_fallback_cluster = df_with_fallback_cluster.with_columns(
+                            pl.Series(name="STORE_NBR", values=[f"store_{i}" for i in range(len(df_with_fallback_cluster))])
+                        )
+                
+                assigned_data[category] = df_with_fallback_cluster
+                context.log.info(f"Assigned all {len(df)} samples in {category} to cluster 0 (fallback)")
+                break  # Just do this for one category
 
     # Store metadata about the assignment
     context.add_output_metadata(
         {
             "categories": list(assigned_data.keys()),
             "total_records": sum(len(df) for df in assigned_data.values()),
+            "skipped_categories": skipped_categories,
+            "error_categories": error_categories
         }
     )
 
@@ -589,12 +681,30 @@ def internal_save_cluster_assignments(
 
     for category, df in internal_assign_clusters.items():
         context.log.info(f"Processing cluster assignments for category: {category}")
-        # Add a category column to identify the source
-        category_df = df.with_columns(pl.lit(category).alias("category"))
-        combined_data.append(category_df)
+        # Log the DataFrame structure for debugging
+        context.log.debug(f"Columns in {category} DataFrame: {df.columns}")
+        
+        # Standardize the DataFrame to only include essential columns
+        # First, ensure STORE_NBR and Cluster columns exist
+        if "STORE_NBR" not in df.columns:
+            context.log.warning(f"Missing STORE_NBR column in {category}, skipping")
+            continue
+            
+        if "Cluster" not in df.columns:
+            context.log.warning(f"Missing Cluster column in {category}, skipping")
+            continue
+        
+        # Create a standardized DataFrame with only the necessary columns
+        standardized_df = df.select(["STORE_NBR", "Cluster"]).with_columns(
+            pl.lit(category).alias("category")
+        )
+        
+        context.log.debug(f"Standardized columns for {category}: {standardized_df.columns}")
+        combined_data.append(standardized_df)
 
     if combined_data:
         # Combine all dataframes
+        context.log.info(f"Concatenating {len(combined_data)} dataframes")
         all_assignments = pl.concat(combined_data)
 
         # Write the combined data

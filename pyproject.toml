@@ -67,8 +67,8 @@ clustering = "clustering.cli.commands:main"
 
 [project.urls]
 # "Documentation" = 
-# "Source Code" = 
-# "Issue Tracker" = 
+"Source Code" = "https://github.com/yourusername/clustering-dagster"
+"Issue Tracker" = "https://github.com/yourusername/clustering-dagster/issues"
 
 # =========================================
 # Optional Dependencies
@@ -86,18 +86,16 @@ all = ["clustering-cli", "clustering-dashboard"]
 
 [dependency-groups]
 dev = [
-    # Linting & formatting
+    # Development dependencies
     "mypy>=1.15.0",
     "pyright>=1.1.399",
     "ruff>=0.11.5",
     "pre-commit>=3.5.0",
-    # Testing
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    # Also include optional components for convenience during development
-    "clustering-cli",
-    "clustering-dashboard",
 ]
+cli = ["clustering-cli"]
+dashboard = ["clustering-dashboard"]
 docs = [
     "sphinx>=8.1.3",
     "sphinx-autobuild>=2024.10.3",
@@ -111,7 +109,7 @@ docs = [
 # =========================================
 
 [tool.uv]
-default-groups = ["dev", "docs"]
+default-groups = ["dev"]
 
 [tool.uv.workspace]
 members = [

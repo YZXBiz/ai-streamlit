@@ -19,6 +19,7 @@ class Defaults:
     OUTLIER_DETECTION = True
     OUTLIER_THRESHOLD = 0.05
     OUTLIER_METHOD = "iforest"
+    MIN_SAMPLES_FOR_OUTLIERS = 10  # Minimum samples required for outlier detection
 
     # PCA settings
     PCA_ACTIVE = True
@@ -307,6 +308,7 @@ def external_outlier_removed_features(
           - 'lof': Uses sklearn's LocalOutlierFactor
         - outlier_threshold: float, default = 0.05
           The percentage outliers to be removed from the dataset.
+        - min_samples_for_outliers: int, minimum number of samples required to apply outlier detection
     """
     # Check if outlier detection is enabled
     outlier_detection = getattr(
@@ -321,6 +323,17 @@ def external_outlier_removed_features(
         context.resources.config, "outlier_threshold", Defaults.OUTLIER_THRESHOLD
     )
     outliers_method = getattr(context.resources.config, "outliers_method", Defaults.OUTLIER_METHOD)
+    min_samples_for_outliers = getattr(
+        context.resources.config, "min_samples_for_outliers", Defaults.MIN_SAMPLES_FOR_OUTLIERS
+    )
+
+    # Check if we have enough samples to apply outlier detection
+    if len(external_normalized_data) < min_samples_for_outliers:
+        context.log.warning(
+            f"External data has only {len(external_normalized_data)} samples, which is less than the minimum "
+            f"required ({min_samples_for_outliers}) for outlier detection. Skipping outlier removal."
+        )
+        return external_normalized_data
 
     context.log.info("Removing outliers")
 

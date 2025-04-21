@@ -39,6 +39,11 @@ A data pipeline for clustering stores based on sales data and external data sour
   - [Deployment](#-deployment)
     - [GitLab CI/CD Setup](#gitlab-cicd-setup)
     - [Manual Deployment](#manual-deployment)
+  - [How to Run](#how-to-run)
+    - [1. Dagster Web UI (Recommended)](#1-dagster-web-ui-recommended)
+    - [2. Command Line Interface](#2-command-line-interface)
+    - [3. Visualization Dashboard](#3-visualization-dashboard)
+    - [4. Scheduled Execution](#4-scheduled-execution)
 
 ## 👥 Project Information
 
@@ -71,7 +76,7 @@ The primary goal is to identify meaningful store segments that can inform busine
 ### Prerequisites
 
 - Python 3.10+
-- [uv](https://astral.sh/uv) package manager
+- [uv](https://astral.sh/uv) package manager (recommended) or pip
 
 ### Developer Installation
 
@@ -105,17 +110,28 @@ The primary goal is to identify meaningful store segments that can inform busine
 
 ### Installing as a Package
 
-To install this project as a Python package:
+To install this project as a Python package without PyPI:
 
 ```bash
-# Install from PyPI
-uv pip install clustering
+# Install from Git repository
+pip install git+https://github.com/yourusername/clustering-dagster.git
 
-# Install specific version (recommended)
-uv pip install clustering==0.1.0
+# Or install from a specific branch
+pip install git+https://github.com/yourusername/clustering-dagster.git@main
 
-# Or install directly from GitHub
-uv pip install git+https://github.com/yourusername/clustering-dagster.git@v0.1.0
+# Or install a specific version using tags
+pip install git+https://github.com/yourusername/clustering-dagster.git@v0.1.0
+
+# Install with specific components
+pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[cli]"
+pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[dashboard]"
+pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[all]"
+```
+
+Alternatively, install using uv:
+
+```bash
+uv pip install git+https://github.com/yourusername/clustering-dagster.git
 ```
 
 ### Uninstallation
@@ -540,4 +556,63 @@ docker-compose up -d
 ```
 
 See the [Docker Deployment Guide](docs/docker-deployment.md) for more information on manual deployment options.
+
+## How to Run
+
+After installation, there are several ways to run the clustering pipeline:
+
+### 1. Dagster Web UI (Recommended)
+
+Start the Dagster web interface:
+
+```bash
+# Using make
+make dev
+
+# Or directly
+uv run -m dagster dev -m clustering.pipeline.definitions
+```
+
+Then open `http://localhost:3000` in your browser to:
+- View all assets and their dependencies
+- Run jobs with custom configurations
+- Monitor execution progress
+- Explore asset materializations
+
+### 2. Command Line Interface
+
+Run specific pipeline jobs:
+
+```bash
+# Run full pipeline with config file
+uv run -m clustering.cli.commands run full_pipeline --config path/to/config.yaml
+
+# Run with inline parameters
+uv run -m clustering.cli.commands run cluster_stores --param cluster_count=5
+```
+
+### 3. Visualization Dashboard
+
+Launch the analytics dashboard:
+
+```bash
+# Using make
+make dashboard
+
+# Or directly
+uv run -m clustering.dashboard
+```
+
+See the [Installation Guide](INSTALLATION_GUIDE.md) for detailed configuration options, Python SDK usage examples, and advanced scenarios.
+
+### 4. Scheduled Execution
+
+Set up scheduled runs in the Dagster UI or configure schedules programmatically.
+
+For production deployment, consider:
+- Using Dagster Daemon for scheduled runs
+- Setting up proper environment variables
+- Configuring appropriate storage solutions
+
+For detailed configuration options, see the [Installation Guide](INSTALLATION_GUIDE.md).
 
