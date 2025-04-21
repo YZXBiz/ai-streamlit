@@ -52,6 +52,7 @@ dependencies = [
     # === Core Project Modules ===
     "clustering-pipeline",
     "clustering-shared",
+    "clustering-cli",
 ]
 
 # =========================================
@@ -75,10 +76,9 @@ clustering = "clustering.cli.commands:main"
 # =========================================
 
 [project.optional-dependencies]
-# Optional extras for users who only need specific interfaces
-cli = ["clustering-cli"]
+# Optional extras for users who need dashboard
 dashboard = ["clustering-dashboard"]
-all = ["clustering-cli", "clustering-dashboard"]
+all = ["clustering-dashboard"]
 
 # =========================================
 # Development Dependencies
