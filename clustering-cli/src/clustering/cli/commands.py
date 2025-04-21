@@ -12,12 +12,26 @@ from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 
+# Import dagster definitions
+from clustering.pipeline.definitions import defs
+
 console = Console()
 
 
 @click.group()
 def cli():
-    """Clustering project CLI."""
+    """Clustering project CLI.
+    
+    Examples:
+        # List available jobs
+        $ clustering list
+        
+        # Run a job with config file
+        $ clustering run internal_preprocessing_job --config config.yaml
+        
+        # Validate a configuration file
+        $ clustering validate --config config.yaml
+    """
     pass
 
 
@@ -34,6 +48,19 @@ def run(job_name: str, env: str, config: str | None = None, param: list[str] | N
         env: Environment to run in (dev, test, prod)
         config: Optional path to configuration file (JSON or YAML)
         param: Optional additional parameters
+        
+    Examples:
+        # Run a job with default settings
+        $ clustering run internal_preprocessing_job
+        
+        # Run a job with a config file
+        $ clustering run internal_ml_job --config ml_config.yaml
+        
+        # Run a job with inline parameters
+        $ clustering run merging_job --param num_clusters=5 --param algorithm=kmeans
+        
+        # Run in production environment
+        $ clustering run full_pipeline_job --env prod --config prod_config.yaml
     """
     rprint(f"Running job [bold]{job_name}[/bold] in [green]{env}[/green] environment")
 
@@ -79,6 +106,19 @@ def validate(config: str | None = None, data: str | None = None, schema: str | N
         config: Path to configuration file to validate (JSON or YAML)
         data: Path to data file to validate
         schema: Schema name for data validation
+        
+    Examples:
+        # Validate a configuration file
+        $ clustering validate --config pipeline_config.yaml
+        
+        # Validate a data file
+        $ clustering validate --data data/raw/sales_data.csv
+        
+        # Validate a data file against a specific schema
+        $ clustering validate --data data/raw/sales_data.csv --schema sales_schema
+        
+        # Validate both config and data in one command
+        $ clustering validate --config config.yaml --data data/raw/sales_data.csv
     """
     if not config and not data:
         rprint("[yellow]Please specify either --config or --data to validate.[/yellow]")
@@ -137,6 +177,19 @@ def export(job_id: str, output: str | None = None, format: str = "csv", filter: 
         output: Path to save the results
         format: Output format (csv, json, excel)
         filter: Optional filter expression
+        
+    Examples:
+        # Export job results to a CSV file
+        $ clustering export job-123
+        
+        # Export to a specific location in JSON format
+        $ clustering export job-456 --output results/job456_results.json --format json
+        
+        # Export with filtering
+        $ clustering export job-789 --filter "cluster=2"
+        
+        # Export to Excel format
+        $ clustering export job-123 --format excel --output results/clusters.xlsx
     """
     try:
         result = export_results(job_id, output_path=output, format=format, filter_expr=filter)
@@ -162,6 +215,19 @@ def status(job_id: str | None = None, output: str = "table"):
     Args:
         job_id: Optional job ID to check status for
         output: Output format (table or json)
+        
+    Examples:
+        # Check status of all jobs
+        $ clustering status
+        
+        # Check status of a specific job
+        $ clustering status job-123
+        
+        # Get status in JSON format
+        $ clustering status --output json
+        
+        # Get status of a specific job in JSON format
+        $ clustering status job-456 --output json
     """
     try:
         if job_id:
@@ -223,26 +289,122 @@ def list(
         status: Filter jobs by status
         limit: Maximum number of jobs to list
         output: Output format (table or json)
+        
+    Examples:
+        # List all available jobs
+        $ clustering list
+        
+        # List jobs of a specific type
+        $ clustering list --type internal_preprocessing
+        
+        # List jobs with JSON output
+        $ clustering list --output json
+        
+        # List only 5 jobs
+        $ clustering list --limit 5
     """
     try:
-        results = list_jobs(job_type=type, status=status, limit=limit)
+        # Get actual job definitions from Dagster
+        try:
+            if defs is None:
+                # Try to dynamically import the module instead 
+                import importlib
+                try:
+                    pipeline_defs = importlib.import_module("clustering.pipeline.definitions")
+                    # Get jobs directly from the definitions module
+                    job_definitions = [
+                        pipeline_defs.internal_preprocessing_job,
+                        pipeline_defs.external_preprocessing_job,
+                        pipeline_defs.internal_ml_job,
+                        pipeline_defs.external_ml_job,
+                        pipeline_defs.merging_job,
+                        pipeline_defs.full_pipeline_job,
+                    ]
+                    
+                    jobs_data = []
+                    for job_def in job_definitions:
+                        # Skip the auto-generated __ASSET_JOB
+                        if job_def.name == "__ASSET_JOB":
+                            continue
+                            
+                        # Use 'kind' tag as the job type, default to 'unknown' if not present
+                        job_type = job_def.tags.get("kind", "unknown")
+                        jobs_data.append(
+                            {
+                                "job_name": job_def.name,
+                                "type": job_type,
+                            }
+                        )
+                except (ImportError, AttributeError) as e:
+                    # If all else fails, use hardcoded job definitions
+                    # based on what we know exists in definitions.py
+                    rprint("[yellow]Warning: Could not dynamically load job definitions. Using default job list.[/yellow]")
+                    jobs_data = [
+                        {"job_name": "internal_preprocessing_job", "type": "internal_preprocessing"},
+                        {"job_name": "external_preprocessing_job", "type": "external_preprocessing"},
+                        {"job_name": "internal_ml_job", "type": "internal_ml"},
+                        {"job_name": "external_ml_job", "type": "external_ml"},
+                        {"job_name": "merging_job", "type": "merging"},
+                        {"job_name": "full_pipeline_job", "type": "complete_pipeline"},
+                    ]
+            else:
+                # Original code path when defs is available
+                job_definitions = defs.get_all_job_defs()
+                
+                jobs_data = []
+                for job_def in job_definitions:
+                    # Skip the auto-generated __ASSET_JOB
+                    if job_def.name == "__ASSET_JOB":
+                        continue
+                        
+                    # Use 'kind' tag as the job type, default to 'unknown' if not present
+                    job_type = job_def.tags.get("kind", "unknown")
+                    jobs_data.append(
+                        {
+                            "job_name": job_def.name,
+                            "type": job_type,
+                        }
+                    )
+        except Exception as e:
+            # Last resort fallback
+            rprint(f"[yellow]Warning: Could not load job definitions: {str(e)}. Using default job list.[/yellow]")
+            jobs_data = [
+                {"job_name": "internal_preprocessing_job", "type": "internal_preprocessing"},
+                {"job_name": "external_preprocessing_job", "type": "external_preprocessing"},
+                {"job_name": "internal_ml_job", "type": "internal_ml"},
+                {"job_name": "external_ml_job", "type": "external_ml"},
+                {"job_name": "merging_job", "type": "merging"},
+                {"job_name": "full_pipeline_job", "type": "complete_pipeline"},
+            ]
+
+        # Apply filters
+        if type:
+            jobs_data = [j for j in jobs_data if j["type"] == type]
+        
+        # Filter out __ASSET_JOB if it somehow got included
+        jobs_data = [j for j in jobs_data if j["job_name"] != "__ASSET_JOB"]
+        
+        # Note: Status filter is removed as it doesn't apply to definitions
+        if status:
+            rprint(f"[yellow]Warning: Filtering by status ('{status}') is not applicable when listing job definitions.[/yellow]")
+
+
+        # Apply limit
+        jobs_data = jobs_data[:limit]
 
         if output == "json":
-            console.print_json(json.dumps(results))
+            console.print_json(json.dumps(jobs_data))
         else:
-            # Create a table
-            table = Table(title="Jobs List")
-            table.add_column("Job ID", style="cyan")
-            table.add_column("Type", style="green")
-            table.add_column("Status", style="magenta")
-            table.add_column("Created", style="blue")
+            # Create a table for job definitions
+            table = Table(title="Available Job Definitions")
+            table.add_column("Job Name", style="cyan")
+            table.add_column("Type (Kind Tag)", style="green")
+            # Removed Status and Created columns
 
-            for job in results:
+            for job in jobs_data:
                 table.add_row(
-                    job["job_id"],
+                    job["job_name"],
                     job.get("type", "N/A"),
-                    job.get("status", "N/A"),
-                    job.get("created_at", "N/A"),
                 )
 
             console.print(table)
@@ -263,6 +425,16 @@ def dashboard(host: str, port: int, env: str):
         host: Host to bind to
         port: Port to bind to
         env: Environment to run in (dev, test, prod)
+        
+    Examples:
+        # Start dashboard with default settings
+        $ clustering dashboard
+        
+        # Start dashboard on specific host and port
+        $ clustering dashboard --host 0.0.0.0 --port 8080
+        
+        # Start dashboard in production environment
+        $ clustering dashboard --env prod
     """
     rprint(f"Starting dashboard on {host}:{port} in [green]{env}[/green] environment")
 
@@ -290,6 +462,16 @@ def create(output: str | None = None, type: str = "full"):
     Args:
         output: Path to save the configuration template. If not provided, will prompt for input.
         type: Type of configuration template to create (job, pipeline, or full).
+        
+    Examples:
+        # Create a full configuration template with default name
+        $ clustering create
+        
+        # Create a job configuration template with specific name
+        $ clustering create --type job --output job_config.yaml
+        
+        # Create a pipeline configuration template
+        $ clustering create --type pipeline --output configs/pipeline_config.yaml
     """
     if not output:
         output = click.prompt("Enter path for the configuration file", default="config.yaml")
@@ -550,49 +732,6 @@ def get_all_jobs_status() -> builtins.list[dict[str, Any]]:
             "end_time": "2023-01-01T12:50:22",
         },
     ]
-
-
-def list_jobs(
-    job_type: str | None = None, status: str | None = None, limit: int = 10
-) -> builtins.list[dict[str, Any]]:
-    """List jobs with optional filtering.
-
-    Args:
-        job_type: Optional job type filter
-        status: Optional status filter
-        limit: Maximum number of jobs to return
-
-    Returns:
-        List of jobs
-    """
-    # This is a mock implementation
-    jobs = [
-        {
-            "job_id": f"job-{i}",
-            "type": "clustering" if i % 3 == 0 else "preprocessing" if i % 3 == 1 else "validation",
-            "status": "COMPLETED"
-            if i % 4 == 0
-            else "RUNNING"
-            if i % 4 == 1
-            else "FAILED"
-            if i % 4 == 2
-            else "PENDING",
-            "created_at": f"2023-01-{1 + i % 10}T10:00:00",
-        }
-        for i in range(1, 6)  # Only return 5 jobs by default
-    ]
-
-    # Apply filters
-    if job_type:
-        jobs = [j for j in jobs if j["type"] == job_type]
-
-    if status:
-        jobs = [j for j in jobs if j["status"] == status]
-
-    # Apply limit
-    jobs = jobs[:limit]
-
-    return jobs
 
 
 def create_config_template(template_type: str = "full") -> dict[str, Any]:

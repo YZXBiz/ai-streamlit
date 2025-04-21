@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   clustering:
     image: ${DOCKER_REGISTRY:-ghcr.io}/yourusername/clustering-dagster:${TAG:-latest}
@@ -17,7 +15,7 @@ services:
       - ./reports:/app/reports
       - ./cache:/app/cache
       - ./dagster_home:/app/dagster_home
-    command: configs/internal_preprocessing.yml
+    command: run full_pipeline_job --config configs/${CONFIG_FILE:-internal_preprocessing.yml}
     environment:
       - DAGSTER_HOME=/app/dagster_home
       - PYTHONPATH=/app
@@ -25,7 +23,7 @@ services:
     ports:
       - "${DAGSTER_PORT:-3000}:3000"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -33,20 +31,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.16.0
-    restart: unless-stopped
-    ports:
-      - "${MLFLOW_PORT:-5000}:5000"
-    volumes:
-      - ./mlruns:/mlruns
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlruns
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # PostgreSQL database for Dagster
   postgres:
@@ -62,7 +46,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-dagster}" ]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-dagster}"]
       interval: 10s
       timeout: 5s
       retries: 5
