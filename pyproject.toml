@@ -53,6 +53,7 @@ dependencies = [
     "clustering-pipeline",
     "clustering-shared",
     "clustering-cli",
+    "clustering-dashboard",
 ]
 
 # =========================================
@@ -75,10 +76,10 @@ clustering = "clustering.cli.commands:main"
 # Optional Dependencies
 # =========================================
 
-[project.optional-dependencies]
+# [project.optional-dependencies]
 # Optional extras for users who need dashboard
-dashboard = ["clustering-dashboard"]
-all = ["clustering-dashboard"]
+# dashboard = ["clustering-dashboard"]
+# all = ["clustering-dashboard"]
 
 # =========================================
 # Development Dependencies
