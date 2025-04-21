@@ -315,7 +315,7 @@ def external_train_clustering_models(
 def external_save_clustering_models(
     context: dg.AssetExecutionContext,
     external_train_clustering_models: dict[str, Any],
-) -> None:
+) -> str:
     """Save trained clustering models to persistent storage.
 
     Uses the configured model output resource to save the trained models
@@ -324,11 +324,16 @@ def external_save_clustering_models(
     Args:
         context: Dagster asset execution context
         external_train_clustering_models: Dictionary of trained clustering models by category
+        
+    Returns:
+        Path to where models were saved
     """
     context.log.info("Saving trained clustering models to storage")
 
     # Use the configured model output resource
     model_output = context.resources.external_model_output
+    # Initialize with a default path value in case something goes wrong
+    output_path = "no_external_models_saved.pickle"
 
     # Convert model info to a DataFrame to comply with PickleWriter requirements
     if external_train_clustering_models:
@@ -354,7 +359,10 @@ def external_save_clustering_models(
 
         # Save the DataFrame (can't save the actual model objects directly)
         context.log.info("Saving model metadata to storage")
-        model_output.write(model_df)
+        saved_path = model_output.write(model_df)
+        # Ensure we get a valid path back
+        if saved_path:
+            output_path = saved_path
 
         # Save the model path to the context for reference
         context.add_output_metadata(
@@ -374,10 +382,13 @@ def external_save_clustering_models(
                 "experiment_path": [],
             }
         )
-        model_output.write(empty_df)
+        saved_path = model_output.write(empty_df)
+        if saved_path:
+            output_path = saved_path
         context.log.warning("No models to save, writing empty metadata DataFrame")
 
-    context.log.info("Successfully saved model metadata to storage")
+    context.log.info(f"Successfully saved model metadata to storage at {output_path}")
+    return output_path
 
 
 @dg.asset(
@@ -654,7 +665,7 @@ def external_assign_clusters(
 def external_save_cluster_assignments(
     context: dg.AssetExecutionContext,
     external_assign_clusters: pl.DataFrame,
-) -> None:
+) -> str:
     """Save cluster assignments to persistent storage.
 
     Uses the configured output resource to save the cluster assignments
@@ -664,15 +675,34 @@ def external_save_cluster_assignments(
     Args:
         context: Dagster asset execution context
         external_assign_clusters: DataFrame with cluster assignments, including outlier assignments
+        
+    Returns:
+        Path to the saved assignments file
     """
     context.log.info("Saving external cluster assignments to storage")
+    
+    # Initialize with a default path value in case something goes wrong
+    output_path = "no_external_assignments_saved.parquet"
 
     # No need to check for null values as outliers now have their own cluster
     # Check that the DataFrame is not empty
     if external_assign_clusters.height == 0:
-        context.log.warning("DataFrame is empty, skipping storage")
-        context.add_output_metadata({"status": "skipped", "reason": "Empty DataFrame"})
-        return
+        context.log.warning("DataFrame is empty, creating empty DataFrame to store")
+        empty_df = pl.DataFrame({
+            "STORE_NBR": [], 
+            "Cluster": [],
+            "category": []
+        })
+        # Save the empty dataframe
+        saved_path = context.resources.external_cluster_assignments.write(empty_df)
+        if saved_path:
+            output_path = saved_path
+        
+        context.add_output_metadata({
+            "status": "empty_dataframe", 
+            "path": output_path
+        })
+        return output_path
 
     # Use the configured output resource
     assignments_output = context.resources.external_cluster_assignments
@@ -682,21 +712,27 @@ def external_save_cluster_assignments(
 
     # Save to storage
     context.log.info(f"Saving cluster assignments with {len(df_with_category)} records")
-    assignments_output.write(df_with_category)
+    saved_path = assignments_output.write(df_with_category)
+    # Ensure we get a valid path back
+    if saved_path:
+        output_path = saved_path
 
     # Get the distribution for logging
     cluster_dist = (
         external_assign_clusters.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
     )
 
-    context.log.info("Successfully saved external cluster assignments")
+    context.log.info(f"Successfully saved external cluster assignments to {output_path}")
     context.add_output_metadata(
         {
             "status": "success",
             "records_saved": external_assign_clusters.height,
             "cluster_distribution": dg.MetadataValue.json(cluster_dist.to_dicts()),
+            "path": output_path
         }
     )
+    
+    return output_path
 
 
 @dg.asset(

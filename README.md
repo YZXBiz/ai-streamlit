@@ -36,6 +36,9 @@ A data pipeline for clustering stores based on sales data and external data sour
   - [Documentation](#-documentation)
   - [Security & Privacy](#-security--privacy)
   - [FAQ](#-faq)
+  - [Deployment](#-deployment)
+    - [GitLab CI/CD Setup](#gitlab-cicd-setup)
+    - [Manual Deployment](#manual-deployment)
 
 ## 👥 Project Information
 
@@ -501,4 +504,40 @@ A: All dependencies are listed in the `pyproject.toml` file, categorized into co
 
 **Q: How do I contribute to this project?**
 A: Fork the repository, make your changes, and submit a pull request. Ensure your code passes all linting and testing checks before submitting.
+
+## 🚀 Deployment
+
+The store clustering pipeline supports deployment with GitLab CI/CD for automated building, testing, and deployment to multiple environments.
+
+### GitLab CI/CD Setup
+
+The project includes a complete GitLab CI/CD pipeline for deploying the Dagster pipeline to development, staging, and production environments. See [Deployment Guide](docs/deployment.md) for detailed instructions.
+
+#### Pipeline Stages
+
+1. **Validate**: Ensures pipeline definitions are valid
+2. **Test**: Runs unit and integration tests
+3. **Build**: Builds Docker image for deployment
+4. **Test Deployment**: Validates environment configuration
+5. **Deploy**: Deploys the pipeline to target environment
+
+#### Deployment Environments
+
+- **Development**: Automatically validated for all branches
+- **Staging**: Deployed manually from main branch
+- **Production**: Deployed manually from version tags
+
+### Manual Deployment
+
+For manual deployment without CI/CD:
+
+```bash
+# Build Docker image
+docker build -t dagster-pipeline:latest .
+
+# Run with docker-compose
+docker-compose up -d
+```
+
+See the [Docker Deployment Guide](docs/docker-deployment.md) for more information on manual deployment options.
 

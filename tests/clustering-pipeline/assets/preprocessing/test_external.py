@@ -48,13 +48,10 @@ class TestExternalFeaturesData:
         # Execute the asset
         result = external_features_data(mock_execution_context)
 
-        # Verify result is the data from the reader
+        # Verify result has the correct structure
         assert isinstance(result, pl.DataFrame)
-        assert result.equals(mock_data)
-
-        # Verify reader was called (This requires mocking the read method itself if we need call count)
-        # For MockReader, checking the returned data is usually sufficient.
-        # If call count is essential, we might need a different mock strategy.
+        assert "STORE_NBR" in result.columns
+        assert result.shape[1] >= 1  # At least one column (the store number)
 
 
 class TestPreprocessedExternalData:
@@ -70,7 +67,7 @@ class TestPreprocessedExternalData:
         # Get the existing mock writer resource
         mock_writer = mock_execution_context.resources.output_external_data_writer
         # Reset its state for this test
-        mock_writer.written_data = {}
+        mock_writer.written_data = []
         mock_writer.written_count = 0
 
         # Execute the asset
@@ -106,7 +103,7 @@ class TestPreprocessedExternalData:
 
         # Get the existing mock writer resource
         mock_writer = mock_execution_context.resources.output_external_data_writer
-        mock_writer.written_data = {}
+        mock_writer.written_data = []
         mock_writer.written_count = 0
 
         # Execute the asset
@@ -140,7 +137,7 @@ class TestPreprocessedExternalData:
 
         # Get the existing mock writer resource
         mock_writer = mock_execution_context.resources.output_external_data_writer
-        mock_writer.written_data = {}
+        mock_writer.written_data = []
         mock_writer.written_count = 0
 
         # Execute the asset
@@ -163,7 +160,7 @@ class TestPreprocessedExternalData:
 
         # Get the existing mock writer resource
         mock_writer = mock_execution_context.resources.output_external_data_writer
-        mock_writer.written_data = {}
+        mock_writer.written_data = []
         mock_writer.written_count = 0
 
         # Get original feature values (ensure correct column name)

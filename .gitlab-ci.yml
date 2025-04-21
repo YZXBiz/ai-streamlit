@@ -1,15 +1,23 @@
 include:
   - local: 'gitlab-ci/main.yml'
 
-stages:
-  - lint
-  - test
-  - build
-  - deploy
+# Pipeline overrides and customizations can be added here
+# These will override any shared configuration from main.yml
 
 variables:
+  # Add or override variables from main.yml
   PYTHON_VERSION: "3.10"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  # Environment-specific deployment variables
+  DEV_SERVER_HOST: "dev-dagster.example.com"
+  DEV_SERVER_USER: "dagster"
+  DEV_DEPLOY_PATH: "/opt/dagster/deploy"
+  STAGING_SERVER_HOST: "staging-dagster.example.com"
+  STAGING_SERVER_USER: "dagster"
+  STAGING_DEPLOY_PATH: "/opt/dagster/deploy"
+  PROD_SERVER_HOST: "prod-dagster.example.com"
+  PROD_SERVER_USER: "dagster"
+  PROD_DEPLOY_PATH: "/opt/dagster/deploy"
 
 cache:
   paths:
@@ -21,15 +29,18 @@ cache:
 .python_template:
   image: python:${PYTHON_VERSION}-slim
   before_script:
-    - pip install uv
+    # Install uv via curl to avoid using pip install
+    - curl -Ls https://astral.sh/uv/install.sh | bash
+    - export PATH="$HOME/.cargo/bin:$PATH"
     - uv venv
-    - uv pip install -e .
+    - uv sync
 
 lint:
   stage: lint
   extends: .python_template
   script:
-    - uv pip install ruff mypy
+    # Use uv sync to install dependencies instead of pip install
+    - uv sync --group dev
     - uv run ruff check .
     - uv run mypy src/clustering
 
@@ -37,7 +48,8 @@ test:
   stage: test
   extends: .python_template
   script:
-    - uv pip install pytest pytest-cov
+    # Use uv sync to install test dependencies
+    - uv sync --group test
     - uv run pytest tests/ -v --cov=src/clustering
   artifacts:
     reports:
@@ -65,41 +77,59 @@ build:
         docker push $CI_REGISTRY_IMAGE:latest
       fi
 
-deploy_dev:
-  stage: deploy
-  image: alpine:latest
-  script:
-    - apk add --no-cache curl
-    - |
-      curl -X POST \
-        -F token=$DEPLOY_TOKEN \
-        -F ref=main \
-        -F "variables[ENVIRONMENT]=dev" \
-        -F "variables[IMAGE_TAG]=$CI_COMMIT_REF_SLUG" \
-        $DEPLOY_WEBHOOK_URL
-  environment:
-    name: dev
-  only:
-    - branches
-  except:
-    - main
-    - production
+# You can add or override specific jobs here
+validate_pipeline:
+  before_script:
+    # Install uv via curl to avoid using pip install
+    - curl -Ls https://astral.sh/uv/install.sh | bash
+    - export PATH="$HOME/.cargo/bin:$PATH"
+    - uv venv
+    - uv sync
+    - mkdir -p ${CI_PROJECT_DIR}/dagster_home
+    - export DAGSTER_HOME=${CI_PROJECT_DIR}/dagster_home
 
+# Specific configuration for production deployment
 deploy_prod:
-  stage: deploy
-  image: alpine:latest
-  script:
-    - apk add --no-cache curl
-    - |
-      curl -X POST \
-        -F token=$DEPLOY_TOKEN \
-        -F ref=main \
-        -F "variables[ENVIRONMENT]=prod" \
-        -F "variables[IMAGE_TAG]=$CI_COMMIT_REF_SLUG" \
-        $DEPLOY_WEBHOOK_URL
-  environment:
-    name: production
-  only:
-    - main
-    - production
+  # Additional configuration for production deployment
+  # This will be merged with the one from main.yml
   when: manual
+  script:
+    - uv sync
+    - mkdir -p ~/.ssh
+    - echo "$PROD_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $PROD_SERVER_HOST >> ~/.ssh/known_hosts
+    - |
+      ssh $PROD_SERVER_USER@$PROD_SERVER_HOST << EOF
+        cd $PROD_DEPLOY_PATH
+        
+        # Stop existing services
+        docker-compose down
+        
+        # Pull new images
+        docker-compose pull
+        
+        # Create required directories
+        mkdir -p data/internal data/external data/merging
+        
+        # Set environment variables
+        cat > .env << ENVEOF
+        DAGSTER_HOME=/opt/dagster/dagster_home
+        DATA_DIR=/opt/dagster/data
+        INTERNAL_DATA_DIR=/opt/dagster/data/internal
+        EXTERNAL_DATA_DIR=/opt/dagster/data/external
+        MERGING_DATA_DIR=/opt/dagster/data/merging
+        ENVEOF
+        
+        # Start services
+        docker-compose up -d
+        
+        # Verify deployment
+        docker-compose ps
+        echo "Deployment to PRODUCTION complete"
+      EOF
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main" && $FORCE_PROD_DEPLOY == "true"'
+      when: manual

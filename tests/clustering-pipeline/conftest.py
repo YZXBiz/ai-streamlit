@@ -1,12 +1,13 @@
 """Test fixtures for the pipeline package."""
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Dict
+from unittest.mock import MagicMock
 
 import dagster as dg
 import polars as pl
 import pytest
-from dagster import ResourceDefinition
+from dagster import ResourceDefinition, build_asset_context, build_op_context
 
 # === Resource Mocks ===
 
@@ -20,8 +21,18 @@ class MockConfig:
         Args:
             **kwargs: Configuration values to be set as attributes
         """
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+        self._attributes = kwargs
+
+    def __getattr__(self, name):
+        if name in self._attributes:
+            return self._attributes[name]
+        raise AttributeError(f"{self.__class__.__name__} has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        if name == "_attributes":
+            super().__setattr__(name, value)
+        else:
+            self._attributes[name] = value
 
 
 class MockReader:
@@ -46,23 +57,13 @@ class MockReader:
 
 
 class MockWriter:
-    """Mock writer resource for testing."""
+    """Mock writer for testing."""
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize the mock writer."""
-        self.written_data = {}
-        self.written_count = 0
-        self.path = "mock/path/writer.pkl"  # Add mock path
-
-    def write(self, data: Any, **kwargs: Any) -> None:
-        """Store data that would be written.
-
-        Args:
-            data: Data that would be written
-            **kwargs: Additional arguments
-        """
-        self.written_data[self.written_count] = data
-        self.written_count += 1
+        self.write = MagicMock(return_value="/mock/path/output.parquet")
+        self.written_data = []  # Keep track of written data
+        self.written_count = 0  # Count of write operations
 
 
 # === Pytest Fixtures ===
@@ -75,8 +76,8 @@ def mock_execution_context() -> Iterator[dg.AssetExecutionContext]:
     Yields:
         A mock asset execution context with test resources
     """
+    # Default test config values
     mock_config = MockConfig(
-        # Default test config values
         ignore_features=[],
         imputation_type="simple",
         numeric_imputation="mean",
@@ -95,21 +96,18 @@ def mock_execution_context() -> Iterator[dg.AssetExecutionContext]:
         standardize_features=True,
         normalize_method="min_max",
     )
-
+    
+    # Configure mock readers and writers
     mock_reader = MockReader({})
     mock_writer = MockWriter()
-
-    # Create resource definitions with all required resources
+    
+    # Create resource definitions
     resource_defs = {
         "config": ResourceDefinition.hardcoded_resource(mock_config),
         # External data resources
         "input_external_placerai_reader": ResourceDefinition.hardcoded_resource(mock_reader),
-        "input_external_urbanicity_template_reader": ResourceDefinition.hardcoded_resource(
-            mock_reader
-        ),
-        "input_external_urbanicity_experiment_reader": ResourceDefinition.hardcoded_resource(
-            mock_reader
-        ),
+        "input_external_urbanicity_template_reader": ResourceDefinition.hardcoded_resource(mock_reader),
+        "input_external_urbanicity_experiment_reader": ResourceDefinition.hardcoded_resource(mock_reader),
         "external_features_reader": ResourceDefinition.hardcoded_resource(mock_reader),
         "output_external_data_writer": ResourceDefinition.hardcoded_resource(mock_writer),
         # Internal data resources
@@ -128,29 +126,8 @@ def mock_execution_context() -> Iterator[dg.AssetExecutionContext]:
         "merged_cluster_assignments": ResourceDefinition.hardcoded_resource(mock_writer),
     }
 
-    with dg.build_asset_context(resources=resource_defs) as context:
-        # Add setup for the renamed writer if tests rely on mock behavior
-        # like checking written_count or written_data
-        internal_writer = context.resources.internal_cluster_assignments
-        internal_writer.written_count = 0
-        internal_writer.written_data = []
-
-        def internal_mock_write(data, **kwargs):
-            internal_writer.written_count += 1
-            internal_writer.written_data.append(data)
-
-        internal_writer.write = internal_mock_write
-
-        # Setup other writers if needed by other tests
-        # Example:
-        # external_writer = context.resources.output_external_data_writer
-        # external_writer.written_count = 0
-        # external_writer.written_data = []
-        # def external_mock_write(data, **kwargs):
-        #     external_writer.written_count += 1
-        #     external_writer.written_data.append(data)
-        # external_writer.write = external_mock_write
-
+    # Use Dagster's built-in op context
+    with build_op_context(resources=resource_defs) as context:
         yield context
 
 
@@ -181,43 +158,47 @@ def sample_category_data() -> dict[str, pl.DataFrame]:
 
 
 @pytest.fixture
-def sample_clustering_results() -> dict[str, dict[str, Any]]:
-    """Create sample clustering results for testing.
+def sample_clustering_results() -> dict[str, int]:
+    """Create sample optimal cluster counts for testing.
 
     Returns:
-        Dictionary of clustering results by category
+        Dictionary mapping category names to optimal cluster counts (integers)
+    """
+    return {"category_a": 3, "category_b": 4}
+
+
+@pytest.fixture
+def sample_trained_models() -> dict[str, dict[str, Any]]:
+    """Create sample trained models data for testing.
+
+    Returns:
+        Dictionary of trained model information by category
     """
     return {
         "category_a": {
-            "optimal_clusters": 3,
+            "num_clusters": 3,
             "model": "mocked_model_object",
             "metrics": {"silhouette": 0.75, "calinski_harabasz": 120.5},
+            "num_samples": 100,
+            "features": ["feature_1", "feature_2", "feature_3"],
+            "experiment_path": "mock/path/experiments/category_a",
         },
         "category_b": {
-            "optimal_clusters": 4,
+            "num_clusters": 4,
             "model": "mocked_model_object",
             "metrics": {"silhouette": 0.68, "calinski_harabasz": 95.3},
+            "num_samples": 120,
+            "features": ["feature_1", "feature_2", "feature_3"],
+            "experiment_path": "mock/path/experiments/category_b",
         },
     }
 
 
 @pytest.fixture
-def sample_cluster_assignments() -> dict[str, pl.DataFrame]:
-    """Create sample cluster assignments for testing.
+def mock_writer() -> MockWriter:
+    """Create a mock writer for testing.
 
     Returns:
-        Dictionary of cluster assignment dataframes by category
+        A MockWriter instance.
     """
-    sample_assignments = {}
-
-    for category in ["category_a", "category_b"]:
-        assignments = pl.DataFrame(
-            {
-                "store_id": [f"store_{i}" for i in range(10)],
-                "cluster": [i % 3 for i in range(10)],
-                "distance": [0.1 * i for i in range(10)],
-            }
-        )
-        sample_assignments[category] = assignments
-
-    return sample_assignments
+    return MockWriter()

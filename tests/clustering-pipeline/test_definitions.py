@@ -24,8 +24,11 @@ class TestPipelineDefinitions:
         # Get the asset nodes from the repository
         asset_graph = defs.get_asset_graph()
 
+        # Get all asset keys from the graph
+        asset_keys = list(asset_graph.get_all_asset_keys())
+
         # Verify we have assets
-        assert len(asset_graph.assets) > 0
+        assert len(asset_keys) > 0
 
         # Verify key assets are included by checking for their keys
         expected_assets = [
@@ -52,7 +55,7 @@ class TestPipelineDefinitions:
 
         for asset_name in expected_assets:
             asset_key = dg.AssetKey(asset_name)
-            assert asset_key in asset_graph.assets, f"Asset {asset_name} is missing"
+            assert asset_key in asset_keys, f"Asset {asset_name} is missing"
 
 
 class TestJobs:

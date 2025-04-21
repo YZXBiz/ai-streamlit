@@ -162,7 +162,7 @@ setup-hooks: ## Set up pre-commit hooks for development
 
 dev: ## Start Dagster development server
 	@echo "==> Starting Dagster development server"
-	@DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m clustering.pipeline.definitions --host 0.0.0.0
+	@DAGSTER_MULTIPROCESS_CONTEXT_ISOLATED=0 $(PYTHON) -m dagster dev -m clustering.pipeline.definitions
 	@echo "✓ Dagster development server stopped"
 
 dashboard: ## Run the clustering dashboard
@@ -223,17 +223,12 @@ pre-commit-all: ## Run pre-commit hooks on all files
 # TESTING
 ################################################################################
 
-.PHONY: test test-unit test-integration test-shared test-pipeline test-cli test-e2e dagster-test
+.PHONY: test test-integration test-shared test-pipeline test-cli test-e2e test-smoke dagster-test
 
 test: ## Run all tests with coverage reporting
 	@echo "==> Running all tests with coverage"
 	@$(PYTHON) -m pytest tests/ --cov=clustering-shared/src --cov=clustering-pipeline/src --cov=clustering-cli/src --cov-report=term --cov-report=xml -v
 	@echo "✓ Tests completed"
-
-test-unit: ## Run only unit tests
-	@echo "==> Running unit tests"
-	@$(PYTHON) -m pytest tests/*/unit -v
-	@echo "✓ Unit tests completed"
 
 test-integration: ## Run only integration tests
 	@echo "==> Running integration tests"
@@ -244,6 +239,11 @@ test-e2e: ## Run end-to-end tests
 	@echo "==> Running end-to-end tests"
 	@$(PYTHON) -m pytest tests/e2e -v
 	@echo "✓ End-to-end tests completed"
+
+test-smoke: ## Run smoke tests
+	@echo "==> Running smoke tests"
+	@$(PYTHON) -m pytest tests/smoke -v
+	@echo "✓ Smoke tests completed"
 
 test-shared: ## Run tests for shared package
 	@echo "==> Running tests for clustering-shared package"
@@ -279,7 +279,7 @@ docs: docs-deps ## Build documentation
 
 docs-server: docs-deps ## Start documentation server (http://localhost:8000)
 	@echo "==> Starting documentation server"
-	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(PYTHON) -m sphinx_autobuild source build/html --port 8000 --host 0.0.0.0
+	@cd $(DOCS_DIR) && LC_ALL=C.UTF-8 LANG=C.UTF-8 $(PYTHON) -m sphinx_autobuild source build/html --port 8000
 	@echo "✓ Documentation server running at http://localhost:8000"
 
 ##@ Dagster Operations

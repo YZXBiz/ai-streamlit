@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import polars as pl
 import pytest
+from dagster import build_op_context
 
 from clustering.pipeline.assets.clustering.internal_ml.model_training import (
     internal_assign_clusters,
@@ -107,8 +108,10 @@ class TestInternalAssignClusters:
     # Patch load_experiment as well, since the asset uses it
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
+    @patch("pathlib.Path.exists")  # Add Path.exists patch
     def test_assign_clusters(
         self,
+        mock_path_exists,
         mock_exp_class,
         mock_load_exp,
         mock_execution_context,
@@ -117,6 +120,9 @@ class TestInternalAssignClusters:
         sample_fe_raw_data,
     ):
         """Test cluster assignment to data points."""
+        # Make Path.exists return True for experiment paths
+        mock_path_exists.return_value = True
+        
         mock_exp = MagicMock()
         # Mock both the class instantiation and the load_experiment function
         mock_exp_class.return_value = mock_exp
@@ -161,8 +167,10 @@ class TestInternalAssignClusters:
 
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
+    @patch("pathlib.Path.exists")  # Add Path.exists patch
     def test_handle_missing_model(
         self,
+        mock_path_exists,
         mock_exp_class,
         mock_load_exp,
         mock_execution_context,
@@ -170,6 +178,9 @@ class TestInternalAssignClusters:
         sample_fe_raw_data,
     ):
         """Test handling of missing model for a category."""
+        # Make Path.exists return True so load_experiment gets called
+        mock_path_exists.return_value = True
+        
         mock_exp = MagicMock()
         mock_load_exp.return_value = mock_exp
         mock_exp_class.return_value = mock_exp
@@ -204,36 +215,38 @@ class TestInternalAssignClusters:
 class TestInternalSaveClusterAssignments:
     """Tests for internal_save_cluster_assignments asset."""
 
-    def test_save_assignments(self, mock_execution_context, sample_cluster_assignments):
+    def test_save_assignments(self, mock_writer, sample_cluster_assignments):
         """Test saving cluster assignments."""
-        result = internal_save_cluster_assignments(
-            mock_execution_context, sample_cluster_assignments
-        )
+        # Create context with resources
+        context = build_op_context(resources={"internal_cluster_assignments": mock_writer})
 
-        # Use the correct resource key from the context
-        writer = mock_execution_context.resources.internal_cluster_assignments
+        # Call the function under test
+        result = internal_save_cluster_assignments(context, sample_cluster_assignments)
 
-        assert writer.write.call_count == 1
-        written_call_args = writer.write.call_args
-        assert "data" in written_call_args.kwargs
+        # Verify that the writer was called
+        assert mock_writer.write.called
 
-        # The asset now combines data before writing
-        written_data = written_call_args.kwargs["data"]
-        assert isinstance(written_data, pl.DataFrame)
-        assert "category" in written_data.columns  # Check for the added category column
-        # Further checks could verify the combined structure if needed
+        # Verify the result is a string path
+        assert isinstance(result, str)
+        assert result == "/mock/path/output.parquet"
 
-        # Verify the asset returns None
-        assert result is None
+        # Check that the call to write included our DataFrame
+        args, _ = mock_writer.write.call_args
+        assert isinstance(args[0], pl.DataFrame)
+        assert "Cluster" in args[0].columns  # Check for cluster column
 
-    def test_empty_assignments(self, mock_execution_context):
+    def test_empty_assignments(self, mock_writer):
         """Test saving empty cluster assignments."""
         empty_assignments = {}
 
-        result = internal_save_cluster_assignments(mock_execution_context, empty_assignments)
+        # Create context with resources
+        context = build_op_context(resources={"internal_cluster_assignments": mock_writer})
 
-        assert result is None
+        # Call the function
+        result = internal_save_cluster_assignments(context, empty_assignments)
 
-        # Use the correct resource key from the context
-        writer = mock_execution_context.resources.internal_cluster_assignments
-        assert writer.write.call_count == 0
+        # Function returns a placeholder path string for empty assignments
+        assert result == "empty_assignments.parquet"
+
+        # The writer shouldn't be called for empty assignments
+        assert not mock_writer.write.called

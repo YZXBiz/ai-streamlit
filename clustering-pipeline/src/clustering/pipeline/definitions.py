@@ -355,6 +355,13 @@ def get_resources_by_env(
         "internal_cluster_assignments": data_writer.configured(
             writers_config.get("cluster_assignments", {})
         ),
+        # Add reader versions of the cluster assignments resources
+        "internal_cluster_assignments_reader": data_reader.configured(
+            {"kind": "PickleReader", "config": writers_config.get("cluster_assignments", {}).get("config", {})}
+        ),
+        "external_cluster_assignments_reader": data_reader.configured(
+            {"kind": "PickleReader", "config": writers_config.get("external_cluster_assignments", {}).get("config", {})}
+        ),
         "external_model_output": data_writer.configured(
             writers_config.get("external_model_output", {})
         ),
