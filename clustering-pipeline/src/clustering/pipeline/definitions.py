@@ -42,7 +42,8 @@ from clustering.pipeline.assets.clustering import (
 # External ML assets - feature engineering
 # External ML assets - model training and analysis
 # Merging assets
-from clustering.pipeline.assets.merging.merge import (
+from clustering.pipeline.assets.merging import (
+    cluster_labeling_analytics,
     cluster_reassignment,
     merged_cluster_assignments,
     merged_clusters,
@@ -133,6 +134,7 @@ merging_assets_list = [
     optimized_merged_clusters,
     cluster_reassignment,
     save_merged_cluster_assignments,
+    cluster_labeling_analytics,
 ]
 
 # -----------------------------------------------------------------------------
@@ -357,10 +359,16 @@ def get_resources_by_env(
         ),
         # Add reader versions of the cluster assignments resources
         "internal_cluster_assignments_reader": data_reader.configured(
-            {"kind": "PickleReader", "config": writers_config.get("cluster_assignments", {}).get("config", {})}
+            {
+                "kind": "PickleReader",
+                "config": writers_config.get("cluster_assignments", {}).get("config", {}),
+            }
         ),
         "external_cluster_assignments_reader": data_reader.configured(
-            {"kind": "PickleReader", "config": writers_config.get("external_cluster_assignments", {}).get("config", {})}
+            {
+                "kind": "PickleReader",
+                "config": writers_config.get("external_cluster_assignments", {}).get("config", {}),
+            }
         ),
         "external_model_output": data_writer.configured(
             writers_config.get("external_model_output", {})

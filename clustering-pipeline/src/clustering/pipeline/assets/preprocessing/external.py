@@ -142,18 +142,18 @@ def preprocessed_external_data(
     # Save the processed data
     context.log.info("Saving preprocessed external data")
     output_data_writer = context.resources.output_external_data_writer
-    
+
     # Write the data and properly update the writer's state (for testing)
-    result_path = output_data_writer.write(data=processed_data)
-    
+    output_data_writer.write(data=processed_data)
+
     # For testing purposes, manually update writer tracking attributes
     if hasattr(output_data_writer, "written_data"):
         if not isinstance(output_data_writer.written_data, list):
             output_data_writer.written_data = []
         output_data_writer.written_data.append(processed_data)
-    
+
     if hasattr(output_data_writer, "written_count"):
         output_data_writer.written_count = getattr(output_data_writer, "written_count", 0) + 1
-    
+
     # Return the data so it can be used by downstream assets
     return processed_data

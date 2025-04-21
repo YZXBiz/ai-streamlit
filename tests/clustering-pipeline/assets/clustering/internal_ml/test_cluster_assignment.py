@@ -122,7 +122,7 @@ class TestInternalAssignClusters:
         """Test cluster assignment to data points."""
         # Make Path.exists return True for experiment paths
         mock_path_exists.return_value = True
-        
+
         mock_exp = MagicMock()
         # Mock both the class instantiation and the load_experiment function
         mock_exp_class.return_value = mock_exp
@@ -180,7 +180,7 @@ class TestInternalAssignClusters:
         """Test handling of missing model for a category."""
         # Make Path.exists return True so load_experiment gets called
         mock_path_exists.return_value = True
-        
+
         mock_exp = MagicMock()
         mock_load_exp.return_value = mock_exp
         mock_exp_class.return_value = mock_exp

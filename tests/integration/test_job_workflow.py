@@ -16,7 +16,7 @@ from clustering.pipeline.definitions import (
 
 class TestJobWorkflow:
     """Tests for job workflow integration."""
-    
+
     def test_job_dependencies(self):
         """Test that job definitions have the correct dependencies."""
         # Test that the jobs can be loaded
@@ -24,13 +24,13 @@ class TestJobWorkflow:
         assert internal_preprocessing_job is not None
         assert external_preprocessing_job is not None
         assert merging_job is not None
-        
+
         # Test job names
         assert full_pipeline_job.name == "full_pipeline_job"
         assert internal_preprocessing_job.name == "internal_preprocessing_job"
         assert external_preprocessing_job.name == "external_preprocessing_job"
         assert merging_job.name == "merging_job"
-        
+
     def test_job_tagging(self):
         """Test that jobs have the correct tags."""
         # Check job tags
@@ -38,7 +38,7 @@ class TestJobWorkflow:
         assert "kind" in internal_preprocessing_job.tags
         assert "kind" in external_preprocessing_job.tags
         assert "kind" in merging_job.tags
-        
+
         # Verify specific tag values
         assert internal_preprocessing_job.tags["kind"] == "internal_preprocessing"
         assert external_preprocessing_job.tags["kind"] == "external_preprocessing"

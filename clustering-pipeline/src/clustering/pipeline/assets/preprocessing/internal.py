@@ -430,14 +430,14 @@ def internal_output_sales_table(
         # Write data using the writer resource
         writer = context.resources.sales_by_category_writer
         context.log.info("Calling sales_by_category_writer.write()")
-        result_path = writer.write(data=internal_sales_by_category)
-        
+        writer.write(data=internal_sales_by_category)
+
         # Update writer attributes for testing
         if hasattr(writer, "written_data"):
             if not isinstance(writer.written_data, list):
                 writer.written_data = []
             writer.written_data.append(internal_sales_by_category)
-        
+
         if hasattr(writer, "written_count"):
             writer.written_count = getattr(writer, "written_count", 0) + 1
 

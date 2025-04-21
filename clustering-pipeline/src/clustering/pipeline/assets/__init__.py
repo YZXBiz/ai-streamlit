@@ -28,7 +28,8 @@ from .clustering import (
 )
 
 # Import merging assets
-from .merging.merge import (
+from .merging import (
+    cluster_labeling_analytics,
     cluster_reassignment,
     merged_cluster_assignments,
     merged_clusters,
@@ -97,4 +98,6 @@ __all__ = [
     "optimized_merged_clusters",
     "cluster_reassignment",
     "save_merged_cluster_assignments",
+    # Analytics assets
+    "cluster_labeling_analytics",
 ]

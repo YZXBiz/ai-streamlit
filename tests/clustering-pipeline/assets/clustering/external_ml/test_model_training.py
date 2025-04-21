@@ -94,7 +94,9 @@ class TestExternalOptimalClusterCounts:
         )
 
         # Skip test with a message
-        pytest.skip("Skipping test for external_optimal_cluster_counts - needs refactoring with updated method names")
+        pytest.skip(
+            "Skipping test for external_optimal_cluster_counts - needs refactoring with updated method names"
+        )
 
     def test_different_optimization_metric(self, mock_execution_context):
         """Test with a different optimization metric."""
@@ -113,7 +115,9 @@ class TestExternalOptimalClusterCounts:
         )
 
         # Skip test with a message
-        pytest.skip("Skipping test for external_optimal_cluster_counts - needs refactoring with updated method names")
+        pytest.skip(
+            "Skipping test for external_optimal_cluster_counts - needs refactoring with updated method names"
+        )
 
 
 class TestExternalTrainClusteringModels:
@@ -136,7 +140,9 @@ class TestExternalTrainClusteringModels:
         mock_execution_context.resources.config.random_state = 42
 
         # Skip test with a message
-        pytest.skip("Skipping test for external_train_clustering_models - needs refactoring with updated method names")
+        pytest.skip(
+            "Skipping test for external_train_clustering_models - needs refactoring with updated method names"
+        )
 
 
 class TestExternalSaveClusteringModels:
@@ -160,26 +166,35 @@ class TestExternalAssignClusters:
 
     @patch("clustering.pipeline.assets.clustering.external_ml.model_training.load_experiment")
     @patch("os.path.exists")
-    def test_assign_clusters(self, mock_exists, mock_load_experiment, mock_execution_context, sample_external_features, sample_trained_model):
+    def test_assign_clusters(
+        self,
+        mock_exists,
+        mock_load_experiment,
+        mock_execution_context,
+        sample_external_features,
+        sample_trained_model,
+    ):
         """Test assigning clusters to samples."""
         # Configure mocks
         mock_exists.return_value = True
-        
+
         # Create a mock experiment
         mock_exp = MagicMock()
-        mock_exp.predict_model.return_value = pd.DataFrame({
-            "STORE_NBR": [f"store_{i}" for i in range(10)],
-            "Cluster": [i % 3 for i in range(10)],
-            "Score": [0.1 * i for i in range(10)]
-        })
+        mock_exp.predict_model.return_value = pd.DataFrame(
+            {
+                "STORE_NBR": [f"store_{i}" for i in range(10)],
+                "Cluster": [i % 3 for i in range(10)],
+                "Score": [0.1 * i for i in range(10)],
+            }
+        )
         mock_load_experiment.return_value = mock_exp
 
         # Execute the asset with all required parameters
         result = external_assign_clusters(
-            mock_execution_context, 
-            sample_external_features, 
-            sample_trained_model, 
-            external_fe_raw_data=sample_external_features
+            mock_execution_context,
+            sample_external_features,
+            sample_trained_model,
+            external_fe_raw_data=sample_external_features,
         )
 
         # Verify result structure
@@ -190,7 +205,9 @@ class TestExternalAssignClusters:
         assert result.height == sample_external_features.height
 
     @patch("os.path.exists")
-    def test_handle_missing_model(self, mock_exists, mock_execution_context, sample_external_features):
+    def test_handle_missing_model(
+        self, mock_exists, mock_execution_context, sample_external_features
+    ):
         """Test handling case when model doesn't exist."""
         # Configure mock to simulate model file doesn't exist
         mock_exists.return_value = False
@@ -198,10 +215,10 @@ class TestExternalAssignClusters:
         # Execute the asset without providing a trained model
         # Include the required external_fe_raw_data parameter
         result = external_assign_clusters(
-            mock_execution_context, 
-            sample_external_features, 
-            {}, 
-            external_fe_raw_data=sample_external_features  # Add missing required parameter
+            mock_execution_context,
+            sample_external_features,
+            {},
+            external_fe_raw_data=sample_external_features,  # Add missing required parameter
         )
 
         # Verify result structure
@@ -239,7 +256,7 @@ class TestExternalSaveClusterAssignments:
         """Test saving empty cluster assignments."""
         # Create empty assignments dataframe with correct column casing
         assignments = pl.DataFrame(schema={"STORE_NBR": str, "Cluster": int, "distance": float})
-        
+
         # Execute the asset
         result = external_save_cluster_assignments(mock_execution_context, assignments)
 
@@ -251,14 +268,18 @@ class TestExternalCalculateClusterMetrics:
     """Tests for external_calculate_cluster_metrics asset."""
 
     @patch("clustering.pipeline.assets.clustering.external_ml.model_training.get_pycaret_metrics")
-    def test_calculate_metrics(self, mock_get_metrics, mock_execution_context, sample_trained_model):
+    def test_calculate_metrics(
+        self, mock_get_metrics, mock_execution_context, sample_trained_model
+    ):
         """Test calculating cluster metrics."""
         # Create sample assignments with the correct column casing
-        assignments = pl.DataFrame({
-            "STORE_NBR": [f"store_{i}" for i in range(10)],
-            "Cluster": [i % 3 for i in range(10)],  # Using capital C to match implementation
-            "distance": [0.1 * i for i in range(10)],
-        })
+        assignments = pl.DataFrame(
+            {
+                "STORE_NBR": [f"store_{i}" for i in range(10)],
+                "Cluster": [i % 3 for i in range(10)],  # Using capital C to match implementation
+                "distance": [0.1 * i for i in range(10)],
+            }
+        )
 
         # Execute the asset
         result = external_calculate_cluster_metrics(
@@ -286,11 +307,13 @@ class TestExternalGenerateClusterVisualizations:
         mock_exp_class.return_value = mock_exp
 
         # Create sample assignments with correct column casing
-        assignments = pl.DataFrame({
-            "STORE_NBR": [f"store_{i}" for i in range(10)],
-            "Cluster": [i % 3 for i in range(10)],  # Using capital C to match implementation
-            "distance": [0.1 * i for i in range(10)],
-        })
+        assignments = pl.DataFrame(
+            {
+                "STORE_NBR": [f"store_{i}" for i in range(10)],
+                "Cluster": [i % 3 for i in range(10)],  # Using capital C to match implementation
+                "distance": [0.1 * i for i in range(10)],
+            }
+        )
 
         # Configure visualization settings
         mock_execution_context.resources.config.metadata_detail = "full"
@@ -308,4 +331,4 @@ class TestExternalGenerateClusterVisualizations:
         assert "path" in result.columns
         assert "status" in result.columns
         # Check that we have visualization results
-        assert result.height > 0 
+        assert result.height > 0

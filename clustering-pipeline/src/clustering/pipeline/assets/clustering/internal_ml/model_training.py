@@ -252,7 +252,7 @@ def internal_train_clustering_models(
 
         # Get sample count
         sample_count = len(df)
-        
+
         # Handle small datasets more effectively
         # For very small datasets (3 samples), we still want to cluster them into 2 groups
         # PyCaret requires at least 2 clusters and sample_count > cluster_count
@@ -273,7 +273,9 @@ def internal_train_clustering_models(
             )
             cluster_count = adjusted_cluster_count
 
-        context.log.info(f"Training {algorithm} with {cluster_count} clusters for {category} (samples: {sample_count})")
+        context.log.info(
+            f"Training {algorithm} with {cluster_count} clusters for {category} (samples: {sample_count})"
+        )
 
         # Convert Polars DataFrame to Pandas for PyCaret
         pandas_df = df.to_pandas()
@@ -467,11 +469,15 @@ def internal_assign_clusters(
     context.log.info(
         "Assigning clusters using dimensionality reduced features and applying to raw data"
     )
-    
+
     # Log available models for debugging
-    context.log.info(f"Available models for categories: {list(internal_train_clustering_models.keys())}")
+    context.log.info(
+        f"Available models for categories: {list(internal_train_clustering_models.keys())}"
+    )
     context.log.info(f"Categories with raw data: {list(internal_fe_raw_data.keys())}")
-    context.log.info(f"Categories with dimensionality reduced features: {list(internal_dimensionality_reduced_features.keys())}")
+    context.log.info(
+        f"Categories with dimensionality reduced features: {list(internal_dimensionality_reduced_features.keys())}"
+    )
 
     for category, df in internal_dimensionality_reduced_features.items():
         # Check if we have a trained model for this category
@@ -518,7 +524,7 @@ def internal_assign_clusters(
 
                 # Get the original raw data for this category
                 original_data = internal_fe_raw_data[category]
-                
+
                 # Convert to pandas if it's a polars DataFrame
                 if isinstance(original_data, pl.DataFrame):
                     original_data = original_data.to_pandas()
@@ -538,20 +544,27 @@ def internal_assign_clusters(
                 original_data_with_clusters["Cluster"] = cluster_assignments["Cluster"].values
 
                 # Ensure STORE_NBR column exists with the correct capitalization
-                if "store_nbr" in original_data_with_clusters.columns and "STORE_NBR" not in original_data_with_clusters.columns:
-                    original_data_with_clusters.rename(columns={"store_nbr": "STORE_NBR"}, inplace=True)
-                
+                if (
+                    "store_nbr" in original_data_with_clusters.columns
+                    and "STORE_NBR" not in original_data_with_clusters.columns
+                ):
+                    original_data_with_clusters.rename(
+                        columns={"store_nbr": "STORE_NBR"}, inplace=True
+                    )
+
                 # Convert back to Polars and store
                 try:
                     result_df = pl.from_pandas(original_data_with_clusters)
-                    
+
                     # Ensure cluster column has consistent naming
                     if "cluster" in result_df.columns and "Cluster" not in result_df.columns:
                         result_df = result_df.rename({"cluster": "Cluster"})
-                        
+
                     # Verify required columns exist
                     if "STORE_NBR" not in result_df.columns:
-                        context.log.warning(f"Missing STORE_NBR column in final result for {category}")
+                        context.log.warning(
+                            f"Missing STORE_NBR column in final result for {category}"
+                        )
                         if "store_id" in result_df.columns:
                             result_df = result_df.rename({"store_id": "STORE_NBR"})
                         elif "STORE_ID" in result_df.columns:
@@ -560,33 +573,43 @@ def internal_assign_clusters(
                             # Create a default store number if none exists
                             context.log.warning(f"Creating placeholder STORE_NBR for {category}")
                             result_df = result_df.with_columns(
-                                pl.Series(name="STORE_NBR", values=[f"store_{i}" for i in range(len(result_df))])
+                                pl.Series(
+                                    name="STORE_NBR",
+                                    values=[f"store_{i}" for i in range(len(result_df))],
+                                )
                             )
-                    
+
                     if "Cluster" not in result_df.columns:
-                        context.log.warning(f"Missing Cluster column in final result for {category}")
+                        context.log.warning(
+                            f"Missing Cluster column in final result for {category}"
+                        )
                         # This shouldn't happen since we added it above, but just in case
                         result_df = result_df.with_columns(pl.lit(0).alias("Cluster"))
-                    
+
                     assigned_data[category] = result_df
-                    
+
                     # Log cluster distribution
                     cluster_counts = (
-                        assigned_data[category].group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
+                        assigned_data[category]
+                        .group_by("Cluster")
+                        .agg(pl.len().alias("count"))
+                        .sort("Cluster")
                     )
                     context.log.info(f"Cluster distribution for {category}:\n{cluster_counts}")
-                    
+
                 except Exception as e:
-                    context.log.error(f"Error converting to Polars DataFrame for {category}: {str(e)}")
+                    context.log.error(
+                        f"Error converting to Polars DataFrame for {category}: {str(e)}"
+                    )
                     error_categories.append(category)
                     continue
-                
+
             except ValueError as e:
                 # Handle model assignment errors (e.g., mismatched dimensions)
                 context.log.warning(f"Error assigning clusters for {category}: {str(e)}")
                 error_categories.append(category)
                 continue
-                
+
         except (FileNotFoundError, pickle.UnpicklingError) as e:
             # Handle missing or corrupted experiment files
             context.log.warning(f"Error loading experiment for {category}: {str(e)}")
@@ -601,34 +624,43 @@ def internal_assign_clusters(
     # Handle case where no clusters were assigned
     if not assigned_data:
         context.log.warning("No clusters were assigned to any category!")
-        
+
         # Create a fallback assignment with default cluster 0 for at least one category
         # This ensures downstream processes have something to work with
         for category, df in internal_fe_raw_data.items():
             if category in internal_dimensionality_reduced_features:
                 context.log.info(f"Creating fallback cluster assignment for {category}")
-                
+
                 # Create a dataframe with all samples assigned to cluster 0
-                df_with_fallback_cluster = df.with_columns(
-                    pl.lit(0).alias("Cluster")
-                )
-                
-                # Ensure STORE_NBR column exists 
+                df_with_fallback_cluster = df.with_columns(pl.lit(0).alias("Cluster"))
+
+                # Ensure STORE_NBR column exists
                 if "STORE_NBR" not in df_with_fallback_cluster.columns:
                     if "store_nbr" in df_with_fallback_cluster.columns:
-                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"store_nbr": "STORE_NBR"})
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename(
+                            {"store_nbr": "STORE_NBR"}
+                        )
                     elif "store_id" in df_with_fallback_cluster.columns:
-                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"store_id": "STORE_NBR"})
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename(
+                            {"store_id": "STORE_NBR"}
+                        )
                     elif "STORE_ID" in df_with_fallback_cluster.columns:
-                        df_with_fallback_cluster = df_with_fallback_cluster.rename({"STORE_ID": "STORE_NBR"})
+                        df_with_fallback_cluster = df_with_fallback_cluster.rename(
+                            {"STORE_ID": "STORE_NBR"}
+                        )
                     else:
                         # Create a default store number if none exists
                         df_with_fallback_cluster = df_with_fallback_cluster.with_columns(
-                            pl.Series(name="STORE_NBR", values=[f"store_{i}" for i in range(len(df_with_fallback_cluster))])
+                            pl.Series(
+                                name="STORE_NBR",
+                                values=[f"store_{i}" for i in range(len(df_with_fallback_cluster))],
+                            )
                         )
-                
+
                 assigned_data[category] = df_with_fallback_cluster
-                context.log.info(f"Assigned all {len(df)} samples in {category} to cluster 0 (fallback)")
+                context.log.info(
+                    f"Assigned all {len(df)} samples in {category} to cluster 0 (fallback)"
+                )
                 break  # Just do this for one category
 
     # Store metadata about the assignment
@@ -637,7 +669,7 @@ def internal_assign_clusters(
             "categories": list(assigned_data.keys()),
             "total_records": sum(len(df) for df in assigned_data.values()),
             "skipped_categories": skipped_categories,
-            "error_categories": error_categories
+            "error_categories": error_categories,
         }
     )
 
@@ -683,22 +715,22 @@ def internal_save_cluster_assignments(
         context.log.info(f"Processing cluster assignments for category: {category}")
         # Log the DataFrame structure for debugging
         context.log.debug(f"Columns in {category} DataFrame: {df.columns}")
-        
+
         # Standardize the DataFrame to only include essential columns
         # First, ensure STORE_NBR and Cluster columns exist
         if "STORE_NBR" not in df.columns:
             context.log.warning(f"Missing STORE_NBR column in {category}, skipping")
             continue
-            
+
         if "Cluster" not in df.columns:
             context.log.warning(f"Missing Cluster column in {category}, skipping")
             continue
-        
+
         # Create a standardized DataFrame with only the necessary columns
         standardized_df = df.select(["STORE_NBR", "Cluster"]).with_columns(
             pl.lit(category).alias("category")
         )
-        
+
         context.log.debug(f"Standardized columns for {category}: {standardized_df.columns}")
         combined_data.append(standardized_df)
 
@@ -720,11 +752,7 @@ def internal_save_cluster_assignments(
     else:
         context.log.warning("No cluster assignments to save")
         # Create an empty dataframe with the expected structure
-        empty_df = pl.DataFrame({
-            "STORE_NBR": [], 
-            "Cluster": [],
-            "category": []
-        })
+        empty_df = pl.DataFrame({"STORE_NBR": [], "Cluster": [], "category": []})
         # Save the empty dataframe
         saved_path = assignments_output.write(empty_df)
         if saved_path:
@@ -847,11 +875,11 @@ def internal_generate_cluster_visualizations(
     import matplotlib.pyplot as plt
     import numpy as np
     import os
-    
+
     # Create temp directory for plots if it doesn't exist
     plot_dir = tempfile.mkdtemp(prefix="cluster_viz_")
     os.makedirs(os.path.join(plot_dir, "plots"), exist_ok=True)
-    
+
     visualizations = {}
 
     for category in internal_train_clustering_models.keys():
@@ -860,68 +888,74 @@ def internal_generate_cluster_visualizations(
             continue
 
         context.log.info(f"Generating visualizations for category: {category}")
-        
+
         # Get assignments for this category
         assignments = internal_assign_clusters[category]
-        
+
         # Create visualization paths for this category
         category_plots = []
-        
+
         # 1. Generate cluster distribution plot
         plt.figure(figsize=(8, 6))
         cluster_counts = assignments.group_by("Cluster").agg(pl.len().alias("count"))
         clusters = cluster_counts["Cluster"].to_list()
         counts = cluster_counts["count"].to_list()
-        
+
         plt.bar(clusters, counts)
         plt.xlabel("Cluster")
         plt.ylabel("Count")
         plt.title(f"{category} - Cluster Distribution")
-        
+
         dist_plot_path = os.path.join(plot_dir, f"plots/{category}_cluster_distribution.png")
         plt.savefig(dist_plot_path)
         plt.close()
         category_plots.append(f"plots/{category}_cluster_distribution.png")
-        
+
         # 2. Generate mock PCA projection plot
         plt.figure(figsize=(8, 6))
-        
+
         # Create some random data points for visualization
         n_clusters = len(clusters)
-        n_points = len(assignments)
-        
+        len(assignments)
+
         # Generate random points for each cluster
         for cluster_id in range(n_clusters):
             # Filter points in this cluster
             cluster_size = counts[clusters.index(cluster_id)] if cluster_id in clusters else 0
-            
+
             if cluster_size > 0:
                 # Generate some random 2D coordinates for this cluster
                 x = np.random.normal(cluster_id * 3, 1, cluster_size)
                 y = np.random.normal(cluster_id * 2, 1, cluster_size)
-                
+
                 plt.scatter(x, y, label=f"Cluster {cluster_id}", alpha=0.7)
-        
+
         plt.xlabel("PCA Component 1")
         plt.ylabel("PCA Component 2")
         plt.title(f"{category} - PCA Projection")
         plt.legend()
-        
+
         pca_plot_path = os.path.join(plot_dir, f"plots/{category}_pca_projection.png")
         plt.savefig(pca_plot_path)
         plt.close()
         category_plots.append(f"plots/{category}_pca_projection.png")
-        
+
         # 3. Generate mock silhouette plot
         plt.figure(figsize=(8, 6))
-        
+
         # Generate mock silhouette values for each cluster
         silhouette_values = []
         for cluster_id in range(n_clusters):
             # Generate random silhouette values (between -1 and 1, but usually positive)
-            sil_values = np.random.beta(4, 1, counts[clusters.index(cluster_id)] if cluster_id in clusters else 0) * 2 - 1
+            sil_values = (
+                np.random.beta(
+                    4, 1, counts[clusters.index(cluster_id)] if cluster_id in clusters else 0
+                )
+                * 2
+                - 1
+            )
             silhouette_values.append(sil_values)
-        
+
         # Plot silhouette values
         y_lower = 10
         for i, cluster_sil_values in enumerate(silhouette_values):
@@ -929,25 +963,26 @@ def internal_generate_cluster_visualizations(
                 cluster_sil_values.sort()
                 size_cluster_i = len(cluster_sil_values)
                 y_upper = y_lower + size_cluster_i
-                
+
                 plt.fill_betweenx(
                     np.arange(y_lower, y_upper),
-                    0, cluster_sil_values,
+                    0,
+                    cluster_sil_values,
                     alpha=0.7,
-                    label=f"Cluster {i}"
+                    label=f"Cluster {i}",
                 )
-                
+
                 y_lower = y_upper + 10
-        
+
         plt.xlabel("Silhouette Coefficient")
         plt.ylabel("Cluster")
         plt.title(f"{category} - Silhouette Plot")
-        
+
         sil_plot_path = os.path.join(plot_dir, f"plots/{category}_silhouette.png")
         plt.savefig(sil_plot_path)
         plt.close()
         category_plots.append(f"plots/{category}_silhouette.png")
-        
+
         visualizations[category] = category_plots
         context.log.info(f"Generated {len(category_plots)} plots for {category}")
 

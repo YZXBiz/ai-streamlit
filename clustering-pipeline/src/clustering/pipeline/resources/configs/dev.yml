@@ -17,6 +17,9 @@ job_params:
   ### --- Feature engineering parameters --- ###
   ignore_features: ["STORE_NBR"]
 
+  # Path settings
+  output_path: "/workspaces/clustering-dagster/data/internal"
+
   # Normalization settings
   normalize: true
   norm_method: "robust"

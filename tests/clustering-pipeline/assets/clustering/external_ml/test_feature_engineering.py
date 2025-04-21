@@ -82,7 +82,9 @@ class TestExternalFilteredFeatures:
         # Should return the original data unchanged
         assert result.equals(sample_external_data)
 
-    @patch("clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment")
+    @patch(
+        "clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment"
+    )
     def test_ignore_features(self, mock_exp_class, mock_execution_context, sample_external_data):
         """Test when features are specified to ignore."""
         # Setup the mock experiment
@@ -112,7 +114,9 @@ class TestExternalFilteredFeatures:
 class TestExternalImputedFeatures:
     """Tests for external_imputed_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment")
+    @patch(
+        "clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment"
+    )
     def test_imputation(self, mock_exp_class, mock_execution_context, sample_external_data):
         """Test feature imputation."""
         # Setup the mock experiment
@@ -147,8 +151,12 @@ class TestExternalImputedFeatures:
 class TestExternalNormalizedData:
     """Tests for external_normalized_data asset."""
 
-    @patch("clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment")
-    def test_normalization_enabled(self, mock_exp_class, mock_execution_context, sample_external_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_normalization_enabled(
+        self, mock_exp_class, mock_execution_context, sample_external_data
+    ):
         """Test normalization when enabled."""
         # Setup the mock experiment
         mock_exp = MagicMock()
@@ -186,8 +194,12 @@ class TestExternalNormalizedData:
 class TestExternalOutlierRemovedFeatures:
     """Tests for external_outlier_removed_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment")
-    def test_outlier_detection_enabled(self, mock_exp_class, mock_execution_context, sample_external_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_outlier_detection_enabled(
+        self, mock_exp_class, mock_execution_context, sample_external_data
+    ):
         """Test outlier detection when enabled."""
         # Setup the mock experiment
         mock_exp = MagicMock()
@@ -230,7 +242,9 @@ class TestExternalOutlierRemovedFeatures:
 class TestExternalDimensionalityReducedFeatures:
     """Tests for external_dimensionality_reduced_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment")
+    @patch(
+        "clustering.pipeline.assets.clustering.external_ml.feature_engineering.ClusteringExperiment"
+    )
     def test_pca_enabled(self, mock_exp_class, mock_execution_context, sample_external_data):
         """Test PCA dimensionality reduction when enabled."""
         # Setup the mock experiment
@@ -247,7 +261,9 @@ class TestExternalDimensionalityReducedFeatures:
         mock_execution_context.resources.config.pca_method = "linear"
 
         # Execute the asset
-        result = external_dimensionality_reduced_features(mock_execution_context, sample_external_data)
+        result = external_dimensionality_reduced_features(
+            mock_execution_context, sample_external_data
+        )
 
         # Verify setup was called with correct PCA parameters
         mock_exp.setup.assert_called_once()
@@ -265,7 +281,9 @@ class TestExternalDimensionalityReducedFeatures:
         mock_execution_context.resources.config.pca_active = False
 
         # Execute the asset
-        result = external_dimensionality_reduced_features(mock_execution_context, sample_external_data)
+        result = external_dimensionality_reduced_features(
+            mock_execution_context, sample_external_data
+        )
 
         # Verify result is the same as input when PCA is disabled
-        assert result.equals(sample_external_data) 
+        assert result.equals(sample_external_data)

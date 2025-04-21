@@ -37,14 +37,17 @@ def mock_pycaret_setup():
 @pytest.fixture
 def mock_execution_context():
     """Create a mock execution context for testing Dagster assets."""
+
     class MockReader:
         def read(self):
             return {
-                "category_a": pl.DataFrame({
-                    "STORE_NBR": ["1", "2", "3"],
-                    "WEEKLY_SALES": [1000, 2000, 3000],
-                    "IGNORED_FEATURE": [1, 2, 3],
-                })
+                "category_a": pl.DataFrame(
+                    {
+                        "STORE_NBR": ["1", "2", "3"],
+                        "WEEKLY_SALES": [1000, 2000, 3000],
+                        "IGNORED_FEATURE": [1, 2, 3],
+                    }
+                )
             }
 
     class MockConfig:
@@ -86,17 +89,17 @@ def mock_context_with_data(mock_execution_context, sample_category_data):
     """Create mock context with sample data in the reader."""
     # This is no longer a simple attribute assignment, we need to adjust the approach
     # to work with the proper Dagster execution context
-    
+
     # Method 1: Patch the read method in this fixture to return our sample data
     original_read = mock_execution_context.resources.sales_by_category_reader.read
-    
+
     def patched_read(*args, **kwargs):
         return sample_category_data
-    
+
     mock_execution_context.resources.sales_by_category_reader.read = patched_read
-    
+
     yield mock_execution_context
-    
+
     # Restore original method after test
     mock_execution_context.resources.sales_by_category_reader.read = original_read
 
@@ -121,11 +124,13 @@ def sample_data():
 def sample_category_data():
     """Create sample category data using polars DataFrames."""
     return {
-        "category_a": pl.DataFrame({
-            "STORE_NBR": ["1", "2", "3"],
-            "WEEKLY_SALES": [1000, 2000, 3000],
-            "IGNORED_FEATURE": [1, 2, 3],
-        })
+        "category_a": pl.DataFrame(
+            {
+                "STORE_NBR": ["1", "2", "3"],
+                "WEEKLY_SALES": [1000, 2000, 3000],
+                "IGNORED_FEATURE": [1, 2, 3],
+            }
+        )
     }
 
 
@@ -136,17 +141,19 @@ class TestInternalFeRawData:
         """Test that the internal_fe_raw_data asset returns data from the reader."""
         # Replace reader's read method with a mock that returns sample data
         original_read = mock_execution_context.resources.sales_by_category_reader.read
-        mock_execution_context.resources.sales_by_category_reader.read = lambda: sample_category_data
-        
+        mock_execution_context.resources.sales_by_category_reader.read = (
+            lambda: sample_category_data
+        )
+
         # Call the asset function
         result = internal_fe_raw_data(mock_execution_context)
-        
+
         # Verify the result
         assert isinstance(result, dict)
         assert "category_a" in result
         assert isinstance(result["category_a"], pl.DataFrame)
         assert result == sample_category_data  # Should return original data
-        
+
         # Restore original method
         mock_execution_context.resources.sales_by_category_reader.read = original_read
 
@@ -154,37 +161,45 @@ class TestInternalFeRawData:
 class TestInternalFilteredFeatures:
     """Tests for internal_filtered_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_filtered_features(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_filtered_features(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test filtering features based on configuration."""
         # Setup the mock experiment
         mock_exp = MagicMock()
         mock_exp_class.return_value = mock_exp
-        
+
         # Create a dictionary of polars DataFrames for the input
         input_dict = {
-            "category_a": pl.DataFrame({
+            "category_a": pl.DataFrame(
+                {
+                    "STORE_NBR": ["1", "2", "3"],
+                    "WEEKLY_SALES": [1000, 2000, 3000],
+                    "IGNORED_FEATURE": [1, 2, 3],
+                }
+            )
+        }
+
+        # Configure mock for the expected filtered output
+        filtered_df = pd.DataFrame(
+            {
                 "STORE_NBR": ["1", "2", "3"],
                 "WEEKLY_SALES": [1000, 2000, 3000],
-                "IGNORED_FEATURE": [1, 2, 3],
-            })
-        }
-        
-        # Configure mock for the expected filtered output
-        filtered_df = pd.DataFrame({
-            "STORE_NBR": ["1", "2", "3"],
-            "WEEKLY_SALES": [1000, 2000, 3000],
-        })
-        
+            }
+        )
+
         # Mock conversion inside the asset
         mock_exp.setup.return_value = mock_exp
         mock_exp.X = filtered_df
         # Important: mock X_train_transformed as a pandas DataFrame
         mock_exp.X_train_transformed = filtered_df
-        
+
         # Call the asset function with polars DataFrame input
         result = internal_filtered_features(mock_execution_context, input_dict)
-        
+
         # Verify the result structure - should return Polars DataFrames
         assert isinstance(result, dict)
         assert "category_a" in result
@@ -197,28 +212,34 @@ class TestInternalFilteredFeatures:
 class TestInternalImputedFeatures:
     """Tests for internal_imputed_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_imputed_features(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_imputed_features(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test imputing missing values in features."""
         # Setup the mock experiment
         mock_exp = MagicMock()
         mock_exp_class.return_value = mock_exp
-        
+
         # Create a dictionary of polars DataFrames for the input
         input_dict = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["1", "2", "3"],
-                "WEEKLY_SALES": [1000, 2000, 3000],
-            })
+            "category_a": pl.DataFrame(
+                {
+                    "STORE_NBR": ["1", "2", "3"],
+                    "WEEKLY_SALES": [1000, 2000, 3000],
+                }
+            )
         }
-        
+
         # Configure mock for the expected imputed output
         mock_exp.setup.return_value = mock_exp
         mock_exp.X_train_transformed = input_dict["category_a"].to_pandas()
-        
+
         # Call the asset function with polars DataFrame input
         result = internal_imputed_features(mock_execution_context, input_dict)
-        
+
         # Verify the result structure - should return Polars DataFrames
         assert isinstance(result, dict)
         assert "category_a" in result
@@ -230,32 +251,40 @@ class TestInternalImputedFeatures:
 class TestInternalNormalizedData:
     """Tests for internal_normalized_data asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_normalized_data(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_normalized_data(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test normalizing feature values."""
         # Setup the mock experiment
         mock_exp = MagicMock()
         mock_exp_class.return_value = mock_exp
-        
+
         # Create a dictionary of polars DataFrames for the input
         input_dict = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["1", "2", "3"],
-                "WEEKLY_SALES": [1000, 2000, 3000],
-            })
+            "category_a": pl.DataFrame(
+                {
+                    "STORE_NBR": ["1", "2", "3"],
+                    "WEEKLY_SALES": [1000, 2000, 3000],
+                }
+            )
         }
-        
+
         # Configure mock for the expected normalized output
         mock_exp.setup.return_value = mock_exp
-        normalized_df = pd.DataFrame({
-            "STORE_NBR": ["1", "2", "3"],
-            "WEEKLY_SALES": [0.0, 0.5, 1.0],  # Normalized values
-        })
+        normalized_df = pd.DataFrame(
+            {
+                "STORE_NBR": ["1", "2", "3"],
+                "WEEKLY_SALES": [0.0, 0.5, 1.0],  # Normalized values
+            }
+        )
         mock_exp.X_train_transformed = normalized_df
-        
+
         # Call the asset function with polars DataFrame input
         result = internal_normalized_data(mock_execution_context, input_dict)
-        
+
         # Verify the result structure - should return Polars DataFrames
         assert isinstance(result, dict)
         assert "category_a" in result
@@ -267,33 +296,41 @@ class TestInternalNormalizedData:
 class TestInternalOutlierRemovedFeatures:
     """Tests for internal_outlier_removed_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_outlier_removed_features(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_outlier_removed_features(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test removing outliers from features."""
         # Setup the mock experiment
         mock_exp = MagicMock()
         mock_exp_class.return_value = mock_exp
-        
+
         # Create a dictionary of polars DataFrames for the input
         input_dict = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["1", "2", "3"],
-                "WEEKLY_SALES": [1000, 2000, 3000],
-            })
+            "category_a": pl.DataFrame(
+                {
+                    "STORE_NBR": ["1", "2", "3"],
+                    "WEEKLY_SALES": [1000, 2000, 3000],
+                }
+            )
         }
-        
+
         # Configure mock for expected output after outlier removal
         mock_exp.setup.return_value = mock_exp
         # Simulate data with outliers removed (e.g., fewer rows)
-        outlier_removed_df = pd.DataFrame({
-            "STORE_NBR": ["1", "2"],
-            "WEEKLY_SALES": [1000, 2000],
-        })
+        outlier_removed_df = pd.DataFrame(
+            {
+                "STORE_NBR": ["1", "2"],
+                "WEEKLY_SALES": [1000, 2000],
+            }
+        )
         mock_exp.X_train_transformed = outlier_removed_df
-        
+
         # Call the asset function with polars DataFrame input
         result = internal_outlier_removed_features(mock_execution_context, input_dict)
-        
+
         # Verify the result structure - should return Polars DataFrames
         assert isinstance(result, dict)
         assert "category_a" in result
@@ -305,33 +342,41 @@ class TestInternalOutlierRemovedFeatures:
 class TestInternalDimensionalityReducedFeatures:
     """Tests for internal_dimensionality_reduced_features asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_dimensionality_reduced_features(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_dimensionality_reduced_features(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test reducing dimensionality of features."""
         # Setup the mock experiment
         mock_exp = MagicMock()
         mock_exp_class.return_value = mock_exp
-        
+
         # Create a dictionary of polars DataFrames for the input
         input_dict = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["1", "2", "3"],
-                "WEEKLY_SALES": [1000, 2000, 3000],
-            })
+            "category_a": pl.DataFrame(
+                {
+                    "STORE_NBR": ["1", "2", "3"],
+                    "WEEKLY_SALES": [1000, 2000, 3000],
+                }
+            )
         }
-        
+
         # Configure mock for expected output after PCA
         mock_exp.setup.return_value = mock_exp
         # Simulate dimensionality reduced data (e.g., fewer columns)
-        pca_df = pd.DataFrame({
-            "STORE_NBR": ["1", "2", "3"],
-            "PC1": [0.1, 0.2, 0.3],  # PCA components
-        })
+        pca_df = pd.DataFrame(
+            {
+                "STORE_NBR": ["1", "2", "3"],
+                "PC1": [0.1, 0.2, 0.3],  # PCA components
+            }
+        )
         mock_exp.X_train_transformed = pca_df
-        
+
         # Call the asset function with polars DataFrame input
         result = internal_dimensionality_reduced_features(mock_execution_context, input_dict)
-        
+
         # Verify the result structure - should return Polars DataFrames
         assert isinstance(result, dict)
         assert "category_a" in result
@@ -342,8 +387,12 @@ class TestInternalDimensionalityReducedFeatures:
 class TestInternalFeatureMetadata:
     """Tests for internal_feature_metadata asset."""
 
-    @patch("clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment")
-    def test_internal_feature_metadata(self, mock_exp_class, mock_execution_context, sample_category_data):
+    @patch(
+        "clustering.pipeline.assets.clustering.internal_ml.feature_engineering.ClusteringExperiment"
+    )
+    def test_internal_feature_metadata(
+        self, mock_exp_class, mock_execution_context, sample_category_data
+    ):
         """Test generating feature metadata."""
         # Setup the mock experiment
         mock_exp = MagicMock()
@@ -382,7 +431,7 @@ class TestInternalFeatureMetadata:
         assert "null_counts" in metadata
         assert "correlations" in metadata
         assert "sample" in metadata
-        
+
         # Verify specific config settings are captured
         assert metadata["config"]["pca"]["enabled"] is True
         assert metadata["config"]["pca"]["variance"] == 0.8

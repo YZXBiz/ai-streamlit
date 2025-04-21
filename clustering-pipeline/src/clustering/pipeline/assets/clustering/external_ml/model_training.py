@@ -221,7 +221,7 @@ def external_train_clustering_models(
 
     # Get sample count
     sample_count = len(df)
-    
+
     # Handle small datasets more effectively
     # For very small datasets (3 samples), we still want to cluster them into 2 groups
     # PyCaret requires at least 2 clusters and sample_count > cluster_count
@@ -241,7 +241,9 @@ def external_train_clustering_models(
         )
         cluster_count = adjusted_cluster_count
 
-    context.log.info(f"Training {algorithm} with {cluster_count} clusters for external data (samples: {sample_count})")
+    context.log.info(
+        f"Training {algorithm} with {cluster_count} clusters for external data (samples: {sample_count})"
+    )
 
     # Convert Polars DataFrame to Pandas for PyCaret
     pandas_df = df.to_pandas()
@@ -326,7 +328,7 @@ def external_save_clustering_models(
     Args:
         context: Dagster asset execution context
         external_train_clustering_models: Dictionary of trained clustering models by category
-        
+
     Returns:
         Path to where models were saved
     """
@@ -429,10 +431,14 @@ def external_assign_clusters(
     context.log.info(
         "Assigning clusters using dimensionality reduced features and applying to raw data"
     )
-    
+
     # Log available models for debugging
-    context.log.info(f"Available models for categories: {list(external_train_clustering_models.keys())}")
-    context.log.info(f"External reduced features shape: {external_dimensionality_reduced_features.shape}")
+    context.log.info(
+        f"Available models for categories: {list(external_train_clustering_models.keys())}"
+    )
+    context.log.info(
+        f"External reduced features shape: {external_dimensionality_reduced_features.shape}"
+    )
     context.log.info(f"External raw data shape: {external_fe_raw_data.shape}")
 
     # Check if we have any trained models
@@ -479,16 +485,20 @@ def external_assign_clusters(
 
     # Check if experiment path exists
     if not Path(experiment_path).exists():
-        context.log.warning(f"Experiment path does not exist: {experiment_path}, creating fallback clusters")
+        context.log.warning(
+            f"Experiment path does not exist: {experiment_path}, creating fallback clusters"
+        )
         # Create fallback with all stores assigned to cluster 0
         result_df = external_fe_raw_data.with_columns(pl.lit(0).cast(pl.Int64).alias("Cluster"))
-        
-        context.add_output_metadata({
-            "warning": "Experiment path not found, created fallback assignments",
-            "total_records": len(result_df),
-            "fallback_used": True,
-        })
-        
+
+        context.add_output_metadata(
+            {
+                "warning": "Experiment path not found, created fallback assignments",
+                "total_records": len(result_df),
+                "fallback_used": True,
+            }
+        )
+
         return result_df
 
     try:
@@ -563,7 +573,9 @@ def external_assign_clusters(
                         original_data_with_clusters.loc[mask, "Cluster"] = cluster
                         matched_count += 1
 
-                context.log.info(f"Matched {matched_count} out of {len(cluster_assignments)} stores")
+                context.log.info(
+                    f"Matched {matched_count} out of {len(cluster_assignments)} stores"
+                )
 
             except Exception as e:
                 context.log.error(f"Error matching reduced data to original: {e}")
@@ -576,9 +588,9 @@ def external_assign_clusters(
             # This prevents the 'int' object cannot be converted to 'PyString' error
             if is_string_format:
                 # Ensure all cluster values are strings
-                original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(
-                    str
-                )
+                original_data_with_clusters["Cluster"] = original_data_with_clusters[
+                    "Cluster"
+                ].astype(str)
                 context.log.info("Ensuring all cluster values are strings")
             else:
                 # Try to convert to integers if possible
@@ -600,54 +612,58 @@ def external_assign_clusters(
                 context.log.info("Successfully converted to Polars DataFrame")
             except TypeError as e:
                 # If conversion still fails, try more aggressive type enforcement
-                context.log.warning(f"Error converting to Polars: {e}, attempting alternative approach")
-                # Convert all columns to string as a last resort
-                original_data_with_clusters["Cluster"] = original_data_with_clusters["Cluster"].astype(
-                    str
+                context.log.warning(
+                    f"Error converting to Polars: {e}, attempting alternative approach"
                 )
+                # Convert all columns to string as a last resort
+                original_data_with_clusters["Cluster"] = original_data_with_clusters[
+                    "Cluster"
+                ].astype(str)
                 assigned_data = pl.from_pandas(original_data_with_clusters)
                 context.log.info("Successfully converted to Polars after type conversion")
         else:
             # Simple case: no outliers
             context.log.info("No size mismatch detected, proceeding with direct cluster assignment")
-            
+
             # Convert Polars DataFrame to Pandas for PyCaret
             pandas_df = external_dimensionality_reduced_features.to_pandas()
-            
+
             # Load the experiment
             exp = load_experiment(experiment_path, data=pandas_df)
-            
+
             # Get cluster assignments
             cluster_assignments = exp.assign_model(model)
-            
+
             # Convert original data to pandas
             original_data = external_fe_raw_data.to_pandas()
-            
+
             # Add the cluster column to the original data
             original_data["Cluster"] = cluster_assignments["Cluster"].values
-            
+
             # Convert back to Polars
             assigned_data = pl.from_pandas(original_data)
-            
+
             context.log.info("Successfully assigned clusters to all data points")
-            
+
     except Exception as e:
         context.log.error(f"Error during cluster assignment: {str(e)}")
-        context.log.warning("Creating fallback cluster assignments with all points assigned to cluster 0")
-        
+        context.log.warning(
+            "Creating fallback cluster assignments with all points assigned to cluster 0"
+        )
+
         # Create fallback with all stores assigned to cluster 0
         assigned_data = external_fe_raw_data.with_columns(pl.lit(0).cast(pl.Int64).alias("Cluster"))
-        
-        context.add_output_metadata({
-            "error": str(e),
-            "fallback_used": True,
-            "total_records": len(assigned_data)
-        })
+
+        context.add_output_metadata(
+            {"error": str(e), "fallback_used": True, "total_records": len(assigned_data)}
+        )
 
     # Add metadata about the assignment
-    cluster_distribution = assigned_data.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
+    cluster_distribution = (
+        assigned_data.group_by("Cluster").agg(pl.len().alias("count")).sort("Cluster")
+    )
     context.log.info(f"Cluster distribution:\n{cluster_distribution}")
-    
+
     context.add_output_metadata(
         {
             "cluster_distribution": dg.MetadataValue.json(cluster_distribution.to_dicts()),
@@ -679,12 +695,12 @@ def external_save_cluster_assignments(
     Args:
         context: Dagster asset execution context
         external_assign_clusters: DataFrame with cluster assignments, including outlier assignments
-        
+
     Returns:
         Path to the saved assignments file
     """
     context.log.info("Saving external cluster assignments to storage")
-    
+
     # Initialize with a default path value in case something goes wrong
     output_path = "no_external_assignments_saved.parquet"
 
@@ -692,20 +708,13 @@ def external_save_cluster_assignments(
     # Check that the DataFrame is not empty
     if external_assign_clusters.height == 0:
         context.log.warning("DataFrame is empty, creating empty DataFrame to store")
-        empty_df = pl.DataFrame({
-            "STORE_NBR": [], 
-            "Cluster": [],
-            "category": []
-        })
+        empty_df = pl.DataFrame({"STORE_NBR": [], "Cluster": [], "category": []})
         # Save the empty dataframe
         saved_path = context.resources.external_cluster_assignments.write(empty_df)
         if saved_path:
             output_path = saved_path
-        
-        context.add_output_metadata({
-            "status": "empty_dataframe", 
-            "path": output_path
-        })
+
+        context.add_output_metadata({"status": "empty_dataframe", "path": output_path})
         return output_path
 
     # Use the configured output resource
@@ -732,10 +741,10 @@ def external_save_cluster_assignments(
             "status": "success",
             "records_saved": external_assign_clusters.height,
             "cluster_distribution": dg.MetadataValue.json(cluster_dist.to_dicts()),
-            "path": output_path
+            "path": output_path,
         }
     )
-    
+
     return output_path
 
 

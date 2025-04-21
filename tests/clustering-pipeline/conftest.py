@@ -96,18 +96,22 @@ def mock_execution_context() -> Iterator[dg.AssetExecutionContext]:
         standardize_features=True,
         normalize_method="min_max",
     )
-    
+
     # Configure mock readers and writers
     mock_reader = MockReader({})
     mock_writer = MockWriter()
-    
+
     # Create resource definitions
     resource_defs = {
         "config": ResourceDefinition.hardcoded_resource(mock_config),
         # External data resources
         "input_external_placerai_reader": ResourceDefinition.hardcoded_resource(mock_reader),
-        "input_external_urbanicity_template_reader": ResourceDefinition.hardcoded_resource(mock_reader),
-        "input_external_urbanicity_experiment_reader": ResourceDefinition.hardcoded_resource(mock_reader),
+        "input_external_urbanicity_template_reader": ResourceDefinition.hardcoded_resource(
+            mock_reader
+        ),
+        "input_external_urbanicity_experiment_reader": ResourceDefinition.hardcoded_resource(
+            mock_reader
+        ),
         "external_features_reader": ResourceDefinition.hardcoded_resource(mock_reader),
         "output_external_data_writer": ResourceDefinition.hardcoded_resource(mock_writer),
         # Internal data resources

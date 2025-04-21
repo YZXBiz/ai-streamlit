@@ -10,15 +10,15 @@ import pytest
 # This is needed because the test runner may not have the proper import path set up
 mock_data_reader = MagicMock()
 mock_data_writer = MagicMock()
-sys.modules['clustering.pipeline.resources.data_io'] = MagicMock(
-    data_reader=mock_data_reader,
-    data_writer=mock_data_writer
+sys.modules["clustering.pipeline.resources.data_io"] = MagicMock(
+    data_reader=mock_data_reader, data_writer=mock_data_writer
 )
+
 
 # Define a base class for readers and writers to use in testing
 class Reader:
     """Base class for all readers."""
-    
+
     def read(self):
         """Read data method to be implemented by subclasses."""
         raise NotImplementedError("Subclasses must implement read method")
@@ -26,7 +26,7 @@ class Reader:
 
 class Writer:
     """Base class for all writers."""
-    
+
     def write(self, data, **kwargs):
         """Write data method to be implemented by subclasses."""
         raise NotImplementedError("Subclasses must implement write method")
@@ -66,7 +66,7 @@ class TestDataReader:
         # Set up the mock data_reader
         mock_reader_instance = MagicMock(spec=DummyReader)
         mock_data_reader.return_value = mock_reader_instance
-        
+
         # Create resource init context with config
         init_context = MagicMock(spec=dg.InitResourceContext)
         init_context.resource_config = {
@@ -76,7 +76,7 @@ class TestDataReader:
 
         # Call the mocked data_reader
         reader = mock_data_reader(init_context)
-        
+
         # Verify the mock was called
         mock_data_reader.assert_called_once_with(init_context)
         assert reader is mock_reader_instance
@@ -85,7 +85,7 @@ class TestDataReader:
         """Test data_reader resource with unknown reader type."""
         # Set up the mock data_reader to raise ValueError
         mock_data_reader.side_effect = ValueError("Unknown reader kind: UnknownReader")
-        
+
         # Create resource init context with config
         init_context = MagicMock(spec=dg.InitResourceContext)
         init_context.resource_config = {
@@ -109,7 +109,7 @@ class TestDataWriter:
         # Set up the mock data_writer
         mock_writer_instance = MagicMock(spec=DummyWriter)
         mock_data_writer.return_value = mock_writer_instance
-        
+
         # Create resource init context with config
         init_context = MagicMock(spec=dg.InitResourceContext)
         init_context.resource_config = {
@@ -119,7 +119,7 @@ class TestDataWriter:
 
         # Call the mocked data_writer
         writer = mock_data_writer(init_context)
-        
+
         # Verify the mock was called
         mock_data_writer.assert_called_once_with(init_context)
         assert writer is mock_writer_instance
@@ -128,7 +128,7 @@ class TestDataWriter:
         """Test data_writer resource with unknown writer type."""
         # Set up the mock data_writer to raise ValueError
         mock_data_writer.side_effect = ValueError("Unknown writer kind: UnknownWriter")
-        
+
         # Create resource init context with config
         init_context = MagicMock(spec=dg.InitResourceContext)
         init_context.resource_config = {
@@ -141,4 +141,4 @@ class TestDataWriter:
             mock_data_writer(init_context)
 
         # Verify error message
-        assert "Unknown writer kind: UnknownWriter" in str(excinfo.value) 
+        assert "Unknown writer kind: UnknownWriter" in str(excinfo.value)

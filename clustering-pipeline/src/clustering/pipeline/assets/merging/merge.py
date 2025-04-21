@@ -1,6 +1,5 @@
 """Cluster merging assets for the clustering pipeline."""
 
-
 import dagster as dg
 import numpy as np
 import polars as pl
@@ -15,7 +14,10 @@ from clustering.shared.io.readers.pickle_reader import PickleReader
     compute_kind="merging",
     group_name="merging",
     deps=["internal_save_cluster_assignments", "external_save_cluster_assignments"],
-    required_resource_keys={"internal_cluster_assignments_reader", "external_cluster_assignments_reader"},
+    required_resource_keys={
+        "internal_cluster_assignments_reader",
+        "external_cluster_assignments_reader",
+    },
 )
 def merged_clusters(
     context: dg.AssetExecutionContext,
@@ -66,50 +68,53 @@ def merged_clusters(
 
     if "STORE_NBR" not in external_clusters.columns:
         raise ValueError("External clusters missing STORE_NBR column")
-        
+
     # Log cluster columns for debugging
     context.log.info(f"Internal columns available: {internal_clusters.columns}")
     context.log.info(f"External columns available: {external_clusters.columns}")
-    
+
     # Check if internal clusters has all the features we need
     # If not, try to find and load internal features dataset
     if len(internal_clusters.columns) <= 3:  # Only has STORE_NBR, Cluster, and maybe category
-        context.log.info("Internal clusters dataset has limited columns, checking for internal features")
+        context.log.info(
+            "Internal clusters dataset has limited columns, checking for internal features"
+        )
         try:
             # Try to load internal features from a few possible locations
             possible_paths = [
                 "data/internal/internal_sales_by_category.pkl",
                 "data/internal/sales_by_category.pkl",
             ]
-            
+
             # Initialize a dictionary to hold features by store number
             store_features = {}
-            
+
             # Loop through all paths and combine features
             for path in possible_paths:
                 if os.path.exists(path):
                     context.log.info(f"Found internal features at {path}")
                     try:
                         import pickle
-                        with open(path, 'rb') as f:
+
+                        with open(path, "rb") as f:
                             internal_features = pickle.load(f)
-                            
+
                         # If it's a dictionary, we need to handle each category
                         if isinstance(internal_features, dict):
                             # Loop through all categories
                             for category_key, category_df in internal_features.items():
                                 context.log.info(f"Processing category: {category_key}")
-                                
+
                                 # Convert to polars if needed
                                 if not isinstance(category_df, pl.DataFrame):
                                     category_df = pl.from_pandas(category_df)
-                                
+
                                 # For each store, add the features
                                 for row in category_df.iter_rows(named=True):
                                     store_nbr = row["STORE_NBR"]
                                     if store_nbr not in store_features:
                                         store_features[store_nbr] = {}
-                                    
+
                                     # Add each feature from this category
                                     for col, val in row.items():
                                         if col != "STORE_NBR":
@@ -119,20 +124,22 @@ def merged_clusters(
                             # Convert to polars if needed
                             if not isinstance(internal_features, pl.DataFrame):
                                 internal_features = pl.from_pandas(internal_features)
-                            
+
                             # For each store, add the features
                             for row in internal_features.iter_rows(named=True):
                                 store_nbr = row["STORE_NBR"]
                                 if store_nbr not in store_features:
                                     store_features[store_nbr] = {}
-                                
+
                                 # Add each feature from this row
                                 for col, val in row.items():
                                     if col != "STORE_NBR":
                                         store_features[store_nbr][col] = val
                     except Exception as e:
-                        context.log.warning(f"Error loading internal features from {path}: {str(e)}")
-            
+                        context.log.warning(
+                            f"Error loading internal features from {path}: {str(e)}"
+                        )
+
             # Now create a DataFrame from the combined features
             if store_features:
                 # Convert the dictionary to lists of records
@@ -141,23 +148,26 @@ def merged_clusters(
                     record = {"STORE_NBR": store_nbr}
                     record.update(features)
                     records.append(record)
-                
+
                 # Create a polars DataFrame
                 combined_features = pl.DataFrame(records)
-                context.log.info(f"Created combined features DataFrame with {combined_features.shape[1]} columns")
-                
+                context.log.info(
+                    f"Created combined features DataFrame with {combined_features.shape[1]} columns"
+                )
+
                 # Merge with internal clusters
                 internal_clusters = internal_clusters.join(
-                    combined_features, 
-                    on="STORE_NBR", 
-                    how="left",
-                    suffix="_features"
+                    combined_features, on="STORE_NBR", how="left", suffix="_features"
                 )
-                context.log.info(f"Enhanced internal clusters with features, now has {internal_clusters.shape[1]} columns")
-                context.log.info(f"Internal feature columns: {[col for col in internal_clusters.columns if col not in ['STORE_NBR', 'Cluster', 'category']]}")
+                context.log.info(
+                    f"Enhanced internal clusters with features, now has {internal_clusters.shape[1]} columns"
+                )
+                context.log.info(
+                    f"Internal feature columns: {[col for col in internal_clusters.columns if col not in ['STORE_NBR', 'Cluster', 'category']]}"
+                )
         except Exception as e:
             context.log.warning(f"Failed to load additional internal features: {str(e)}")
-    
+
     # Verify or standardize Cluster columns
     if "Cluster" not in internal_clusters.columns:
         if "cluster" in internal_clusters.columns:
@@ -169,12 +179,15 @@ def merged_clusters(
     else:
         # Rename Cluster to internal_cluster
         internal_clusters = internal_clusters.rename({"Cluster": "internal_cluster"})
-    
+
     # Clean internal cluster values - remove any "Cluster" prefix from values
     internal_clusters = internal_clusters.with_columns(
-        pl.col("internal_cluster").str.replace("Cluster ", "").str.replace("cluster ", "").alias("internal_cluster")
+        pl.col("internal_cluster")
+        .str.replace("Cluster ", "")
+        .str.replace("cluster ", "")
+        .alias("internal_cluster")
     )
-            
+
     if "Cluster" not in external_clusters.columns:
         if "cluster" in external_clusters.columns:
             external_clusters = external_clusters.rename({"cluster": "external_cluster"})
@@ -185,10 +198,13 @@ def merged_clusters(
     else:
         # Rename Cluster to external_cluster
         external_clusters = external_clusters.rename({"Cluster": "external_cluster"})
-    
+
     # Clean external cluster values - remove any "Cluster" prefix from values
     external_clusters = external_clusters.with_columns(
-        pl.col("external_cluster").str.replace("Cluster ", "").str.replace("cluster ", "").alias("external_cluster")
+        pl.col("external_cluster")
+        .str.replace("Cluster ", "")
+        .str.replace("cluster ", "")
+        .alias("external_cluster")
     )
 
     # Join the dataframes on STORE_NBR
@@ -203,7 +219,7 @@ def merged_clusters(
 
     # Log columns before cleanup
     context.log.info(f"Columns after join: {merged.columns}")
-    
+
     # KEEP ALL COLUMNS - do not drop any columns
     """
     # Handle any *_external columns where we want to prefer the internal version
@@ -241,16 +257,20 @@ def merged_clusters(
     # Convert cluster columns to strings and concatenate with underscore
     try:
         merged = merged.with_columns(
-            pl.concat_str([
-                pl.col("internal_cluster").cast(pl.Utf8),
-                pl.lit("_"),
-                pl.col("external_cluster").cast(pl.Utf8)
-            ]).alias("merged_cluster")
+            pl.concat_str(
+                [
+                    pl.col("internal_cluster").cast(pl.Utf8),
+                    pl.lit("_"),
+                    pl.col("external_cluster").cast(pl.Utf8),
+                ]
+            ).alias("merged_cluster")
         )
         context.log.info("Created merged_cluster column from internal and external clusters")
-        
+
         # Log sample of merged values for verification
-        sample_merged = merged.select(["internal_cluster", "external_cluster", "merged_cluster"]).head(5)
+        sample_merged = merged.select(
+            ["internal_cluster", "external_cluster", "merged_cluster"]
+        ).head(5)
         context.log.info(f"Sample of merged values: {sample_merged}")
     except Exception as e:
         context.log.warning(f"Error creating merged_cluster column: {str(e)}")
@@ -258,10 +278,9 @@ def merged_clusters(
         # Fallback to creating sequential cluster IDs
         merged = merged.with_row_count("row_id")
         merged = merged.with_columns(
-            pl.concat_str([
-                pl.lit("merged_"),
-                pl.col("row_id").cast(pl.Utf8)
-            ]).alias("merged_cluster")
+            pl.concat_str([pl.lit("merged_"), pl.col("row_id").cast(pl.Utf8)]).alias(
+                "merged_cluster"
+            )
         )
         merged = merged.drop("row_id")
 
@@ -270,25 +289,25 @@ def merged_clusters(
 
     # Reorganize columns to ensure key columns are at the front
     priority_columns = ["STORE_NBR"]
-    
+
     # Add category if it exists
     if "category" in merged.columns:
         priority_columns.append("category")
-    
+
     # Add internal and external cluster columns
     if "internal_cluster" in merged.columns:
         priority_columns.append("internal_cluster")
-    
+
     if "external_cluster" in merged.columns:
         priority_columns.append("external_cluster")
-    
+
     # Add merged_cluster
     if "merged_cluster" in merged.columns:
         priority_columns.append("merged_cluster")
-    
+
     # Add remaining columns
     remaining_columns = [col for col in merged.columns if col not in priority_columns]
-    
+
     # Reorder columns
     merged = merged.select(priority_columns + remaining_columns)
     context.log.info(f"Reorganized columns: {merged.columns}")
@@ -323,27 +342,37 @@ def merged_cluster_assignments(
     # Create a merged_cluster column if it doesn't exist
     if "merged_cluster" not in merged_clusters.columns:
         context.log.info("Creating merged_cluster column from cluster columns")
-        
+
         # Determine the column names based on what's available
-        internal_cluster_col = "internal_cluster" if "internal_cluster" in merged_clusters.columns else None
-        external_cluster_col = "external_cluster" if "external_cluster" in merged_clusters.columns else None
-        
+        internal_cluster_col = (
+            "internal_cluster" if "internal_cluster" in merged_clusters.columns else None
+        )
+        external_cluster_col = (
+            "external_cluster" if "external_cluster" in merged_clusters.columns else None
+        )
+
         if internal_cluster_col and external_cluster_col:
             # Create a new column that combines internal and external clusters
             merged_clusters = merged_clusters.with_columns(
-                pl.concat_str([
-                    pl.col(internal_cluster_col).cast(pl.Utf8),
-                    pl.lit("_"),
-                    pl.col(external_cluster_col).cast(pl.Utf8)
-                ]).alias("merged_cluster")
+                pl.concat_str(
+                    [
+                        pl.col(internal_cluster_col).cast(pl.Utf8),
+                        pl.lit("_"),
+                        pl.col(external_cluster_col).cast(pl.Utf8),
+                    ]
+                ).alias("merged_cluster")
             )
-            context.log.info(f"Created merged_cluster column from {internal_cluster_col} and {external_cluster_col}")
+            context.log.info(
+                f"Created merged_cluster column from {internal_cluster_col} and {external_cluster_col}"
+            )
         elif internal_cluster_col:
             # Just use the internal_cluster if that's all we have
             merged_clusters = merged_clusters.with_columns(
                 pl.col(internal_cluster_col).cast(pl.Utf8).alias("merged_cluster")
             )
-            context.log.info(f"Created merged_cluster column from internal {internal_cluster_col} only")
+            context.log.info(
+                f"Created merged_cluster column from internal {internal_cluster_col} only"
+            )
         else:
             # Fallback to creating sequential IDs if no cluster columns are found
             context.log.warning("No cluster columns found, creating sequential cluster IDs")
@@ -352,24 +381,24 @@ def merged_cluster_assignments(
             merged_clusters = merged_clusters.with_columns(
                 pl.col("merged_cluster").cast(pl.Utf8).alias("merged_cluster")
             )
-    
+
     # Check if category column exists for organizing by category
     has_category = "category" in merged_clusters.columns
     context.log.info(f"Dataset has category column: {has_category}")
-    
+
     # Create the cluster map with categories as keys
     cluster_map = {}
-    
+
     if has_category:
         # Get unique categories
         categories = merged_clusters.select("category").unique().to_series().to_list()
         context.log.info(f"Found {len(categories)} unique categories")
-        
+
         # Process each category
         for category in categories:
             # Filter data for this category
             category_data = merged_clusters.filter(pl.col("category") == category)
-            
+
             # Count occurrences of each merged cluster in this category
             try:
                 category_counts = (
@@ -377,11 +406,13 @@ def merged_cluster_assignments(
                     .agg(pl.len().alias("count"))
                     .sort("count", descending=True)
                 )
-                
+
                 # Store category data in the map
                 cluster_map[str(category)] = {
                     "clusters": category_counts.to_dict(as_series=False),
-                    "store_mappings": category_data.select(["STORE_NBR", "merged_cluster"]).to_dict(as_series=False)
+                    "store_mappings": category_data.select(["STORE_NBR", "merged_cluster"]).to_dict(
+                        as_series=False
+                    ),
                 }
                 context.log.info(f"Added cluster data for category: {category}")
             except Exception as e:
@@ -389,7 +420,7 @@ def merged_cluster_assignments(
                 # Add empty entry
                 cluster_map[str(category)] = {
                     "clusters": {"merged_cluster": [], "count": []},
-                    "store_mappings": {"STORE_NBR": [], "merged_cluster": []}
+                    "store_mappings": {"STORE_NBR": [], "merged_cluster": []},
                 }
     else:
         # No category column, use "all" as the key
@@ -399,10 +430,12 @@ def merged_cluster_assignments(
                 .agg(pl.len().alias("count"))
                 .sort("count", descending=True)
             )
-            
+
             cluster_map["all"] = {
                 "clusters": cluster_counts.to_dict(as_series=False),
-                "store_mappings": merged_clusters.select(["STORE_NBR", "merged_cluster"]).to_dict(as_series=False)
+                "store_mappings": merged_clusters.select(["STORE_NBR", "merged_cluster"]).to_dict(
+                    as_series=False
+                ),
             }
             context.log.info("Added cluster data with 'all' as category key")
         except Exception as e:
@@ -410,13 +443,13 @@ def merged_cluster_assignments(
             # Provide debug information
             context.log.info(f"DataFrame shape: {merged_clusters.shape}")
             context.log.info(f"Column dtypes: {merged_clusters.dtypes}")
-            
+
             # Return a minimal dictionary with empty mappings
             cluster_map["all"] = {
                 "clusters": {"merged_cluster": [], "count": []},
-                "store_mappings": {"STORE_NBR": [], "merged_cluster": []}
+                "store_mappings": {"STORE_NBR": [], "merged_cluster": []},
             }
-            
+
     return cluster_map
 
 
@@ -463,41 +496,41 @@ def optimized_merged_clusters(
         # Since we've restructured by category, we'll aggregate across all categories
         all_small_clusters_data = []
         all_large_clusters_data = []
-        
+
         # Process each category
         for category, category_data in merged_cluster_assignments.items():
             context.log.info(f"Processing category: {category}")
-            
+
             if not category_data["clusters"]["merged_cluster"]:
                 context.log.warning(f"No clusters found for category: {category}")
                 continue
-                
+
             # Extract cluster counts for this category
             category_cluster_counts = pl.DataFrame(category_data["clusters"])
-            
+
             # Separate small and large clusters
             small_clusters = category_cluster_counts.filter(pl.col("count") < min_cluster_size)
             large_clusters = category_cluster_counts.filter(pl.col("count") >= min_cluster_size)
-            
+
             # Add category column if it's not "all"
             if category != "all":
                 small_clusters = small_clusters.with_columns(pl.lit(category).alias("category"))
                 large_clusters = large_clusters.with_columns(pl.lit(category).alias("category"))
-            
+
             # Add to aggregated results
             all_small_clusters_data.append(small_clusters)
             all_large_clusters_data.append(large_clusters)
-            
+
             context.log.info(
                 f"Category {category}: {small_clusters.height} small clusters and {large_clusters.height} large clusters"
             )
-        
+
         # Combine results from all categories
         if all_small_clusters_data:
             result["small_clusters"] = pl.concat(all_small_clusters_data)
         else:
             result["small_clusters"] = pl.DataFrame({"merged_cluster": [], "count": []})
-            
+
         if all_large_clusters_data:
             result["large_clusters"] = pl.concat(all_large_clusters_data)
         else:
@@ -556,7 +589,7 @@ def cluster_reassignment(
         final_assignments_df = merged_data.with_columns(
             pl.col("merged_cluster").alias("rebalanced_cluster")
         )
-        
+
         # Organize by category
         return organize_by_category(context, final_assignments_df)
 
@@ -579,7 +612,7 @@ def cluster_reassignment(
         final_assignments_df = merged_data.with_columns(
             pl.col("merged_cluster").alias("rebalanced_cluster")
         )
-        
+
         # Organize by category
         return organize_by_category(context, final_assignments_df)
 
@@ -608,7 +641,7 @@ def cluster_reassignment(
         final_assignments_df = merged_data.with_columns(
             pl.col("merged_cluster").alias("rebalanced_cluster")
         )
-        
+
         # Organize by category
         return organize_by_category(context, final_assignments_df)
 
@@ -620,11 +653,11 @@ def cluster_reassignment(
     for i_cluster, i_centroid in internal_centroids.items():
         # Clean internal_cluster key if needed
         i_cluster_clean = str(i_cluster).replace("Cluster ", "").replace("cluster ", "")
-        
+
         for e_cluster, e_centroid in external_centroids.items():
             # Clean external_cluster key if needed
             e_cluster_clean = str(e_cluster).replace("Cluster ", "").replace("cluster ", "")
-            
+
             merged_id = f"{i_cluster_clean}_{e_cluster_clean}"
             # Combine centroids (assuming they are numpy arrays)
             all_centroids[merged_id] = np.concatenate([i_centroid, e_centroid])
@@ -694,50 +727,54 @@ def cluster_reassignment(
     reassigned_count = merged_data.filter(pl.col("merged_cluster").is_in(small_cluster_ids)).height
 
     context.log.info(f"Reassigned {reassigned_count} stores from small clusters")
-    context.log.info(f"Final assignments dataframe has {final_assignments_df.shape[0]} rows and {final_assignments_df.shape[1]} columns")
+    context.log.info(
+        f"Final assignments dataframe has {final_assignments_df.shape[0]} rows and {final_assignments_df.shape[1]} columns"
+    )
     context.log.info(f"Columns in final assignments: {final_assignments_df.columns}")
 
     # Reorganize columns to ensure key columns are at the front
     priority_columns = ["STORE_NBR"]
-    
+
     # Add category if it exists
     if "category" in final_assignments_df.columns:
         priority_columns.append("category")
-    
+
     # Add internal and external cluster columns
     if "internal_cluster" in final_assignments_df.columns:
         priority_columns.append("internal_cluster")
-    
+
     if "external_cluster" in final_assignments_df.columns:
         priority_columns.append("external_cluster")
-    
+
     # Add merged_cluster followed immediately by rebalanced_cluster
     if "merged_cluster" in final_assignments_df.columns:
         priority_columns.append("merged_cluster")
-    
+
     if "rebalanced_cluster" in final_assignments_df.columns:
         priority_columns.append("rebalanced_cluster")
-    
+
     # Add remaining columns
     remaining_columns = [col for col in final_assignments_df.columns if col not in priority_columns]
-    
+
     # Reorder columns
     final_assignments_df = final_assignments_df.select(priority_columns + remaining_columns)
     context.log.info(f"Reorganized columns: {final_assignments_df.columns}")
-    
+
     # Make an additional explicit reordering to place rebalanced_cluster right after merged_cluster
     all_columns = final_assignments_df.columns
     # Find where rebalanced_cluster is
     if "rebalanced_cluster" in all_columns and "merged_cluster" in all_columns:
         rebalanced_index = all_columns.index("rebalanced_cluster")
         merged_index = all_columns.index("merged_cluster")
-        
+
         # If rebalanced_cluster is not right after merged_cluster, move it
         if rebalanced_index != merged_index + 1:
             all_columns.remove("rebalanced_cluster")
             all_columns.insert(merged_index + 1, "rebalanced_cluster")
             final_assignments_df = final_assignments_df.select(all_columns)
-            context.log.info("Explicitly moved rebalanced_cluster column to be right after merged_cluster")
+            context.log.info(
+                "Explicitly moved rebalanced_cluster column to be right after merged_cluster"
+            )
 
     # Organize by category and return
     return organize_by_category(context, final_assignments_df)
@@ -745,11 +782,11 @@ def cluster_reassignment(
 
 def organize_by_category(context, dataframe: pl.DataFrame) -> dict[str, pl.DataFrame]:
     """Organize a dataframe by category.
-    
+
     Args:
         context: Dagster execution context
         dataframe: DataFrame to organize
-        
+
     Returns:
         Dictionary with categories as keys and DataFrames as values
     """
@@ -757,33 +794,35 @@ def organize_by_category(context, dataframe: pl.DataFrame) -> dict[str, pl.DataF
     if "rebalanced_cluster" in dataframe.columns and "merged_cluster" in dataframe.columns:
         # Get all column names
         all_columns = list(dataframe.columns)
-        
+
         # Find the indices
         merged_idx = all_columns.index("merged_cluster")
         rebalanced_idx = all_columns.index("rebalanced_cluster")
-        
+
         # If rebalanced_cluster is not immediately after merged_cluster, rearrange
         if rebalanced_idx != merged_idx + 1:
             # Remove rebalanced_cluster from its current position
             all_columns.remove("rebalanced_cluster")
-            
+
             # Insert it right after merged_cluster
             all_columns.insert(merged_idx + 1, "rebalanced_cluster")
-            
+
             # Reorder the dataframe
             dataframe = dataframe.select(all_columns)
-            context.log.info("Rearranged columns to place rebalanced_cluster right after merged_cluster")
-    
+            context.log.info(
+                "Rearranged columns to place rebalanced_cluster right after merged_cluster"
+            )
+
     # Check if category column exists
     has_category = "category" in dataframe.columns
-    
+
     result = {}
-    
+
     if has_category:
         # Get unique categories
         categories = dataframe.select("category").unique().to_series().to_list()
         context.log.info(f"Organizing results by {len(categories)} categories")
-        
+
         # Create a DataFrame for each category
         for category in categories:
             category_df = dataframe.filter(pl.col("category") == category)
@@ -793,7 +832,7 @@ def organize_by_category(context, dataframe: pl.DataFrame) -> dict[str, pl.DataF
         # No category, use "all" as the key
         context.log.info("No category column found, using 'all' as the category key")
         result["all"] = dataframe
-    
+
     return result
 
 

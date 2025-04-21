@@ -37,19 +37,22 @@ class TestPipelineSmoke:
         """Test that resources can be initialized."""
         # Get resource definitions for dev environment
         resource_defs = get_resources_by_env(Environment.DEV)
-        
+
         # Check that key resources are present
         assert "config" in resource_defs
         assert "io_manager" in resource_defs
 
-    @pytest.mark.parametrize("job_def", [
-        full_pipeline_job,
-        internal_preprocessing_job,
-    ])
+    @pytest.mark.parametrize(
+        "job_def",
+        [
+            full_pipeline_job,
+            internal_preprocessing_job,
+        ],
+    )
     def test_job_can_build(self, job_def):
         """Test that jobs can be built without errors."""
         # This test just verifies the job definition is valid
         # It does not actually execute the job
         assert job_def.name is not None
-        assert hasattr(job_def, 'selection')
-        assert job_def.tags is not None 
+        assert hasattr(job_def, "selection")
+        assert job_def.tags is not None

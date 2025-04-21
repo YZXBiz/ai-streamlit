@@ -9,7 +9,8 @@ import polars as pl
 from pathlib import Path
 import pickle
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for testing
+
+matplotlib.use("Agg")  # Use non-interactive backend for testing
 import matplotlib.pyplot as plt
 from dagster import build_asset_context, ResourceDefinition, AssetExecutionContext, build_op_context
 
@@ -35,10 +36,12 @@ def mock_writer_resource():
         2: Path("/mock/path/to/visualization_3.png"),
         3: Path("/mock/path/to/visualization_4.png"),
     }
-    
+
     # Set up the write method to return sequential paths
-    mock_writer.write.side_effect = lambda *args, **kwargs: str(paths[mock_writer.write.call_count - 1])
-    
+    mock_writer.write.side_effect = lambda *args, **kwargs: str(
+        paths[mock_writer.write.call_count - 1]
+    )
+
     return mock_writer
 
 
@@ -55,10 +58,10 @@ def mock_execution_context(mock_writer_resource) -> AssetExecutionContext:
             "min_clusters": 2,
             "max_clusters": 10,
             "pca_components": 3,
-            "clusters_to_keep": 3
+            "clusters_to_keep": 3,
         }
     }
-    
+
     return build_asset_context(
         resources={
             "config": ResourceDefinition.hardcoded_resource(config_mock),
@@ -74,20 +77,24 @@ def sample_category_data():
     """Create sample category data for testing."""
     # Convert pandas to polars
     return {
-        "category_a": pl.DataFrame({
-            "store_id": ["1", "2", "3", "4", "5"],
-            "feature_1": [1.0, 2.0, 3.0, 4.0, 5.0],
-            "feature_2": [5.0, 4.0, 3.0, 2.0, 1.0],
-            "feature_3": [2.0, 2.0, 2.0, 2.0, 2.0],
-            "category": ["category_a"] * 5
-        }),
-        "category_b": pl.DataFrame({
-            "store_id": ["6", "7", "8", "9", "10"],
-            "feature_1": [1.0, 2.0, 3.0, 4.0, 5.0],
-            "feature_2": [5.0, 4.0, 3.0, 2.0, 1.0],
-            "feature_3": [2.0, 2.0, 2.0, 2.0, 2.0],
-            "category": ["category_b"] * 5
-        })
+        "category_a": pl.DataFrame(
+            {
+                "store_id": ["1", "2", "3", "4", "5"],
+                "feature_1": [1.0, 2.0, 3.0, 4.0, 5.0],
+                "feature_2": [5.0, 4.0, 3.0, 2.0, 1.0],
+                "feature_3": [2.0, 2.0, 2.0, 2.0, 2.0],
+                "category": ["category_a"] * 5,
+            }
+        ),
+        "category_b": pl.DataFrame(
+            {
+                "store_id": ["6", "7", "8", "9", "10"],
+                "feature_1": [1.0, 2.0, 3.0, 4.0, 5.0],
+                "feature_2": [5.0, 4.0, 3.0, 2.0, 1.0],
+                "feature_3": [2.0, 2.0, 2.0, 2.0, 2.0],
+                "category": ["category_b"] * 5,
+            }
+        ),
     }
 
 
@@ -100,10 +107,7 @@ def sample_features(sample_category_data):
 @pytest.fixture
 def sample_clustering_results():
     """Optimal cluster counts for each category."""
-    return {
-        "category_a": 3,
-        "category_b": 4
-    }
+    return {"category_a": 3, "category_b": 4}
 
 
 @pytest.fixture
@@ -116,7 +120,7 @@ def sample_trained_models():
             "metrics": {"calinski_harabasz": 95.3, "silhouette": 0.68},
             "model": MagicMock(),  # Use a MagicMock for the model object
             "num_clusters": 3,
-            "num_samples": 100
+            "num_samples": 100,
         }
     }
 
@@ -125,14 +129,18 @@ def sample_trained_models():
 def sample_cluster_assignments():
     """Sample cluster assignments."""
     return {
-        "category_a": pl.DataFrame({
-            "STORE_NBR": ["1", "2", "3", "4", "5"],
-            "Cluster": [0, 1, 0, 2, 1]  # Using the same capitalization as the implementation
-        }),
-        "category_b": pl.DataFrame({
-            "STORE_NBR": ["6", "7", "8", "9", "10"],
-            "Cluster": [0, 0, 1, 1, 2]  # Using the same capitalization as the implementation
-        })
+        "category_a": pl.DataFrame(
+            {
+                "STORE_NBR": ["1", "2", "3", "4", "5"],
+                "Cluster": [0, 1, 0, 2, 1],  # Using the same capitalization as the implementation
+            }
+        ),
+        "category_b": pl.DataFrame(
+            {
+                "STORE_NBR": ["6", "7", "8", "9", "10"],
+                "Cluster": [0, 0, 1, 1, 2],  # Using the same capitalization as the implementation
+            }
+        ),
     }
 
 
@@ -140,7 +148,9 @@ class TestInternalOptimalClusterCounts:
     """Tests for internal_optimal_cluster_counts asset."""
 
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
-    def test_internal_optimal_cluster_counts(self, mock_exp_class, mock_execution_context, sample_features):
+    def test_internal_optimal_cluster_counts(
+        self, mock_exp_class, mock_execution_context, sample_features
+    ):
         """Test determining optimal cluster counts using PyCaret mocks."""
         # Setup the mock experiment
         mock_exp = MagicMock()
@@ -159,7 +169,7 @@ class TestInternalOptimalClusterCounts:
                 pd.DataFrame({"silhouette": [0.4], "calinski_harabasz": [80]}, index=[0]),  # k=2
                 pd.DataFrame({"silhouette": [0.5], "calinski_harabasz": [110]}, index=[0]),  # k=3
                 pd.DataFrame({"silhouette": [0.45], "calinski_harabasz": [90]}, index=[0]),  # k=4
-            ]
+            ],
         }
 
         def mock_pull_side_effect(*args, **kwargs):
@@ -173,13 +183,14 @@ class TestInternalOptimalClusterCounts:
 
         # Simulate setting category during setup
         def setup_side_effect(*args, **kwargs):
-            data = kwargs.get('data')
+            data = kwargs.get("data")
             # Extract category from the 'category' column instead of df.name
-            category_name = data['category'].iloc[0]
+            category_name = data["category"].iloc[0]
             mock_exp._current_category_for_test = category_name
             return mock_exp
+
         mock_exp.setup.side_effect = setup_side_effect
-        
+
         # Set up the configuration with actual integer values
         mock_execution_context.resources.config.min_clusters = 2
         mock_execution_context.resources.config.max_clusters = 4
@@ -202,7 +213,14 @@ class TestInternalTrainClusteringModels:
 
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.ClusteringExperiment")
     @patch("tempfile.mkdtemp")  # Keep mkdtemp patch
-    def test_train_models(self, mock_mkdtemp, mock_exp_class, mock_execution_context, sample_features, sample_clustering_results):
+    def test_train_models(
+        self,
+        mock_mkdtemp,
+        mock_exp_class,
+        mock_execution_context,
+        sample_features,
+        sample_clustering_results,
+    ):
         """Test training clustering models."""
         # Setup the mock experiment
         mock_exp = MagicMock()
@@ -213,19 +231,25 @@ class TestInternalTrainClusteringModels:
         mock_exp.create_model.return_value = mock_model
 
         # Configure the mock to return cluster metrics
-        mock_exp.pull.return_value = pd.DataFrame({"Silhouette": [0.75], "Calinski-Harabasz": [120.5]}, index=[0])
-        
+        mock_exp.pull.return_value = pd.DataFrame(
+            {"Silhouette": [0.75], "Calinski-Harabasz": [120.5]}, index=[0]
+        )
+
         # Mock the get_config method to return appropriate polars dataframes
         mock_exp.get_config.side_effect = lambda key: {
-            "X_train": sample_features["category_a"].to_pandas(),  # Convert polars to pandas for PyCaret
-            "prep_pipe": MagicMock()  # Mock pipeline object
+            "X_train": sample_features[
+                "category_a"
+            ].to_pandas(),  # Convert polars to pandas for PyCaret
+            "prep_pipe": MagicMock(),  # Mock pipeline object
         }.get(key)
 
         # Configure tempfile.mkdtemp
         mock_mkdtemp.return_value = "/tmp/mock_tempdir"
 
         # Call the asset function
-        result = internal_train_clustering_models(mock_execution_context, sample_features, sample_clustering_results)
+        result = internal_train_clustering_models(
+            mock_execution_context, sample_features, sample_clustering_results
+        )
 
         # Verify PyCaret experiment was created
         assert mock_exp_class.call_count == len(sample_features)
@@ -237,7 +261,7 @@ class TestInternalTrainClusteringModels:
         # Verify the result
         assert isinstance(result, dict)
         assert "category_a" in result
-        
+
         # Check structure of the trained model output
         for category, model_output in result.items():
             assert "experiment_path" in model_output
@@ -272,43 +296,51 @@ class TestInternalAssignClusters:
 
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
     @patch("pathlib.Path.exists")
-    @patch("pickle.load") 
+    @patch("pickle.load")
     @patch("builtins.open", new_callable=mock_open)
-    def test_internal_assign_clusters(self, mock_open, mock_pickle_load, mock_path_exists, mock_load_experiment, mock_execution_context, sample_features, sample_trained_models):
+    def test_internal_assign_clusters(
+        self,
+        mock_open,
+        mock_pickle_load,
+        mock_path_exists,
+        mock_load_experiment,
+        mock_execution_context,
+        sample_features,
+        sample_trained_models,
+    ):
         """Test assigning clusters to stores based on trained models."""
         # Configure mocks
         mock_path_exists.return_value = True
-        
+
         # Create a mock experiment with assign_model method
         mock_exp = MagicMock()
         mock_load_experiment.return_value = mock_exp
-        
+
         # Configure the assign_model to return a DataFrame with cluster assignments
-        mock_predictions = pd.DataFrame({
-            "store_id": ["1", "2", "3", "4", "5"],
-            "Cluster": [0, 1, 0, 2, 1]
-        })
+        mock_predictions = pd.DataFrame(
+            {"store_id": ["1", "2", "3", "4", "5"], "Cluster": [0, 1, 0, 2, 1]}
+        )
         mock_exp.assign_model.return_value = mock_predictions
-        
+
         # Configure pickle.load to return our mock model
         mock_model = MagicMock()
         mock_pickle_load.return_value = mock_model
-        
+
         # Provide the required upstream assets - all three parameters
         result = internal_assign_clusters(
-            mock_execution_context, 
+            mock_execution_context,
             internal_dimensionality_reduced_features=sample_features,
             internal_train_clustering_models=sample_trained_models,
-            internal_fe_raw_data=sample_features
+            internal_fe_raw_data=sample_features,
         )
-        
+
         # Verify the load_experiment was called
         mock_load_experiment.assert_called()
-        
+
         # Verify the result
         assert isinstance(result, dict)
         assert "category_a" in result
-        
+
         # Verify the result contains the expected columns (Polars DataFrame)
         df = result["category_a"]
         assert isinstance(df, pl.DataFrame)
@@ -317,7 +349,14 @@ class TestInternalAssignClusters:
 
     @patch("clustering.pipeline.assets.clustering.internal_ml.model_training.load_experiment")
     @patch("pathlib.Path.exists")
-    def test_handle_missing_model(self, mock_path_exists, mock_load_experiment, mock_execution_context, sample_features, sample_trained_models):
+    def test_handle_missing_model(
+        self,
+        mock_path_exists,
+        mock_load_experiment,
+        mock_execution_context,
+        sample_features,
+        sample_trained_models,
+    ):
         """Test handling of missing model files."""
         # Configure mocks
         mock_path_exists.return_value = False  # Simulate missing model file
@@ -328,7 +367,7 @@ class TestInternalAssignClusters:
             mock_execution_context,
             internal_dimensionality_reduced_features=sample_features,
             internal_train_clustering_models=sample_trained_models,
-            internal_fe_raw_data=sample_features
+            internal_fe_raw_data=sample_features,
         )
 
         # Verify empty result due to missing model
@@ -343,14 +382,19 @@ class TestInternalAssignClusters:
     @patch("pathlib.Path.exists")
     @patch("pickle.load")
     def test_invalid_model_format(
-        self, mock_pickle_load, mock_path_exists, mock_load_experiment,
-        mock_execution_context, sample_features, sample_trained_models
+        self,
+        mock_pickle_load,
+        mock_path_exists,
+        mock_load_experiment,
+        mock_execution_context,
+        sample_features,
+        sample_trained_models,
     ):
         """Test handling of invalid model formats."""
         # Configure mocks
         mock_path_exists.return_value = True
         mock_pickle_load.side_effect = pickle.UnpicklingError("Invalid model format")
-        
+
         # Configure load_experiment to return a mock experiment
         mock_exp = MagicMock()
         mock_load_experiment.return_value = mock_exp
@@ -361,7 +405,7 @@ class TestInternalAssignClusters:
             mock_execution_context,
             internal_dimensionality_reduced_features=sample_features,
             internal_train_clustering_models=sample_trained_models,
-            internal_fe_raw_data=sample_features
+            internal_fe_raw_data=sample_features,
         )
 
         # Verify empty result due to invalid model
@@ -377,18 +421,25 @@ class TestInternalAssignClusters:
     @patch("pathlib.Path.exists")
     @patch("pickle.load")
     def test_mismatched_feature_dimensions(
-        self, mock_pickle_load, mock_path_exists, mock_load_experiment,
-        mock_execution_context, sample_features, sample_trained_models
+        self,
+        mock_pickle_load,
+        mock_path_exists,
+        mock_load_experiment,
+        mock_execution_context,
+        sample_features,
+        sample_trained_models,
     ):
         """Test handling of mismatched feature dimensions between training and prediction."""
         # Configure mocks
         mock_path_exists.return_value = True
-        
+
         # Create mock experiment that raises ValueError on dimension mismatch
         mock_exp = MagicMock()
         mock_load_experiment.return_value = mock_exp
-        mock_exp.assign_model.side_effect = ValueError("Feature dimensions do not match training data")
-        
+        mock_exp.assign_model.side_effect = ValueError(
+            "Feature dimensions do not match training data"
+        )
+
         # Configure pickle.load to return mock model
         mock_model = MagicMock()
         mock_pickle_load.return_value = mock_model
@@ -398,7 +449,7 @@ class TestInternalAssignClusters:
             mock_execution_context,
             internal_dimensionality_reduced_features=sample_features,
             internal_train_clustering_models=sample_trained_models,
-            internal_fe_raw_data=sample_features
+            internal_fe_raw_data=sample_features,
         )
 
         # Verify empty result due to dimension mismatch
@@ -455,7 +506,11 @@ class TestInternalCalculateClusterMetrics:
     """Tests for internal_calculate_cluster_metrics asset."""
 
     def test_internal_calculate_cluster_metrics(
-        self, mock_execution_context, sample_cluster_assignments, sample_features, sample_trained_models
+        self,
+        mock_execution_context,
+        sample_cluster_assignments,
+        sample_features,
+        sample_trained_models,
     ):
         """Test calculating cluster metrics."""
         result = internal_calculate_cluster_metrics(
@@ -467,19 +522,17 @@ class TestInternalCalculateClusterMetrics:
         # Verify result structure
         assert isinstance(result, dict)
         assert "category_a" in result
-        
+
         # Verify metrics structure
         category_metrics = result["category_a"]
         assert "num_clusters" in category_metrics
         assert "num_samples" in category_metrics
         assert "cluster_distribution" in category_metrics
 
-    def test_empty_clusters(
-        self, mock_execution_context, sample_features, sample_trained_models
-    ):
+    def test_empty_clusters(self, mock_execution_context, sample_features, sample_trained_models):
         """Test handling of empty cluster assignments."""
         empty_assignments = {}
-        
+
         result = internal_calculate_cluster_metrics(
             mock_execution_context,
             internal_train_clustering_models=sample_trained_models,
@@ -496,10 +549,7 @@ class TestInternalCalculateClusterMetrics:
         """Test handling of clusters with single stores."""
         # Create assignments where each store is in its own cluster
         single_store_assignments = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["001", "002", "003"],
-                "Cluster": [0, 1, 2]
-            })
+            "category_a": pl.DataFrame({"STORE_NBR": ["001", "002", "003"], "Cluster": [0, 1, 2]})
         }
 
         result = internal_calculate_cluster_metrics(
@@ -512,7 +562,7 @@ class TestInternalCalculateClusterMetrics:
         assert isinstance(result, dict)
         assert "category_a" in result
         assert "cluster_distribution" in result["category_a"]
-        
+
         # Verify each cluster has exactly one store
         cluster_dist = result["category_a"]["cluster_distribution"]
         assert all(d["count"] == 1 for d in cluster_dist)
@@ -523,10 +573,9 @@ class TestInternalCalculateClusterMetrics:
         """Test calculation of metrics with weighted samples."""
         # Create assignments with known weights
         weighted_assignments = {
-            "category_a": pl.DataFrame({
-                "STORE_NBR": ["001", "002", "003", "004"],
-                "Cluster": [0, 0, 1, 1]
-            })
+            "category_a": pl.DataFrame(
+                {"STORE_NBR": ["001", "002", "003", "004"], "Cluster": [0, 0, 1, 1]}
+            )
         }
 
         result = internal_calculate_cluster_metrics(
@@ -538,7 +587,7 @@ class TestInternalCalculateClusterMetrics:
         # Verify metrics calculation with weights
         assert isinstance(result, dict)
         assert "category_a" in result
-        
+
         # Verify cluster distribution
         cluster_dist = result["category_a"]["cluster_distribution"]
         cluster_0_count = next(d["count"] for d in cluster_dist if d["Cluster"] == 0)
@@ -554,8 +603,13 @@ class TestInternalGenerateClusterVisualizations:
     @patch("matplotlib.pyplot.figure")
     @patch("tempfile.mkdtemp")
     def test_internal_generate_cluster_visualizations(
-        self, mock_mkdtemp, mock_figure, mock_savefig,
-        mock_execution_context, sample_cluster_assignments, sample_trained_models
+        self,
+        mock_mkdtemp,
+        mock_figure,
+        mock_savefig,
+        mock_execution_context,
+        sample_cluster_assignments,
+        sample_trained_models,
     ):
         """Test generating cluster visualizations."""
         # Configure the mock temp directory
@@ -586,7 +640,7 @@ class TestInternalGenerateClusterVisualizations:
 
         # Verify savefig was called for each visualization
         assert mock_savefig.call_count == 3  # One call per visualization
-        
+
         # Verify the paths in the result
         for path in result["category_a"]:
             assert path.startswith("plots/category_a_")

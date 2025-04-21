@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger("environment-test")
 
 
-def load_config(env: str) -> Dict[str, Any]:
+def load_config(env: str) -> dict[str, Any]:
     """Load environment configuration file.
 
     Args:
@@ -43,7 +43,7 @@ def load_config(env: str) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def test_database_connection(config: Dict[str, Any]) -> bool:
+def test_database_connection(config: dict[str, Any]) -> bool:
     """Test database connection using configuration.
 
     Args:
@@ -65,7 +65,7 @@ def test_database_connection(config: Dict[str, Any]) -> bool:
         # engine = create_engine(db_config["url"])
         # with engine.connect() as conn:
         #     result = conn.execute("SELECT 1")
-        
+
         # This is a placeholder - implement actual test
         logger.info("Database connection test passed")
         return True
@@ -83,7 +83,7 @@ def test_dagster_asset_loading() -> bool:
     try:
         # Import the definitions
         from clustering.pipeline.definitions import defs
-        
+
         # Get assets and check count
         asset_count = len(defs.get_all_asset_nodes())
         logger.info(f"Successfully loaded {asset_count} Dagster assets")
@@ -93,7 +93,7 @@ def test_dagster_asset_loading() -> bool:
         return False
 
 
-def test_data_paths(config: Dict[str, Any]) -> bool:
+def test_data_paths(config: dict[str, Any]) -> bool:
     """Test that data paths exist and are writable.
 
     Args:
@@ -108,7 +108,7 @@ def test_data_paths(config: Dict[str, Any]) -> bool:
         if not paths:
             logger.warning("No path configuration found")
             return False
-        
+
         # Check each path
         for name, path_str in paths.items():
             # Handle environment variable substitution
@@ -120,12 +120,12 @@ def test_data_paths(config: Dict[str, Any]) -> bool:
                 if path_str is None:
                     logger.error(f"Environment variable {env_var} not set and no default provided")
                     return False
-            
+
             path = Path(path_str)
             if not path.exists():
                 path.mkdir(parents=True, exist_ok=True)
                 logger.info(f"Created directory: {path}")
-            
+
             # Test write permission
             test_file = path / ".write_test"
             try:
@@ -136,7 +136,7 @@ def test_data_paths(config: Dict[str, Any]) -> bool:
             except PermissionError:
                 logger.error(f"Path {name} ({path}) is not writable")
                 return False
-                
+
         return True
     except Exception as e:
         logger.error(f"Data path test failed: {e}")
@@ -151,26 +151,26 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(description="Test deployment environment")
     parser.add_argument(
-        "--env", 
+        "--env",
         choices=["dev", "staging", "prod"],
         default="dev",
-        help="Environment to test (dev, staging, prod)"
+        help="Environment to test (dev, staging, prod)",
     )
     args = parser.parse_args()
 
     try:
         logger.info(f"Testing {args.env} environment")
-        
+
         # Load configuration
         config = load_config(args.env)
-        
+
         # Run tests
         tests = [
             ("Database connection", lambda: test_database_connection(config)),
             ("Dagster asset loading", test_dagster_asset_loading),
             ("Data paths", lambda: test_data_paths(config)),
         ]
-        
+
         failures = 0
         for name, test_func in tests:
             logger.info(f"Running test: {name}")
@@ -179,18 +179,18 @@ def main() -> int:
             else:
                 logger.error(f"❌ {name}: FAILED")
                 failures += 1
-        
+
         if failures > 0:
             logger.error(f"{failures} tests failed")
             return 1
         else:
             logger.info("All environment tests passed!")
             return 0
-            
+
     except Exception as e:
         logger.error(f"Environment test failed: {e}")
         return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
