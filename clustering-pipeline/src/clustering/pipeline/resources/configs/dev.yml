@@ -17,7 +17,7 @@ job_params:
   ### --- Feature engineering parameters --- ###
   ignore_features: ["STORE_NBR"]
 
-  # Path settings
+  # Classics Path settings
   output_path: "/workspaces/clustering-dagster/data/internal"
 
   # Normalization settings
@@ -149,3 +149,18 @@ writers:
     kind: "PickleWriter"
     config:
       path: /workspaces/clustering-dagster/data/merging/merged_cluster_assignments.pkl
+
+  # Snowflake configuration for uploading the final results (simplified)
+  snowflake_uploader:
+    kind: "SnowflakeWriter"
+    config:
+      table: FINAL_ASSORTMENT_STORE_CLUSTERS
+      database: DL_FSCA_SLFSRV
+      schema: TWA07
+
+  snowflake_archive_uploader:
+    kind: "SnowflakeWriter"
+    config:
+      table: FINAL_ASSORTMENT_STORE_CLUSTERS_ARCHIVE
+      database: DL_FSCA_SLFSRV
+      schema: TWA07

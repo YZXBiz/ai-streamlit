@@ -973,6 +973,8 @@ name = "clustering"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "clustering-cli" },
+    { name = "clustering-dashboard" },
     { name = "clustering-pipeline" },
     { name = "clustering-shared" },
     { name = "dagster" },
@@ -991,19 +993,13 @@ dependencies = [
     { name = "setuptools" },
 ]
 
-[package.optional-dependencies]
-all = [
-    { name = "clustering-cli" },
-    { name = "clustering-dashboard" },
-]
+[package.dev-dependencies]
 cli = [
     { name = "clustering-cli" },
 ]
 dashboard = [
     { name = "clustering-dashboard" },
 ]
-
-[package.dev-dependencies]
 dev = [
     { name = "mypy" },
     { name = "pre-commit" },
@@ -1024,10 +1020,8 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "clustering-cli", marker = "extra == 'all'", editable = "clustering-cli" },
-    { name = "clustering-cli", marker = "extra == 'cli'", editable = "clustering-cli" },
-    { name = "clustering-dashboard", marker = "extra == 'all'", editable = "clustering-dashboard" },
-    { name = "clustering-dashboard", marker = "extra == 'dashboard'", editable = "clustering-dashboard" },
+    { name = "clustering-cli", editable = "clustering-cli" },
+    { name = "clustering-dashboard", editable = "clustering-dashboard" },
     { name = "clustering-pipeline", editable = "clustering-pipeline" },
     { name = "clustering-shared", editable = "clustering-shared" },
     { name = "dagster", specifier = ">=1.6.0" },
@@ -1045,7 +1039,6 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.3.2,<1.5.0" },
     { name = "setuptools", specifier = ">=75.6.0" },
 ]
-provides-extras = ["cli", "dashboard", "all"]
 
 [package.metadata.requires-dev]
 cli = [{ name = "clustering-cli", editable = "clustering-cli" }]

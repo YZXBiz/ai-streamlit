@@ -49,6 +49,7 @@ from clustering.pipeline.assets.merging import (
     merged_clusters,
     optimized_merged_clusters,
     save_merged_cluster_assignments,
+    upload_merged_cluster_assignments,
 )
 from clustering.pipeline.assets.preprocessing.external import (
     external_features_data,
@@ -135,6 +136,7 @@ merging_assets_list = [
     cluster_reassignment,
     save_merged_cluster_assignments,
     cluster_labeling_analytics,
+    upload_merged_cluster_assignments,
 ]
 
 # -----------------------------------------------------------------------------
@@ -328,6 +330,7 @@ def get_resources_by_env(
         # Data readers
         "internal_ns_sales": data_reader.configured(readers_config.get("ns_sales", {})),
         "internal_ns_map": data_reader.configured(readers_config.get("ns_map", {})),
+        "ns_map": data_reader.configured(readers_config.get("ns_map", {})),
         "sales_by_category_reader": data_reader.configured(
             readers_config.get("sales_by_category", {})
         ),

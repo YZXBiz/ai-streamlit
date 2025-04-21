@@ -1,10 +1,6 @@
 """Tests for the application settings module."""
 
-import os
 from unittest import mock
-
-import pytest
-
 from clustering.shared.infra.app_settings import (
     AppConfig,
     CONFIG,

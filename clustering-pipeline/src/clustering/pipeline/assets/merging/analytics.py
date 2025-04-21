@@ -4,9 +4,13 @@ import dagster as dg
 import polars as pl
 import pandas as pd
 import os
-import pickle
 from datetime import datetime
-from typing import Optional, Dict, List, Any
+import pickle
+import snowflake.connector
+from snowflake.connector.pandas_tools import write_pandas
+
+# Import schema validation utilities
+from clustering.shared.schemas import validate_dataframe_schema, fix_dataframe_schema
 
 
 @dg.asset(
@@ -17,8 +21,8 @@ from typing import Optional, Dict, List, Any
     required_resource_keys={
         "merged_cluster_assignments", 
         "job_params", 
-        "ns_map", 
-        "ns_sales"
+        "internal_ns_map", 
+        "internal_ns_sales"
     },
 )
 def cluster_labeling_analytics(
@@ -37,7 +41,7 @@ def cluster_labeling_analytics(
     
     # Get configuration from resources
     job_params = context.resources.job_params
-    output_path = job_params.get("output_path", "data/internal")
+    output_path = getattr(job_params, "output_path", "data/internal")
     context.log.info(f"Using output path: {output_path}")
     
     # Create timestamped output directory
@@ -64,7 +68,7 @@ def cluster_labeling_analytics(
     
     # Load need states sales data using resource
     try:
-        ns_sales_reader = context.resources.ns_sales
+        ns_sales_reader = context.resources.internal_ns_sales
         ns_sales_df = ns_sales_reader.read()
         
         # Convert to pandas if it's a polars DataFrame
@@ -82,7 +86,7 @@ def cluster_labeling_analytics(
     
     # Load need states mapping data using resource
     try:
-        ns_map_reader = context.resources.ns_map
+        ns_map_reader = context.resources.internal_ns_map
         ns_map_df = ns_map_reader.read()
         
         # Convert to pandas if it's a polars DataFrame
@@ -325,7 +329,7 @@ def cluster_labeling_analytics(
                 # Try to create placeholder columns
                 for col in missing_required:
                     df_final_cat[col] = "0"  # Default cluster label
-                context.log.info(f"Added placeholder columns for missing cluster columns")
+                context.log.info("Added placeholder columns for missing cluster columns")
             
             # Grouping - Internal
             grouped_internal = (
@@ -471,4 +475,183 @@ def cluster_labeling_analytics(
     }
     
     # Add metadata to the asset
-    context.add_output_metadata(metadata=return_metadata) 
+    context.add_output_metadata(metadata=return_metadata)
+
+
+@dg.asset(
+    compute_kind="python",
+    deps=["save_merged_cluster_assignments"],
+    group_name="merging",
+    io_manager_key="io_manager",
+    required_resource_keys={"merged_cluster_assignments"},
+)
+def upload_merged_cluster_assignments(context: dg.AssetExecutionContext) -> dg.Output:
+    """
+    Upload merged cluster assignments to Snowflake for reporting.
+    
+    This asset uploads the final merged cluster assignments to Snowflake,
+    replacing underscores with spaces in the category column and
+    creating standardized output for business reporting.
+    
+    Args:
+        context: Dagster asset execution context containing resources
+        
+    Returns:
+        Output: None value with metadata about the upload operation
+    """
+    # Configuration
+    SF_DATABASE = "DL_FSCA_SLFSRV"
+    SF_SCHEMA = "TWA07"
+    OUTPUT_TABLE_NAME = "FINAL_ASSORTMENT_STORE_CLUSTERS"
+    ARCHIVE_TABLE_NAME = "FINAL_ASSORTMENT_STORE_CLUSTERS_ARCHIVE"
+    
+    # Define the expected schema for merged cluster assignments
+    expected_schema = {
+        'store_nbr': str,                  # Always store as string per project convention
+        'category': str,                   # Category name
+        'CAT_DSC': str,                    # Display-friendly category name
+        'external_cluster_labels': int,    # External clustering result
+        'internal_cluster_labels': int,    # Internal clustering result
+        'demand_cluster_labels': int,      # Demand-based clustering
+        'rebalanced_demand_cluster_labels': int  # Rebalanced demand clusters
+    }
+    
+    # Optional fields that might be present
+    optional_fields = [
+        'external_cluster', 
+        'internal_cluster',
+        'merged_cluster',
+        'rebalanced_cluster'
+    ]
+    
+    # Get the pickle file path from the merged_cluster_assignments resource
+    merged_file_path = context.resources.merged_cluster_assignments._writer_config["config"]["path"]
+    context.log.info(f"Loading merged cluster assignments from {merged_file_path}")
+    
+    try:
+        # Load pickle data
+        with open(merged_file_path, 'rb') as file:
+            data_dict = pickle.load(file)
+        
+        # Convert dictionary to DataFrame
+        dfs = []
+        for key, data in data_dict.items():
+            if isinstance(data, pd.DataFrame):
+                dfs.append(data)
+            else:
+                context.log.warning(f"Skipping non-DataFrame item with key: {key}")
+        
+        if not dfs:
+            raise ValueError("No valid DataFrames found in pickle file")
+        
+        # Concatenate all DataFrames
+        combined_df = pd.concat(dfs, ignore_index=True)
+        
+        # Replace underscores with spaces in category column
+        if 'category' in combined_df.columns:
+            combined_df['category'] = combined_df['category'].str.replace('_', ' ')
+        
+        # Create a CAT_DSC column that's identical to category
+        combined_df['CAT_DSC'] = combined_df['category']
+        
+        # Validate DataFrame schema
+        context.log.info("Validating DataFrame schema...")
+        validation_result = validate_dataframe_schema(
+            df=combined_df,
+            expected_schema=expected_schema,
+            optional_fields=optional_fields,
+            strict=False
+        )
+        
+        if not validation_result["passed"]:
+            context.log.warning(f"Schema validation failed: {validation_result}")
+            
+            # Fix the DataFrame to match the expected schema
+            context.log.info("Attempting to fix DataFrame schema...")
+            combined_df = fix_dataframe_schema(
+                df=combined_df,
+                expected_schema=expected_schema,
+                optional_fields=optional_fields,
+                strict=False
+            )
+            
+            # Validate again after fixing
+            fixed_validation_result = validate_dataframe_schema(
+                df=combined_df,
+                expected_schema=expected_schema,
+                optional_fields=optional_fields,
+                strict=False
+            )
+            
+            if fixed_validation_result["passed"]:
+                context.log.info("DataFrame schema fixed successfully")
+            else:
+                context.log.warning(f"Schema validation still failed after fixing: {fixed_validation_result}")
+        else:
+            context.log.info("DataFrame schema validation passed")
+        
+        # Generate timestamp for archive (current date in YYYYMMDD_HHMM format)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        
+        # Record statistics for metadata
+        row_count = combined_df.shape[0]
+        category_count = combined_df['category'].nunique()
+        store_count = combined_df['store_nbr'].nunique() if 'store_nbr' in combined_df.columns else 0
+        
+        context.log.info(f"Processed {row_count} records across {category_count} categories")
+        
+        # Use existing Snowflake configuration from shared implementation
+        from clustering.shared.io.readers.snowflake_reader import SnowflakeReader
+        
+        # Create a reader to utilize the connection mechanism
+        sf_reader = SnowflakeReader()
+        conn = sf_reader._create_connection()
+        
+        # Upload to main table
+        write_pandas(
+            conn,
+            combined_df,
+            OUTPUT_TABLE_NAME,
+            database=SF_DATABASE,
+            schema=SF_SCHEMA,
+            overwrite=True,
+            auto_create_table=True,
+        )
+        context.log.info(f"Data successfully written to {SF_DATABASE}.{SF_SCHEMA}.{OUTPUT_TABLE_NAME}")
+        
+        # Create archive copy with timestamp
+        df_archive = combined_df.copy()
+        df_archive["timestamp"] = timestamp
+        
+        write_pandas(
+            conn,
+            df_archive,
+            ARCHIVE_TABLE_NAME,
+            database=SF_DATABASE,
+            schema=SF_SCHEMA,
+            overwrite=False,
+            auto_create_table=True,
+        )
+        context.log.info(f"Archive copy with timestamp {timestamp} written to {SF_DATABASE}.{SF_SCHEMA}.{ARCHIVE_TABLE_NAME}")
+        
+        # Close connection
+        conn.close()
+        
+        # Return metadata about the operation
+        return dg.Output(
+            value=None,
+            metadata={
+                "timestamp": timestamp,
+                "row_count": row_count,
+                "category_count": category_count,
+                "store_count": store_count,
+                "main_table": f"{SF_DATABASE}.{SF_SCHEMA}.{OUTPUT_TABLE_NAME}",
+                "archive_table": f"{SF_DATABASE}.{SF_SCHEMA}.{ARCHIVE_TABLE_NAME}",
+                "schema_validation": validation_result,
+                "schema_fixed": not validation_result["passed"]
+            }
+        )
+        
+    except Exception as e:
+        context.log.error(f"Error processing/uploading clustering data: {e}")
+        raise 

@@ -15,11 +15,22 @@ from clustering.shared.schemas.schemas import (
     SalesSchema,
 )
 
+# Import and expose validation utilities
+from clustering.shared.schemas.validation import (
+    validate_dataframe_schema,
+    fix_dataframe_schema,
+)
+
 __all__ = [
+    # Schema definitions
     "DataFrameType",
     "BaseSchema",
     "SalesSchema",
     "NSMappingSchema",
     "MergedDataSchema",
     "DistributedDataSchema",
+    
+    # Validation utilities
+    "validate_dataframe_schema",
+    "fix_dataframe_schema",
 ]
