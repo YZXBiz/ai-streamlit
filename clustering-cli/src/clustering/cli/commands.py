@@ -2,10 +2,12 @@
 
 import builtins
 import json
+import os
 from typing import Any
 
 import click
 import pandas as pd
+import yaml
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
@@ -22,7 +24,7 @@ def cli():
 @cli.command()
 @click.argument("job_name", required=True)
 @click.option("--env", default="dev", help="Environment to run in.")
-@click.option("--config", type=click.Path(exists=True), help="Path to configuration file.")
+@click.option("--config", type=click.Path(exists=True), help="Path to configuration file (JSON or YAML).")
 @click.option("--param", multiple=True, help="Additional parameters in key=value format.")
 def run(job_name: str, env: str, config: str | None = None, param: list[str] | None = None):
     """Run a pipeline job.
@@ -30,7 +32,7 @@ def run(job_name: str, env: str, config: str | None = None, param: list[str] | N
     Args:
         job_name: Name of the job to run
         env: Environment to run in (dev, test, prod)
-        config: Optional path to configuration file
+        config: Optional path to configuration file (JSON or YAML)
         param: Optional additional parameters
     """
     rprint(f"Running job [bold]{job_name}[/bold] in [green]{env}[/green] environment")
@@ -45,10 +47,9 @@ def run(job_name: str, env: str, config: str | None = None, param: list[str] | N
 
     # Process config file
     if config:
-        with open(config, "r") as f:
-            config_data = json.load(f)
-            if "job" in config_data and "params" in config_data["job"]:
-                params.update(config_data["job"]["params"])
+        config_data = load_config_file(config)
+        if config_data and "job" in config_data and "params" in config_data["job"]:
+            params.update(config_data["job"]["params"])
 
     try:
         # Run the job
@@ -67,7 +68,7 @@ def run(job_name: str, env: str, config: str | None = None, param: list[str] | N
 
 @cli.command()
 @click.option(
-    "--config", type=click.Path(exists=True), help="Path to configuration file to validate."
+    "--config", type=click.Path(exists=True), help="Path to configuration file to validate (JSON or YAML)."
 )
 @click.option("--data", type=click.Path(exists=True), help="Path to data file to validate.")
 @click.option("--schema", help="Schema name for data validation.")
@@ -75,7 +76,7 @@ def validate(config: str | None = None, data: str | None = None, schema: str | N
     """Validate configuration or data files.
 
     Args:
-        config: Path to configuration file to validate
+        config: Path to configuration file to validate (JSON or YAML)
         data: Path to data file to validate
         schema: Schema name for data validation
     """
@@ -280,6 +281,37 @@ def dashboard(host: str, port: int, env: str):
         return 1  # Don't exit for tests
 
 
+@cli.command()
+@click.option("--output", type=click.Path(), help="Output file path for the config template.")
+@click.option("--type", type=click.Choice(["job", "pipeline", "full"]), default="full", help="Type of template to create.")
+def create(output: str | None = None, type: str = "full"):
+    """Create a template YAML configuration file.
+    
+    Args:
+        output: Path to save the configuration template. If not provided, will prompt for input.
+        type: Type of configuration template to create (job, pipeline, or full).
+    """
+    if not output:
+        output = click.prompt("Enter path for the configuration file", default="config.yaml")
+    
+    # Make sure the directory exists
+    os.makedirs(os.path.dirname(os.path.abspath(output)) if os.path.dirname(output) else ".", exist_ok=True)
+    
+    # Create the template based on the type
+    template = create_config_template(type)
+    
+    try:
+        with open(output, "w") as f:
+            yaml.dump(template, f, default_flow_style=False, sort_keys=False)
+        
+        rprint(f"[green]Created configuration template at: {output}[/green]")
+        rprint("[yellow]Please edit this file to customize your configuration.[/yellow]")
+        return 0
+    except Exception as e:
+        rprint(f"[red]Error creating template: {str(e)}[/red]")
+        return 1  # Don't exit for tests
+
+
 # Helper functions for the CLI commands
 def run_job(job_name: str, env: str = "dev", params: dict[str, Any] = None) -> dict[str, Any]:
     """Run a job with the specified name and parameters.
@@ -301,19 +333,56 @@ def run_job(job_name: str, env: str = "dev", params: dict[str, Any] = None) -> d
     return {"status": "success", "job_id": f"{job_name}-123"}
 
 
-def validate_config(config_path: str) -> dict[str, Any]:
-    """Validate a configuration file.
+def load_config_file(config_path: str) -> dict[str, Any] | None:
+    """Load a configuration file in either JSON or YAML format.
 
     Args:
         config_path: Path to the configuration file
 
     Returns:
+        Loaded configuration or None if loading fails
+    """
+    try:
+        ext = os.path.splitext(config_path)[1].lower()
+        with open(config_path, "r") as f:
+            if ext == ".json":
+                return json.load(f)
+            elif ext in (".yaml", ".yml"):
+                return yaml.safe_load(f)
+            else:
+                # Try to detect format based on content
+                content = f.read()
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    try:
+                        return yaml.safe_load(content)
+                    except yaml.YAMLError:
+                        rprint("[yellow]Warning: Could not determine file format. Attempting to parse as JSON.[/yellow]")
+                        return json.loads(content)  # Will raise exception if not JSON
+    except Exception as e:
+        rprint(f"[red]Error loading config file: {str(e)}[/red]")
+        return None
+
+
+def validate_config(config_path: str) -> dict[str, Any]:
+    """Validate a configuration file.
+
+    Args:
+        config_path: Path to the configuration file (JSON or YAML)
+
+    Returns:
         Validation result
     """
-    # This is a mock implementation
+    # Load the configuration file
     try:
-        with open(config_path, "r") as f:
-            config = json.load(f)
+        config = load_config_file(config_path)
+        if config is None:
+            return {
+                "valid": False,
+                "message": "Failed to load configuration file",
+                "errors": ["Could not parse file format"],
+            }
 
         # Simple validation check
         if "job" not in config:
@@ -336,6 +405,12 @@ def validate_config(config_path: str) -> dict[str, Any]:
             "valid": False,
             "message": "Invalid JSON format",
             "errors": ["File is not valid JSON"],
+        }
+    except yaml.YAMLError:
+        return {
+            "valid": False,
+            "message": "Invalid YAML format",
+            "errors": ["File is not valid YAML"],
         }
     except Exception as e:
         return {"valid": False, "message": f"Validation error: {str(e)}", "errors": [str(e)]}
@@ -520,12 +595,144 @@ def list_jobs(
     return jobs
 
 
+def create_config_template(template_type: str = "full") -> dict[str, Any]:
+    """Create a configuration template based on the specified type.
+    
+    Args:
+        template_type: Type of template to create (job, pipeline, or full)
+        
+    Returns:
+        Configuration template as a dictionary
+    """
+    # Base job template
+    job_template = {
+        "job": {
+            "name": "clustering-pipeline",
+            "params": {
+                "input_path": "<PATH_TO_INPUT_DATA>",
+                "output_path": "<PATH_TO_OUTPUT_DATA>",
+                "num_clusters": 5,
+                "algorithm": "kmeans",
+                "features": [
+                    "sales_amount",
+                    "transaction_count",
+                    "avg_basket_size"
+                ],
+                "normalize": True,
+                "random_seed": 42
+            }
+        }
+    }
+    
+    # Pipeline configuration template
+    pipeline_template = {
+        "alerts": {
+            "enabled": True,
+            "threshold": "WARNING"
+        },
+        "logger": {
+            "level": "DEBUG",
+            "sink": "logs/dagster_dev.log"
+        },
+        "paths": {
+            "base_data_dir": "<PATH_TO_DATA_DIR>",
+            "internal_data_dir": "<PATH_TO_INTERNAL_DATA_DIR>",
+            "external_data_dir": "<PATH_TO_EXTERNAL_DATA_DIR>",
+            "merging_data_dir": "<PATH_TO_MERGING_DATA_DIR>"
+        },
+        "job_params": {
+            "ignore_features": ["STORE_NBR"],
+            "normalize": True,
+            "norm_method": "robust",
+            "imputation_type": "simple",
+            "numeric_imputation": "mean",
+            "categorical_imputation": "mode",
+            "outlier_detection": True,
+            "outliers_method": "iforest",
+            "outlier_threshold": 0.05,
+            "pca_active": True,
+            "pca_method": "linear",
+            "pca_components": 0.8,
+            "min_clusters": 2,
+            "max_clusters": 10,
+            "metrics": ["silhouette", "calinski_harabasz", "davies_bouldin"],
+            "algorithm": "kmeans",
+            "session_id": 42
+        }
+    }
+    
+    # Full template includes data readers and writers
+    full_template = pipeline_template.copy()
+    full_template["readers"] = {
+        "sales_data": {
+            "kind": "CSVReader",
+            "config": {
+                "path": "<PATH_TO_SALES_DATA>",
+                "ignore_errors": True,
+                "delimiter": ",",
+                "null_values": ["", "NA", "N/A", "None", "null"],
+                "encoding": "utf8",
+                "try_parse_dates": False,
+                "comment_char": None
+            }
+        },
+        "external_data": {
+            "kind": "CSVReader",
+            "config": {
+                "path": "<PATH_TO_EXTERNAL_DATA>",
+                "ignore_errors": True,
+                "delimiter": ",",
+                "null_values": ["", "NA", "N/A", "None", "null"],
+                "encoding": "utf8",
+                "try_parse_dates": False,
+                "comment_char": None
+            }
+        }
+    }
+    
+    full_template["writers"] = {
+        "feature_engineering_output": {
+            "kind": "PickleWriter",
+            "config": {
+                "path": "<PATH_TO_ENGINEERED_FEATURES>"
+            }
+        },
+        "model_output": {
+            "kind": "PickleWriter",
+            "config": {
+                "path": "<PATH_TO_MODEL_OUTPUT>"
+            }
+        },
+        "cluster_assignments": {
+            "kind": "PickleWriter",
+            "config": {
+                "path": "<PATH_TO_CLUSTER_ASSIGNMENTS>"
+            }
+        },
+        "merged_clusters_output": {
+            "kind": "CSVWriter",
+            "config": {
+                "path": "<PATH_TO_MERGED_CLUSTERS>",
+                "index": False
+            }
+        }
+    }
+    
+    if template_type == "job":
+        return job_template
+    elif template_type == "pipeline":
+        return pipeline_template
+    else:  # full
+        return full_template
+
+
 # Command aliases for Click
 run_command = run
 validate_command = validate
 export_command = export
 status_command = status
 list_command = list
+create_command = create
 
 
 def main():
