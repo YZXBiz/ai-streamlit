@@ -9,35 +9,42 @@ A data pipeline for clustering stores based on sales data and external data sour
 ## 📋 Table of Contents
 
 - [Store Clustering Data Pipeline](#store-clustering-data-pipeline)
-  - [Project Information](#-project-information)
-  - [Project Purpose](#-project-purpose)
-  - [Features](#-features)
-  - [Installation](#-installation)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [👥 Project Information](#-project-information)
+  - [🎯 Project Purpose](#-project-purpose)
+  - [✨ Features](#-features)
+  - [🚀 Installation](#-installation)
     - [Prerequisites](#prerequisites)
-    - [Developer Installation](#developer-installation)
-    - [Installing as a Package](#installing-as-a-package)
-    - [Uninstallation](#uninstallation)
-    - [Shell Completion](#shell-completion)
-  - [Configuration](#-configuration)
+    - [Installation Steps](#installation-steps)
     - [Environment Setup](#environment-setup)
+    - [Running the Pipeline](#running-the-pipeline)
+    - [Basic Usage](#basic-usage)
+    - [Troubleshooting](#troubleshooting)
+  - [⚙️ Configuration](#️-configuration)
     - [Data Directory Structure](#data-directory-structure)
     - [Configuration Files](#configuration-files)
-  - [Usage](#-usage)
+  - [📊 Usage](#-usage)
     - [Using the CLI](#using-the-cli)
-    - [Running the Pipeline](#running-the-pipeline)
+      - [Getting Help](#getting-help)
+    - [Running the Pipeline](#running-the-pipeline-1)
     - [Common Workflows](#common-workflows)
     - [Error Handling](#error-handling)
-  - [Architecture](#-architecture)
+  - [🏗️ Architecture](#️-architecture)
     - [Pipeline Structure](#pipeline-structure)
     - [Data Flow](#data-flow)
-  - [Development](#-development)
+  - [💻 Development](#-development)
     - [Code Quality](#code-quality)
     - [Testing](#testing)
-  - [Documentation](#-documentation)
-  - [Security & Privacy](#-security--privacy)
-  - [FAQ](#-faq)
-  - [Deployment](#-deployment)
+      - [Code Coverage](#code-coverage)
+  - [📚 Documentation](#-documentation)
+  - [🔒 Security \& Privacy](#-security--privacy)
+    - [Package Verification](#package-verification)
+    - [Data Collection](#data-collection)
+  - [❓ FAQ](#-faq)
+  - [🚀 Deployment](#-deployment)
     - [GitLab CI/CD Setup](#gitlab-cicd-setup)
+      - [Pipeline Stages](#pipeline-stages)
+      - [Deployment Environments](#deployment-environments)
     - [Manual Deployment](#manual-deployment)
   - [How to Run](#how-to-run)
     - [1. Dagster Web UI (Recommended)](#1-dagster-web-ui-recommended)
@@ -75,148 +82,107 @@ The primary goal is to identify meaningful store segments that can inform busine
 
 ### Prerequisites
 
-- Python 3.10+
-- [uv](https://astral.sh/uv) package manager (recommended) or pip
+- Python 3.10 or higher
+- [UV package manager](https://docs.astral.sh/uv/) (recommended)
+- Git
 
-### Developer Installation
+### Installation Steps
 
 1. Clone the repository:
    ```bash
+   # Clone the repository
    git clone https://github.com/yourusername/clustering-dagster.git
    cd clustering-dagster
    ```
 
-2. Install dependencies using uv:
+2. Install the package:
    ```bash
-   uv pip install -e .
-   ```
-
-   Or install with optional dependencies:
-   ```bash
-   # Install development dependencies
-   uv pip install -e ".[dev]"
+   # Standard installation
+   uv add .
    
-   # Install documentation dependencies
-   uv pip install -e ".[docs]"
-   
-   # Install all dependencies
-   uv pip install -e ".[all]"
+   # Or install in development mode
+   uv add -e ".[dev]"  # Include development tools
    ```
 
-3. Verify installation:
+3. Create required directories:
    ```bash
-   clustering --version
+   # Create required data directories
+   mkdir -p data/internal data/external data/merging data/raw
+
+   # Create the Dagster home directory
+   mkdir -p dagster_home
    ```
-
-### Installing as a Package
-
-To install this project as a Python package without PyPI:
-
-```bash
-# Install from Git repository
-pip install git+https://github.com/yourusername/clustering-dagster.git
-
-# Or install from a specific branch
-pip install git+https://github.com/yourusername/clustering-dagster.git@main
-
-# Or install a specific version using tags
-pip install git+https://github.com/yourusername/clustering-dagster.git@v0.1.0
-
-# Install with specific components
-pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[cli]"
-pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[dashboard]"
-pip install "git+https://github.com/yourusername/clustering-dagster.git#egg=clustering[all]"
-```
-
-Alternatively, install using uv:
-
-```bash
-uv pip install git+https://github.com/yourusername/clustering-dagster.git
-```
-
-### Uninstallation
-
-To remove the package:
-
-```bash
-# Remove the package
-uv pip uninstall clustering
-
-# Remove all related configuration (optional)
-rm -rf ~/.clustering
-```
-
-### Shell Completion
-
-Enable shell completion for easier CLI usage:
-
-```bash
-# For Bash
-clustering completion bash > ~/.bash_completion.d/clustering
-
-# For Zsh
-clustering completion zsh > "${fpath[1]}/_clustering"
-
-# For Fish
-clustering completion fish > ~/.config/fish/completions/clustering.fish
-```
-
-## ⚙️ Configuration
 
 ### Environment Setup
 
-After installing the package, you'll need to create some configuration files before running the CLI:
+Create a `.env` file in the project root:
 
-1. **Create Environment File**:
+```bash
+# Create a .env file from the template
+cp .env.example .env
+```
 
-   ```bash
-   # Create a .env file for development
-   cat > .env.dev << EOF
-   # Base directories
-   DATA_DIR=./data
-   INTERNAL_DATA_DIR=./data/internal
-   EXTERNAL_DATA_DIR=./data/external
-   MERGING_DATA_DIR=./data/merging
+Edit the `.env` file to configure your environment variables:
 
-   # Dagster configuration
-   DAGSTER_HOME=~/.dagster
-   EOF
-   ```
+```
+# Base directories
+DATA_DIR=./data
+INTERNAL_DATA_DIR=./data/internal
+EXTERNAL_DATA_DIR=./data/external
+MERGING_DATA_DIR=./data/merging
 
-2. **Set Up Data Directories**:
+# Dagster configuration
+DAGSTER_HOME=./dagster_home
+```
 
-   ```bash
-   # Create the required data directories
-   mkdir -p data/internal data/external data/merging data/raw
-   ```
+### Running the Pipeline
 
-3. **Configure Dagster Home**:
+Verify installation:
 
-   ```bash
-   # Create Dagster home directory
-   mkdir -p ~/.dagster
+```bash
+# Verify the CLI functionality
+clustering --version
+```
 
-   # Create a basic dagster.yaml file
-   cat > ~/.dagster/dagster.yaml << EOF
-   telemetry:
-     enabled: false
-   storage:
-     sqlite:
-       base_dir: ~/.dagster
-   EOF
-   ```
+Start the Dagster development server:
 
-4. **Test the Installation**:
+```bash
+# Start the Dagster development server
+make dev
+```
 
-   ```bash
-   # List available jobs to verify the setup
-   clustering list-jobs
+Then open your browser at [http://localhost:3000](http://localhost:3000) to access the Dagster UI.
 
-   # If you encounter any errors, check that:
-   # - Your .env.dev file is in the correct directory
-   # - The data directories exist
-   # - DAGSTER_HOME is set correctly
-   ```
+### Basic Usage
+
+Using the CLI:
+
+```bash
+# Run the CLI with help command to see available options
+clustering --help
+
+# Execute specific CLI commands
+clustering validate --config your_config.yaml
+```
+
+Running the Dashboard:
+
+```bash
+# Start the dashboard
+clustering dashboard
+```
+
+### Troubleshooting
+
+If you encounter issues:
+
+1. Ensure all required directories exist
+2. Verify your environment variables in the `.env` file
+3. Check that your Python version is 3.10 or higher
+4. Make sure Dagster can access the required data directories
+5. Check logs in the `dagster_home/logs` directory
+
+## ⚙️ Configuration
 
 ### Data Directory Structure
 
