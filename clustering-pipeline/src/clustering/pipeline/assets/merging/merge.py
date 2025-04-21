@@ -373,20 +373,17 @@ def organize_by_category(context, dataframe: pl.DataFrame) -> dict[str, pl.DataF
         Dictionary with categories as keys and DataFrames as values
     """
     # Check if category column exists
-    has_category = "category" in dataframe.columns
-    result = {}
+    if "category" not in dataframe.columns:
+        raise ValueError("Category column required for organizing results")
 
-    if has_category:
-        # Get unique categories
-        categories = dataframe.select("category").unique().to_series().to_list()
-        
-        # Create a DataFrame for each category
-        for category in categories:
-            category_df = dataframe.filter(pl.col("category") == category)
-            result[str(category)] = category_df
-    else:
-        # No category, use "all" as the key
-        result["all"] = dataframe
+    # Get unique categories
+    categories = dataframe.select("category").unique().to_series().to_list()
+    
+    result = {}
+    # Create a DataFrame for each category
+    for category in categories:
+        category_df = dataframe.filter(pl.col("category") == category)
+        result[str(category)] = category_df
 
     return result
 
