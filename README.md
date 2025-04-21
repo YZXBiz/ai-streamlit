@@ -10,7 +10,6 @@ A data pipeline for clustering stores based on sales data and external data sour
 
 - [Store Clustering Data Pipeline](#store-clustering-data-pipeline)
   - [📋 Table of Contents](#-table-of-contents)
-  - [👥 Project Information](#-project-information)
   - [🎯 Project Purpose](#-project-purpose)
   - [✨ Features](#-features)
   - [🚀 Installation](#-installation)
@@ -51,12 +50,6 @@ A data pipeline for clustering stores based on sales data and external data sour
     - [2. Command Line Interface](#2-command-line-interface)
     - [3. Visualization Dashboard](#3-visualization-dashboard)
     - [4. Scheduled Execution](#4-scheduled-execution)
-
-## 👥 Project Information
-
-**Author**: Jackson Yang  
-**Email**: Jackson.Yang@cvshealth.com  
-**License**: MIT  
 
 ## 🎯 Project Purpose
 
@@ -391,14 +384,13 @@ Maintain code quality with the following tools configured in the project:
 
 ```bash
 # Format code with ruff
-ruff format .
+make format
 
 # Lint code and auto-fix issues
-ruff check --fix .
+make lint
 
 # Run type checking
-mypy src/
-pyright src/
+make type-check
 ```
 
 ### Testing
@@ -419,56 +411,44 @@ make test-pipeline    # Run pipeline tests
 
 #### Code Coverage
 
-The project uses Coveralls to track code coverage:
+Generate coverage reports:
 
 ```bash
 # Generate coverage reports
-make test-cli-coverage
+make test-coverage
 
-# Generate HTML coverage report (viewable in browser)
-make test-cli-html
+# Generate HTML coverage report
+make test-html-coverage
 ```
-
-The coverage badge in the README shows the current coverage status. You can view detailed coverage reports on the [Coveralls dashboard](https://coveralls.io/github/YOUR_USERNAME/clustering-dagster).
 
 ## 📚 Documentation
 
 Build and view documentation:
 
 ```bash
-# Install documentation dependencies
-uv pip install -e ".[docs]"
-
 # Build documentation
-sphinx-build -b html docs/source docs/build/html
+make docs
+
+# Start documentation server
+make docs-serve
 ```
 
 Open `docs/build/html/index.html` in your browser to view.
-
-Or start the documentation server:
-
-```bash
-# Start documentation server
-sphinx-autobuild docs/source docs/build/html
-```
 
 ## 🔒 Security & Privacy
 
 ### Package Verification
 
-Verify package integrity during installation:
+All dependencies are managed using the UV package manager:
 
 ```bash
-# Download and verify package signature
-uv pip install clustering --require-hashes
-
-# View package metadata
-uv pip show clustering
+# Package management - always use UV, never pip
+uv add <package-name>
 ```
 
 ### Data Collection
 
-This CLI does not collect any telemetry or usage data by default. All data processing happens locally within your infrastructure.
+This project does not collect any telemetry or usage data by default. All data processing happens locally within your infrastructure.
 
 ## ❓ FAQ
 
@@ -484,8 +464,17 @@ A: Add a new reader configuration in the environment config file and create a co
 **Q: Where can I find the project's dependencies?**
 A: All dependencies are listed in the `pyproject.toml` file, categorized into core dependencies and optional dependencies.
 
-**Q: How do I contribute to this project?**
-A: Fork the repository, make your changes, and submit a pull request. Ensure your code passes all linting and testing checks before submitting.
+**Q: How do I create a new Dagster asset?**
+A: Follow the asset creation guide. Assets should be organized by their purpose in appropriate directories (preprocessing, clustering, checks, merging), use the `@asset` decorator, and have explicit dependencies declared.
+
+**Q: How should I handle store numbers in the data?**
+A: Always ensure `STORE_NBR` is handled as a string, not an integer.
+
+**Q: What type should cluster counts be?**
+A: Ensure optimal cluster counts are integers, not floats.
+
+**Q: How do I validate my DataFrame before processing?**
+A: Always validate dataframe schemas before processing using the schema validation utilities.
 
 ## 🚀 Deployment
 
@@ -520,8 +509,6 @@ docker build -t dagster-pipeline:latest .
 # Run with docker-compose
 docker-compose up -d
 ```
-
-See the [Docker Deployment Guide](docs/docker-deployment.md) for more information on manual deployment options.
 
 ## How to Run
 
@@ -568,8 +555,6 @@ make dashboard
 # Or directly
 uv run -m clustering.dashboard
 ```
-
-See the [Installation Guide](INSTALLATION_GUIDE.md) for detailed configuration options, Python SDK usage examples, and advanced scenarios.
 
 ### 4. Scheduled Execution
 
