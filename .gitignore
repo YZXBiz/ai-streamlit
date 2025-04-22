@@ -51,19 +51,14 @@ Thumbs.db
 # Output directories
 outputs/*/
 
-# Dagster temporary files
-.tmp_dagster_home*/
-
 # Virtual environment
 .venv/
 
 # Cursor IDE
 .cursor/
-# Environment variable files
-.env
-.env.*
 
-dagster_home/
-
-# Storage files
-storage/
+# Data files that shouldn't be committed
+data/**/*.csv
+data/**/*.xlsx
+data/**/*.parquet
+data/**/*.json

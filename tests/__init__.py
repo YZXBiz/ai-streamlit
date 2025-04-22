@@ -1,1 +1,1 @@
-"""Tests for the clustering package."""
+"""Tests for the store clustering dashboard application.""" 

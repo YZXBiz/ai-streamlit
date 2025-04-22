@@ -1,65 +1,57 @@
-FROM python:3.10-slim AS builder
-
-WORKDIR /build
-
-# Install minimal system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv directly instead of installing Rust + building uv
-RUN curl -fsSL https://astral.sh/uv/install.sh | bash
-
-# Copy dependency files first for better layer caching
-COPY pyproject.toml uv.lock ./
-COPY clustering-pipeline/pyproject.toml clustering-pipeline/
-COPY clustering-cli/pyproject.toml clustering-cli/
-COPY clustering-shared/pyproject.toml clustering-shared/
-COPY clustering-dashboard/pyproject.toml clustering-dashboard/
-
-# Copy the source code
-COPY clustering-pipeline/src/ clustering-pipeline/src/
-COPY clustering-cli/src/ clustering-cli/src/
-COPY clustering-shared/src/ clustering-shared/src/
-COPY clustering-dashboard/src/ clustering-dashboard/src/
-
-# Install dependencies and build wheel packages
-RUN uv pip wheel --wheel-dir /wheels -e ".[all]"
-
-# Production stage
 FROM python:3.10-slim
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_LINK_MODE=copy \
+    PATH="/root/.cargo/bin:${PATH}" \
+    LOGS_DIR=/app/logs \
+    LOG_LEVEL=INFO
+
+# Working directory
 WORKDIR /app
 
-# Install minimal system dependencies for runtime only
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     curl \
+    git \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy wheels from builder stage
-COPY --from=builder /wheels /wheels
+# Install uv package manager
+RUN curl -sSf https://astral.sh/uv/install.sh | sh
 
-# Install from wheels (faster and more reproducible)
-RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+# Copy dependency files first for better caching
+COPY pyproject.toml uv.lock Makefile ./
 
-# Create necessary directories for runtime
-RUN mkdir -p cache data/internal data/external data/merging logs
+# Install dependencies
+RUN uv sync
 
-# Copy configuration files
-COPY configs/ /app/configs/
+# Copy application code
+COPY app ./app
+COPY dashboard ./dashboard
+COPY tests ./tests
+COPY config ./config
+COPY docs ./docs
 
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV DAGSTER_HOME=/app/dagster_home
+# Create required directories
+RUN mkdir -p data/internal data/external data/raw logs
 
-# Create wrapper script for consistent execution (matching Makefile pattern)
-RUN echo '#!/bin/bash\nexec python -m "$@"' > /usr/local/bin/run-python && \
-    chmod +x /usr/local/bin/run-python
+# Set permissions
+RUN chmod +x /app/app/main.py
 
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# Volume configuration for persistent data and logs
+VOLUME ["/app/data", "/app/logs"]
 
-# Command to run when the container starts
-ENTRYPOINT ["run-python", "clustering.cli.commands"]
-CMD ["--help"]
+# Expose port for Streamlit
+EXPOSE 8501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8501 || exit 1
+
+# Command to run the application
+CMD ["make", "dashboard"]

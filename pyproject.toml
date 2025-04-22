@@ -3,8 +3,8 @@
 # =========================================
 
 [build-system]
-requires = ["hatchling>=1.26.0"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -14,13 +14,14 @@ allow-direct-references = true
 # =========================================
 
 [project]
-name = "clustering"
+name = "chatbot-assortment"
 version = "0.1.0"
-description = "A data clustering pipeline using Dagster"
+description = "A web-based chatbot application for data exploration and analysis"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Jackson Yang", email = "Jackson.Yang@cvshealth.com" }]
-keywords = ["clustering", "fsassortment", "dagster", "pipeline"]
+license = { file = "LICENSE" }
+authors = [{ name = "Data Chat Team" }]
+keywords = ["clustering", "dashboard", "visualization"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -29,57 +30,32 @@ classifiers = [
 ]
 
 dependencies = [
-    # === Core Platform ===
-    "dagster>=1.6.0",
-    "dagster-webserver>=1.10.4",
-
-    # === Core Utilities ===
-    "pandas>=2.1.4",
-    "numpy>=1.26.0,<2.0.0",
-    "pydantic>=2.10.3",
-    "pydantic-settings>=2.6.1",
-    "rich>=13.0.0",
-    "loguru>=0.7.2",
-    "matplotlib>=3.7.0,<3.8.0",
-    "scikit-learn>=1.3.2,<1.5.0",
-
-    # === Dev Utilities ===
-    "ipykernel>=6.29.5",
-    "psutil>=6.1.0",
-    "setuptools>=75.6.0",
-    "pre-commit>=4.2.0",
-
-    # === Core Project Modules ===
-    "clustering-pipeline",
-    "clustering-shared",
-    "clustering-cli",
-    "clustering-dashboard",
+    "streamlit>=1.25.0",
+    "pywalker>=0.2.0",
+    "duckdb>=0.8.0",
+    "pydantic>=2.1.0",
+    "pymongo>=4.4.0",
+    "snowflake-connector-python>=3.0.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "cryptography>=41.0.0",
+    "xlsxwriter>=3.1.0",
+    "openpyxl>=3.1.0",
+    "fastparquet>=2023.10.0",
 ]
-
-# =========================================
-# Entry Points
-# =========================================
-
-[project.scripts]
-clustering = "clustering.cli.commands:main"
 
 # =========================================
 # URLs
 # =========================================
 
 [project.urls]
-# "Documentation" = 
-"Source Code" = "https://github.com/yourusername/clustering-dagster"
-"Issue Tracker" = "https://github.com/yourusername/clustering-dagster/issues"
+"Source Code" = "https://github.com/yourusername/clustering-dashboard"
+"Issue Tracker" = "https://github.com/yourusername/clustering-dashboard/issues"
+"Documentation" = "https://yourusername.github.io/clustering-dashboard"
 
-# =========================================
-# Optional Dependencies
-# =========================================
-
-# [project.optional-dependencies]
-# Optional extras for users who need dashboard
-# dashboard = ["clustering-dashboard"]
-# all = ["clustering-dashboard"]
+# Entry point for the dashboard
+[project.scripts]
+store-clustering-dashboard = "dashboard.app:main"
 
 # =========================================
 # Development Dependencies
@@ -88,21 +64,18 @@ clustering = "clustering.cli.commands:main"
 [dependency-groups]
 dev = [
     # Development dependencies
-    "mypy>=1.15.0",
-    "pyright>=1.1.399",
-    "ruff>=0.11.5",
-    "pre-commit>=3.5.0",
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
+    "mypy>=1.3.0",
+    "ruff>=0.0.270",
+    "black>=23.3.0",
+    "pytest>=7.3.1",
 ]
-cli = ["clustering-cli"]
-dashboard = ["clustering-dashboard"]
+
 docs = [
-    "sphinx>=8.1.3",
-    "sphinx-autobuild>=2024.10.3",
-    "sphinx-autodoc-typehints>=3.0.1",
-    "sphinx-rtd-theme>=3.0.2",
-    "nbconvert>=7.16.6",
+    # Documentation dependencies
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc-typehints>=1.25.2",
+    "sphinxcontrib-napoleon>=0.7",
 ]
 
 # =========================================
@@ -110,33 +83,14 @@ docs = [
 # =========================================
 
 [tool.uv]
-default-groups = ["dev"]
-
-[tool.uv.workspace]
-members = [
-    "clustering-dashboard",
-    "clustering-cli",
-    "clustering-shared",
-    "clustering-pipeline",
-]
-
-[tool.uv.sources]
-clustering-shared = { workspace = true }
-clustering-pipeline = { workspace = true }
-clustering-cli = { workspace = true }
-clustering-dashboard = { workspace = true }
+default-groups = ["dev", "docs"]
 
 # =========================================
 # Build Configuration
 # =========================================
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "clustering-pipeline",
-    "clustering-shared",
-    "clustering-cli",
-    "clustering-dashboard",
-]
+packages = ["dashboard"]
 
 # =========================================
 # Code Quality & Linting Configuration
@@ -156,39 +110,17 @@ exclude = [
     ".venv",
     "venv",
     "__pycache__",
-    "experiments",
     "data",
     "cache",
-    "logs",
-    "dagster_home",
-    "storage",
-    "docs/build",
-    "documents",
 ]
 
 [tool.ruff.lint]
-select = [
-    "E",  # pycodestyle errors
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "N",  # pep8-naming
-    "UP", # pyupgrade
-    "D",  # pydocstyle
-]
+select = ["E", "F", "I", "N", "B", "UP", "C", "A", "T", "Q"]
 # Explicitly make type annotation modernization rules fixable and ensure they're selected
 fixable = ["UP006", "UP007", "UP035"]
 # Force the type hint update rules to be applied
 extend-select = ["UP006", "UP007", "UP035"]
-ignore = [
-    "D203", # one-blank-line-before-class (conflicts with no-blank-line-before-class)
-    "D212", # multi-line-summary-first-line (conflicts with multi-line-summary-second-line)
-    "N805", # first argument is self
-    "F405", # star imports are not allowed
-    "N806", # Upper case letters are not allowed in function names
-    "E501", # Line too long (handled by formatter)
-]
+ignore = ["E203", "E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -197,26 +129,10 @@ ignore = [
     "D102", # Missing docstring in public method
     "D103", # Missing docstring in public function
 ]
-"src/clustering/dagster/**/*.py" = [
-    "D104", # Missing docstring in public package
-    "D105", # Missing docstring in magic method
-    "D107", # Missing docstring in __init__
-    "B007", # Loop control variable not used within loop body
-    "B008", # Do not perform function call in argument defaults
-]
-"src/clustering/io/readers/**/*.py" = [
-    "B904", # Use raise from for exception chaining
-]
-"src/clustering/io/writers/**/*.py" = [
-    "B904", # Use raise from for exception chaining
-]
-"src/clustering/core/sql_templates.py" = ["E501"]
-"src/clustering/dagster/assets/clustering/internal.py" = ["E501"]
-"src/clustering/dagster/definitions.py" = ["E501"]
 
 # Isort settings
 [tool.ruff.lint.isort]
-known-first-party = ["clustering"]
+known-first-party = ["dashboard"]
 
 # Docstring style
 [tool.ruff.lint.pydocstyle]
@@ -232,7 +148,6 @@ keep-runtime-typing = false
 
 [tool.mypy]
 python_version = "3.10"
-ignore_errors = false
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -240,62 +155,18 @@ disallow_incomplete_defs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["tests.*", "scripts.*"]
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
+module = ["streamlit.*", "pywalker.*", "duckdb.*", "snowflake.*"]
+ignore_missing_imports = true
 
 # Pyright configuration
 [tool.pyright]
-include = ["src"]
-exclude = [
-    "**/__pycache__",
-    "**/.mypy_cache",
-    "**/.pytest_cache",
-    "dagster_home",
-]
-ignore = ["tests", "scripts", "dagster_home"]
-reportGeneralTypeIssues = "warning"
-reportPrivateImportUsage = "warning"
-reportAttributeAccessIssue = "warning"
-reportArgumentType = "warning"
-reportCallIssue = "warning"
-reportReturnType = "warning"
-reportIncompatibleMethodOverride = "warning"
-reportAbstractUsage = "warning"
-reportOptionalMemberAccess = "warning"
-reportOperatorIssue = "warning"
-reportMissingImports = "warning"
-reportInvalidTypeForm = "warning"
-reportUnusedExcept = "warning"
-typeCheckingMode = "basic"
+include = ["dashboard"]
+exclude = ["**/__pycache__", "**/.mypy_cache", "**/.pytest_cache"]
 
-# =========================================
-# Testing Configuration
-# =========================================
+[tool.black]
+line-length = 100
+target-version = ["py310"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-python_functions = "test_*"
-pythonpath = [".", "src"]
-
-[tool.coverage.run]
-source = ["src"]
-omit = ["tests/*", "scripts/*"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "pass",
-    "raise ImportError",
-]
-
-# =========================================
-# Dagster Configuration
-# =========================================
-[tool.dagster]
-module_name = "clustering.pipeline.definitions"

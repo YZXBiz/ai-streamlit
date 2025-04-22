@@ -1,4 +1,0 @@
-PRODUCT_ID, CATEGORY, NEED_STATE, CDT, ATTRIBUTE_1, ATTRIBUTE_2, ATTRIBUTE_3, ATTRIBUTE_4, ATTRIBUTE_5, ATTRIBUTE_6, PLANOGRAM_DSC, PLANOGRAM_NBR, NEW_ITEM, TO_BE_DROPPED
-1001, "Adult Care", "Convenience_0", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "ADULT CARE", 1, FALSE, FALSE
-1002, "Adult Care", "Convenience_1", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "BASIC NUTRITION", 1, FALSE, FALSE
-1003, "Adult Care", "Convenience_2", "Convenience_1", "Pads", "Regular", "Smooth", null, null, null, "ADULT CARE", 1, FALSE, FALSE
