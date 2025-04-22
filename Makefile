@@ -115,12 +115,17 @@ update: ## Update all project dependencies to latest versions
 # DEVELOPMENT TOOLS
 ################################################################################
 
-.PHONY: dashboard
+.PHONY: run
 
-dashboard: ## Run the clustering dashboard
+run: ## Run the clustering dashboard
 	@echo "==> Starting Clustering Dashboard"
-	@$(PYTHON) -m dashboard.app
+	@$(PYTHON) -m streamlit run dashboard/app.py --server.port 8501
 	@echo "✓ Dashboard server stopped"
+
+kill-port:
+	@echo "==> Killing port 8501"
+	@kill -9 $(shell lsof -t -i:8501)
+	@echo "✓ Port 8501 killed"
 
 ##@ Code Quality & Testing
 ################################################################################

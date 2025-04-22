@@ -19,7 +19,7 @@ version = "0.1.0"
 description = "A web-based chatbot application for data exploration and analysis"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "MIT"
 authors = [{ name = "Data Chat Team" }]
 keywords = ["clustering", "dashboard", "visualization"]
 classifiers = [
@@ -31,7 +31,7 @@ classifiers = [
 
 dependencies = [
     "streamlit>=1.25.0",
-    "pywalker>=0.2.0",
+    "pygwalker>=0.4.9",
     "duckdb>=0.8.0",
     "pydantic>=2.1.0",
     "pymongo>=4.4.0",
@@ -42,6 +42,11 @@ dependencies = [
     "xlsxwriter>=3.1.0",
     "openpyxl>=3.1.0",
     "fastparquet>=2023.10.0",
+    "streamlit-option-menu>=0.4.0",
+    "matplotlib>=3.10.0",
+    "plotly>=6.0.0",
+    "openai>=1.75.0",
+    "pydantic-ai",
 ]
 
 # =========================================
@@ -91,6 +96,9 @@ default-groups = ["dev", "docs"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["dashboard"]
+
+[tool.setuptools]
+packages = ["dashboard", "config"]
 
 # =========================================
 # Code Quality & Linting Configuration

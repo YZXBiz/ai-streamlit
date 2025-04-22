@@ -1,13 +1,13 @@
-"""Dashboard components for the data chat assistant."""
+"""Component initialization and exports for the dashboard."""
 
-from dashboard.components.cluster_viz import cluster_visualization
-from dashboard.components.data_uploader import data_uploader
-from dashboard.components.data_viewer import data_viewer
-from dashboard.components.chat_interface import chat_interface
+from dashboard.components.data import data_uploader, data_viewer
+from dashboard.components.visualization import cluster_visualization, interactive_visualization
+from dashboard.components.chat import display_chat_interface
 
 __all__ = [
-    "cluster_visualization",
-    "data_uploader", 
-    "data_viewer",
-    "chat_interface"
-] 
+    'data_uploader',
+    'data_viewer',
+    'cluster_visualization',
+    'interactive_visualization',
+    'display_chat_interface',
+]
