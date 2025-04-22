@@ -1,24 +1,50 @@
-# Data Chat Assistant
+# Assortment Chatbot
 
 A web-based chatbot application for data exploration and analysis, powered by PydanticAI and DuckDB.
 
-## Features
+## 📊 Features
 
 - **Data Explorer**: Upload and preview your data files
 - **Interactive Visualization**: Create visualizations with PyGWalker 
 - **Cluster Analysis**: Visualize clustering results
 - **AI Chat**: Chat with your data using natural language
 
-### PydanticAI-Powered Data Chat
+### 🔍 PydanticAI-Powered Data Chat
 
-The Data Chat Assistant uses PydanticAI to provide a powerful, natural language interface to your data. Key capabilities include:
+The Assortment Chatbot uses PydanticAI to provide a powerful, natural language interface to your data. Key capabilities include:
 
 - **Natural Language to SQL**: Ask questions about your data in plain English, get SQL-powered answers
 - **Data Transformation**: Request transformations and manipulations of your data
 - **Automated Insights**: Get AI-generated interpretations of query results
 - **Result Downloads**: Download the results of your queries in various formats
 
-## Technology Stack
+## 🏗️ Project Structure
+
+The project follows a clean, modular architecture:
+
+```
+assortment_chatbot/
+├── core/               # Core application logic
+├── utils/              # Utility functions and helpers
+├── config/             # Configuration management
+├── api/                # API endpoints
+├── services/           # External service integrations
+├── models/             # Data models
+├── ui/                 # User interface components
+│   ├── components/     # Reusable UI components
+│   │   ├── data/       # Data-related components
+│   │   ├── chat/       # Chat interface components
+│   │   └── visualization/ # Visualization components
+│   └── pages/          # Full pages
+├── logs/               # Log files
+├── data/               # Data storage
+├── tests/              # Test suite
+├── main.py             # Application entry point
+├── pyproject.toml      # Project configuration
+└── README.md           # Project documentation
+```
+
+## 🛠️ Technology Stack
 
 - **Python 3.10+**: Core programming language
 - **Streamlit**: Web UI framework
@@ -27,8 +53,10 @@ The Data Chat Assistant uses PydanticAI to provide a powerful, natural language 
 - **PydanticAI**: Agent framework for AI-powered interactions
 - **Plotly**: Interactive data visualizations
 - **PyGWalker**: No-code data visualization tool
+- **Loguru**: Modern logging system
+- **Azure Key Vault**: Secure secret management
 
-## Installation
+## 📋 Installation
 
 ### Prerequisites
 
@@ -40,8 +68,8 @@ The Data Chat Assistant uses PydanticAI to provide a powerful, natural language 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/data-chat-assistant.git
-cd data-chat-assistant
+git clone https://github.com/yourusername/assortment-chatbot.git
+cd assortment-chatbot
 ```
 
 2. Set up a virtual environment:
@@ -64,19 +92,19 @@ cp .env.example .env
 # Edit .env to add your API keys
 ```
 
-## Usage
+## 🚀 Usage
 
 1. Start the application:
 
 ```bash
-uv run -m dashboard.app
+python main.py
 ```
 
 2. Open your browser at http://localhost:8501
 3. Upload your data file in the Data Explorer page
 4. Navigate to the AI Chat page to start asking questions about your data
 
-## Example Queries
+## 💬 Example Queries
 
 - "Show me the top 5 records by revenue"
 - "What's the average sales by region?"
@@ -84,7 +112,7 @@ uv run -m dashboard.app
 - "Find outliers in the sales data"
 - "Compare performance across different regions"
 
-## Configuration
+## ⚙️ Configuration
 
 The application can be configured through environment variables:
 
@@ -103,32 +131,18 @@ The application uses Loguru for comprehensive logging. Configure logging behavio
 - `LOG_JSON`: Whether to output logs in JSON format (True/False)
 - `LOG_CONSOLE`: Whether to output logs to console (True/False)
 
-To use logging in your code:
+### Azure Key Vault Integration
 
-```python
-from dashboard.log_config import get_logger
+For secure secret management, you can use Azure Key Vault:
 
-# Create a logger for your module
-logger = get_logger(__name__)
+- `KEY_VAULT_URL`: Azure Key Vault URL
+- `KEY_VAULT_ENABLED`: Whether to use Azure Key Vault for secrets
+- `USE_MANAGED_IDENTITY`: Whether to use managed identity authentication
+- `CLIENT_ID`: Azure client ID for Key Vault access
+- `CLIENT_SECRET`: Azure client secret for Key Vault access
+- `TENANT_ID`: Azure tenant ID for Key Vault access
 
-# Use the logger
-logger.info("This is an info message")
-logger.error("This is an error message")
-
-# Add context to your logs
-from dashboard.log_config import with_context
-context_logger = with_context(user_id="123", session="abc")
-context_logger.info("This log has context")
-
-# Trace function calls
-from dashboard.log_config import trace_function
-
-@trace_function
-def my_function(arg):
-    return arg * 2
-```
-
-## Development
+## 🧪 Development
 
 ### Running Tests
 
@@ -142,7 +156,6 @@ uv run -m pytest
 uv run -m ruff check .
 ```
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
+This project is licensed under the MIT License - see the LICENSE file for details. 
