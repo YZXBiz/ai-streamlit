@@ -21,7 +21,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Data Chat Team" }]
-keywords = ["clustering", "dashboard", "visualization"]
+keywords = ["assortment", "chatbot", "data", "analysis"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -50,6 +50,10 @@ dependencies = [
     "azure-keyvault-secrets>=4.9.0",
     "azure-identity>=1.21.0",
     "loguru>=0.7.0",
+    "llama-index>=0.12.32",
+    "ipykernel>=6.29.5",
+    "duckdb-engine>=0.17.0",
+    "chardet>=5.2.0",
 ]
 
 # =========================================
@@ -76,6 +80,9 @@ dev = [
     "ruff>=0.0.270",
     "black>=23.3.0",
     "pytest>=7.3.1",
+    "pandas-stubs>=2.2.3.250308",
+    "types-pytz>=2025.2.0.20250326",
+    "pylint>=3.3.6",
 ]
 
 docs = [
@@ -98,9 +105,10 @@ default-groups = ["dev", "docs"]
 # =========================================
 
 [tool.hatch.build.targets.wheel]
-packages = ["assortment_chatbot"]
+packages = ["src/assortment_chatbot"]
 
 [tool.setuptools]
+package-dir = { "" = "src" }
 packages = ["assortment_chatbot"]
 
 # =========================================
@@ -131,7 +139,7 @@ select = ["E", "F", "I", "N", "B", "UP", "C", "A", "T", "Q"]
 fixable = ["UP006", "UP007", "UP035"]
 # Force the type hint update rules to be applied
 extend-select = ["UP006", "UP007", "UP035"]
-ignore = ["E203", "E501"]
+ignore = ["E203", "E501", "T201"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -171,7 +179,7 @@ ignore_missing_imports = true
 
 # Pyright configuration
 [tool.pyright]
-include = ["assortment_chatbot"]
+include = ["src/assortment_chatbot"]
 exclude = ["**/__pycache__", "**/.mypy_cache", "**/.pytest_cache"]
 
 [tool.black]

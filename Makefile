@@ -118,11 +118,11 @@ update: ## Update all project dependencies to latest versions
 .PHONY: run
 
 run: ## Run the clustering dashboard
-	@echo "==> Starting Clustering Dashboard"
-	@$(PYTHON) -m streamlit run dashboard/app.py --server.port 8501
+	@echo "==> Starting Assortment Chatbot"
+	@$(PYTHON) -m streamlit run src/assortment_chatbot/app.py --server.port 8501
 	@echo "✓ Dashboard server stopped"
 
-kill-port:
+kill:
 	@echo "==> Killing port 8501"
 	@kill -9 $(shell lsof -t -i:8501)
 	@echo "✓ Port 8501 killed"

@@ -79,7 +79,7 @@ The application is built with the following core technologies:
 - **Streamlit** - Web UI framework
 - **Pandas** - Data processing and manipulation
 - **Plotly** - Interactive data visualizations
-- **SQLite/DuckDB** - Local SQL database for queries
+- **DuckDB** - Local SQL database for queries
 - **MongoDB** (optional) - Persistent storage
 - **Docker** - Containerization for deployment
 
