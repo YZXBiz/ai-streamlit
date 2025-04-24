@@ -456,20 +456,3 @@ class EnhancedDuckDBService(DuckDBService):
 #     print(output2["data"])
 #     print(output3["data"])
 
-
-@st.cache_resource(show_spinner=False)
-def get_enhanced_service():
-    """Returns one shared EnhancedDuckDBService for this session.
-    
-    This singleton pattern ensures we never accidentally create 
-    two different connections or lose state when Streamlit re-runs.
-    
-    Returns
-    -------
-    EnhancedDuckDBService
-        The shared DuckDB service instance
-    """
-    from flat_chatbot.controller import AppController
-    controller = AppController()
-    return controller.svc
-

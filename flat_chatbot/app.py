@@ -14,27 +14,32 @@ from flat_chatbot.ui.query import render_query_tab
 from flat_chatbot.ui.schema import render_schema_tab
 from flat_chatbot.ui.styles import CSS
 from flat_chatbot.ui.upload import render_upload_sidebar
-from flat_chatbot.services.duckdb_enhanced import get_enhanced_service
 
 st.set_page_config(
     page_title="Data File/Table Chatbot",
     page_icon="🤖",
-    layout="wide",
+    layout="centered",
 )
 st.markdown(CSS, unsafe_allow_html=True)
 
 # Add main title
 st.markdown("<h1 class='main-header'>🤖 Data File/Table Chatbot</h1>", unsafe_allow_html=True)
 
-controller = AppController()
-svc = get_enhanced_service()
+# ---- Store controller in session state to maintain state between reruns ----
+if "controller" not in st.session_state:
+    st.session_state.controller = AppController()
+controller = st.session_state.controller
 
 # Sidebar: data management
 with st.sidebar:
     render_upload_sidebar(controller)
+    # Force a rerun after upload so UI sees new tables
+    if st.session_state.get("just_uploaded"):
+        st.session_state.just_uploaded = False
+        st.rerun()
 
 # Gate UI based on data availability
-tables = controller.get_tables()
+tables = controller.get_table_list()
 if not tables:
     st.warning("Please upload at least one file to begin.")
     st.markdown("""

@@ -7,7 +7,7 @@ listing, and data management operations.
 """
 
 import streamlit as st
-from typing import Any, List, Dict, Optional
+from typing import Any, List
 import os
 import pandas as pd
 
@@ -55,8 +55,8 @@ def render_upload_sidebar(controller: AppController) -> None:
             files = st.session_state["_uploaded_files"]
             any_new = controller.upload_files(files)
             if any_new:
-                # No need for explicit rerun - callback will trigger it automatically
-                pass
+                # Signal the UI to rerun and pick up new tables
+                st.session_state.just_uploaded = True
     
     st.file_uploader(
         "Upload CSV/Parquet", 
@@ -76,6 +76,8 @@ def render_upload_sidebar(controller: AppController) -> None:
     def _on_refresh():
         """Callback for refresh tables button"""
         controller.svc.initialize()
+        # Signal the UI to rerun and pick up new tables
+        st.session_state.just_uploaded = True
         st.success("Refreshed")
     
     with col1:
@@ -83,7 +85,7 @@ def render_upload_sidebar(controller: AppController) -> None:
     with col2:
         st.button("Refresh Tables", on_click=_on_refresh)
 
-    tbls = controller.get_tables()
+    tbls = controller.get_table_list()
     if tbls:
         st.markdown("##### Available Tables")
         for i, t in enumerate(tbls, 1):
@@ -177,6 +179,8 @@ def process_uploaded_files(controller: AppController, uploaded_files: List[Any])
             if success_count > 0:
                 st.success(f"Successfully imported {success_count} file(s) to database")
                 controller.svc.initialize()  # Initialize after import
+                # Signal the UI to rerun and pick up new tables
+                st.session_state.just_uploaded = True
             else:
                 st.warning("No files were imported successfully")
     

@@ -17,9 +17,12 @@ from llama_index.llms.openai import OpenAI
 
 from flat_chatbot.config import SETTINGS
 from flat_chatbot.services.duckdb_enhanced import EnhancedDuckDBService
+from flat_chatbot.logger import get_logger
 
 import os 
 os.environ["OPENAI_API_KEY"] = SETTINGS.OPENAI_API_KEY
+
+logger = get_logger(__name__)
 
 class AppController:
     """
@@ -37,6 +40,7 @@ class AppController:
             st.session_state.processed_files = set()
         if "last_result" not in st.session_state:
             st.session_state.last_result = None
+        logger.debug(f"AppController initialized, tables: {self.svc.tables if self.svc else 'None'}")
 
     def _init_service(self) -> Optional[EnhancedDuckDBService]:
         """Initialize the DuckDB service with OpenAI embeddings and LLM."""
@@ -77,6 +81,9 @@ class AppController:
         """
         from flat_chatbot.ui.upload import table_exists
 
+        logger.debug(f"Beginning upload_files with {len(files) if files else 0} files")
+        logger.debug(f"Tables before upload: {self.svc.tables}")
+        
         any_new = False
         for uf in files or []:
             fid = f"{uf.name}_{uf.size}"
@@ -98,8 +105,12 @@ class AppController:
                 st.session_state.processed_files.add(fid)
             else:
                 st.sidebar.error(f"Failed {tbl}")
+        
         if any_new:
+            logger.debug("New files loaded, calling initialize()...")
             self.svc.initialize()
+            
+        logger.debug(f"Tables after upload: {self.svc.tables}")
         return any_new
 
     def ask(self, query: str, complexity: str) -> Dict[str, Any]:
@@ -128,8 +139,6 @@ class AppController:
             try:
                 # Add debug print before returning result
                 result = future.result(timeout=SETTINGS.QUERY_TIMEOUT)
-                from flat_chatbot.logger import get_logger
-                logger = get_logger(__name__)
                 tables_after_query = self.svc.get_tables() if self.svc else 'SVC NONE'
                 logger.debug(f'Tables after query in controller.ask: {tables_after_query}')
                 return result
@@ -137,8 +146,6 @@ class AppController:
                 return {"success": False, "error": f"Timeout after {SETTINGS.QUERY_TIMEOUT}s"}
             except Exception as e:
                 # Catch potential errors during execution in thread
-                from flat_chatbot.logger import get_logger
-                logger = get_logger(__name__)
                 logger.exception("Error processing query in controller.ask thread")
                 return {"success": False, "error": f"An error occurred: {str(e)}"}
 
@@ -174,7 +181,9 @@ class AppController:
         """
         if self.svc is None:
             return []
-        return self.svc.get_tables()
+        tables = self.svc.get_tables()
+        logger.debug(f"get_table_list returning: {tables}")
+        return tables
     
     def get_table_schema(self, table: str) -> Dict[str, str]:
         """
@@ -252,8 +261,11 @@ class AppController:
         try:
             success = self.svc.load_dataframe(df, table_name)
             if success:
-                self.svc.initialize()
+                logger.debug(f"Successfully imported DataFrame to {table_name}")
+                # Signal the UI to rerun and pick up new tables
+                st.session_state.just_uploaded = True
             return success
         except Exception as e:
+            logger.exception(f"Error importing DataFrame to {table_name}")
             st.error(f"Error importing DataFrame: {str(e)}")
             return False

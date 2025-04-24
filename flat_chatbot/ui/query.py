@@ -26,8 +26,12 @@ def render_query_tab(controller, container):
         container: The Streamlit container to render the UI in
     """
     with container:
+        # Always get fresh table list directly from controller
         tbls = controller.get_table_list()
-        st.write(f"DEBUG: Tables found by UI: {tbls}")
+        
+        # Log tables for debugging
+        logger.debug(f"Tables found by UI: {tbls}")
+        
         if not tbls:
             st.warning("Upload data first")
             return
