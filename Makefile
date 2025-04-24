@@ -119,7 +119,7 @@ update: ## Update all project dependencies to latest versions
 
 run: ## Run the clustering dashboard
 	@echo "==> Starting Assortment Chatbot"
-	@$(PYTHON) -m streamlit run src/assortment_chatbot/app.py --server.port 8501
+	@$(PYTHON) -m streamlit run src/chatbot/app.py --server.port 8501
 	@echo "✓ Dashboard server stopped"
 
 kill:

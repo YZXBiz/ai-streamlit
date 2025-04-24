@@ -9,14 +9,14 @@ build-backend = "setuptools.build_meta"
 
 # Core Metadata
 [project]
-name = "chatbot-assortment"
+name = "chatbot"
 version = "0.1.0"
 description = "A web-based chatbot application for data exploration and analysis"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Data Chat Team" }]
-keywords = ["assortment", "chatbot", "data", "analysis"]
+keywords = ["chatbot", "data", "analysis"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -61,7 +61,7 @@ dependencies = [
 
 # Entry point
 [project.scripts]
-flat-chatbot = "flat_chatbot.app:main"
+flat-chatbot = "chatbot.app:main"
 
 # =============================================
 # DEVELOPMENT TOOLS
@@ -99,8 +99,10 @@ default-groups = ["dev", "docs"]
 
 # Build Configuration
 [tool.setuptools]
-package-dir = { "" = "." }
-packages = ["chatbot"]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 # =============================================
 # CODE QUALITY TOOLS
@@ -139,7 +141,7 @@ ignore = ["E203", "E501", "T201"]
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["chatbot"]
+known-first-party = ["src/chatbot"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -162,7 +164,7 @@ ignore_missing_imports = true
 
 # Pyright Configuration
 [tool.pyright]
-include = ["chatbot"]
+include = ["src/chatbot"]
 exclude = ["**/__pycache__", "**/.mypy_cache", "**/.pytest_cache"]
 
 # Formatting

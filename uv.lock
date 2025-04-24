@@ -426,7 +426,7 @@ wheels = [
 ]
 
 [[package]]
-name = "chatbot-assortment"
+name = "chatbot"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

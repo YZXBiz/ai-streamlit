@@ -369,13 +369,14 @@ class EnhancedDuckDBService(DuckDBService):
 if __name__ == "__main__":
     import pandas as pd
     from llama_index.embeddings.openai import OpenAIEmbedding
-    from settings import SETTINGS
+
+    from chatbot.config import config
 
     # Initialize with memory options
     db_service = EnhancedDuckDBService(
-        embed_model=OpenAIEmbedding(api_key=SETTINGS.OPENAI_API_KEY),
-        memory_type="summary",  # Use summarizing memory for longer conversations
-        token_limit=4000,  # Adjust token limit as needed
+        embed_model=OpenAIEmbedding(api_key=config.OPENAI_API_KEY.get_secret_value()),
+        memory_type=config.MEMORY_TYPE,
+        token_limit=config.MEMORY_TOKEN_LIMIT,
         chat_store_key="user_123",  # Track sessions by user ID
     )
 
