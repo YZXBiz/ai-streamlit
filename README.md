@@ -1,148 +1,168 @@
-# Data Chat Assistant
+# Flat Chatbot - Natural Language for Data
 
-A web-based chatbot application for data exploration and analysis, powered by PydanticAI and DuckDB.
+A modern, intuitive application for querying data using natural language and SQL with DuckDB and LlamaIndex integration.
+
+![DuckDB Natural Language Query](https://img.shields.io/badge/DuckDB-Natural%20Language%20Query-yellow)
+![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue)
+![LlamaIndex](https://img.shields.io/badge/LlamaIndex-Latest-green)
+![Streamlit](https://img.shields.io/badge/Streamlit-Latest-red)
 
 ## Features
 
-- **Data Explorer**: Upload and preview your data files
-- **Interactive Visualization**: Create visualizations with PyGWalker 
-- **Cluster Analysis**: Visualize clustering results
-- **AI Chat**: Chat with your data using natural language
+### Core Functionality
+- **Natural Language Queries**: Ask questions about your data in plain English
+- **SQL Query Interface**: Write and execute raw SQL queries
+- **Multiple Data Formats**: Support for CSV, Parquet, JSON, and Excel files
+- **Schema Inference**: Automatic detection of column types and structures
+- **Smart Query Context**: Uses conversation history for better follow-up questions
 
-### PydanticAI-Powered Data Chat
+### Enhanced User Experience
+- **Interactive UI**: Clean, tabbed interface with modern design
+- **Real-time Feedback**: Immediate results with progress indicators
+- **Data Visualization**: Automatic visualization of query results
+- **Export Options**: Download results as CSV, Excel, or JSON
+- **Query History**: Track and re-run previous queries
+- **Smart Suggestions**: Contextual example queries based on your data
 
-The Data Chat Assistant uses PydanticAI to provide a powerful, natural language interface to your data. Key capabilities include:
+### Technical Features
+- **Modular Architecture**: Clean separation of UI, business logic, and services
+- **LlamaIndex Integration**: Vector search and embeddings-based query understanding
+- **Memory Management**: Efficient handling of large datasets
+- **Session Management**: Persistent chat sessions
+- **Error Handling**: Helpful suggestions for common errors
 
-- **Natural Language to SQL**: Ask questions about your data in plain English, get SQL-powered answers
-- **Data Transformation**: Request transformations and manipulations of your data
-- **Automated Insights**: Get AI-generated interpretations of query results
-- **Result Downloads**: Download the results of your queries in various formats
+## Architecture
 
-## Technology Stack
+The application follows a clean, modular architecture:
 
-- **Python 3.10+**: Core programming language
-- **Streamlit**: Web UI framework
-- **Pandas**: Data processing and manipulation
-- **DuckDB**: In-memory SQL database for high-performance queries
-- **PydanticAI**: Agent framework for AI-powered interactions
-- **Plotly**: Interactive data visualizations
-- **PyGWalker**: No-code data visualization tool
+```
+flat_chatbot/
+├── app.py              # Main entry point
+├── config.py           # Configuration settings
+├── controller.py       # Business logic orchestration
+├── logger.py           # Custom logging
+├── services/           # Service layer components
+│   ├── duckdb_base.py  # Base DuckDB functionality
+│   └── duckdb_enhanced.py # Natural language integration
+└── ui/                 # User interface components
+    ├── components.py   # Reusable UI elements
+    ├── history.py      # Chat history display
+    ├── query.py        # Query interface
+    ├── schema.py       # Schema display
+    └── upload.py       # File upload handling
+```
 
-## Installation
+## Getting Started
 
 ### Prerequisites
 
 - Python 3.10 or higher
-- pip or uv package manager
+- OpenAI API Key (for embeddings and language model)
 
-### Setup
+### Installation
 
 1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/flat-chatbot.git
+   cd flat-chatbot
+   ```
+
+2. Create a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Create a `.env` file with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+### Running the Application
+
+Start the application with:
 
 ```bash
-git clone https://github.com/yourusername/data-chat-assistant.git
-cd data-chat-assistant
+streamlit run app.py
 ```
 
-2. Set up a virtual environment:
+The application will be available at http://localhost:8501 in your web browser.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
+## Usage Guide
 
-3. Install dependencies using uv:
+### Data Upload
 
-```bash
-uv pip install -e .
-```
+1. Navigate to the "Upload Data" tab
+2. Select one or more data files to upload (CSV, Excel, Parquet, or JSON)
+3. Optionally provide a custom table name
+4. Click "Load Data" to process files
 
-4. Set environment variables:
+### Querying Data
 
-```bash
-cp .env.example .env
-# Edit .env to add your API keys
-```
+#### Natural Language Queries
 
-## Usage
+1. Go to the "Ask Questions" tab
+2. Type a question in natural language, such as:
+   - "What's the average age of users?"
+   - "Show me the top 5 countries by total sales"
+   - "How many transactions occurred each month?"
+3. Select simple or advanced query mode
+4. Click "Run Query" to see results
 
-1. Start the application:
+#### SQL Queries
 
-```bash
-uv run -m dashboard.app
-```
+1. Go to the "SQL Query" tab
+2. Write your SQL query, such as:
+   - `SELECT * FROM users LIMIT 10;`
+   - `SELECT country, SUM(sales) FROM transactions GROUP BY country ORDER BY SUM(sales) DESC LIMIT 5;`
+3. Click "Execute SQL" to run the query
 
-2. Open your browser at http://localhost:8501
-3. Upload your data file in the Data Explorer page
-4. Navigate to the AI Chat page to start asking questions about your data
+### Exploring Results
 
-## Example Queries
-
-- "Show me the top 5 records by revenue"
-- "What's the average sales by region?"
-- "Create a new column that calculates profit margin as (revenue - cost) / revenue"
-- "Find outliers in the sales data"
-- "Compare performance across different regions"
+- View the natural language response and data table
+- Explore data statistics and visualizations
+- Download results in CSV, Excel, or JSON format
+- View the generated SQL query for natural language questions
 
 ## Configuration
 
-The application can be configured through environment variables:
+Adjust settings in the `config.py` file:
 
-- `OPENAI_API_KEY`: OpenAI API key for the chat functionality
-- `DUCKDB_PATH`: Path to DuckDB database file (default: in-memory)
-- `STREAMLIT_SERVER_PORT`: Port for the Streamlit server (default: 8501)
-
-### Logging Configuration
-
-The application uses Loguru for comprehensive logging. Configure logging behavior with these environment variables:
-
-- `LOG_LEVEL`: Minimum log level to capture (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)
-- `LOG_DIR`: Directory to store log files (default: logs)
-- `LOG_RETENTION`: How long to keep log files (default: 7 days)
-- `LOG_ROTATION`: When to rotate log files (default: 100 MB)
-- `LOG_JSON`: Whether to output logs in JSON format (True/False)
-- `LOG_CONSOLE`: Whether to output logs to console (True/False)
-
-To use logging in your code:
-
-```python
-from dashboard.log_config import get_logger
-
-# Create a logger for your module
-logger = get_logger(__name__)
-
-# Use the logger
-logger.info("This is an info message")
-logger.error("This is an error message")
-
-# Add context to your logs
-from dashboard.log_config import with_context
-context_logger = with_context(user_id="123", session="abc")
-context_logger.info("This log has context")
-
-# Trace function calls
-from dashboard.log_config import trace_function
-
-@trace_function
-def my_function(arg):
-    return arg * 2
-```
+- `query_timeout`: Maximum seconds for query execution
+- `token_limit`: Token limit for conversation memory
+- Various path settings for data and logs
 
 ## Development
 
-### Running Tests
+### Testing
+
+Run tests with:
 
 ```bash
-uv run -m pytest
+pytest tests/
 ```
 
-### Linting
+### Contributing
 
-```bash
-uv run -m ruff check .
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit your changes: `git commit -m 'Add feature'`
+4. Push to the branch: `git push origin feature-name`
+5. Submit a pull request
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [LlamaIndex](https://github.com/run-llama/llama_index) for natural language processing
+- [DuckDB](https://github.com/duckdb/duckdb) for efficient data querying
+- [Streamlit](https://github.com/streamlit/streamlit) for the interactive UI
+- [OpenAI](https://openai.com/) for embeddings and language processing
 

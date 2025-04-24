@@ -30,30 +30,22 @@ classifiers = [
 ]
 
 dependencies = [
-    "streamlit>=1.25.0",
-    "pygwalker>=0.4.9",
-    "duckdb>=0.8.0",
-    "pydantic>=2.1.0",
-    "pymongo>=4.4.0",
-    "snowflake-connector-python>=3.0.0",
+    "streamlit>=1.30.0",
+    "duckdb>=0.9.0",
     "pandas>=2.0.0",
+    "openpyxl>=3.1.2",
+    "llama-index-core>=0.10.0",
+    "llama-index-readers-file>=0.1.0",
+    "llama-index-embeddings-openai>=0.1.0",
+    "llama-index-legacy>=0.9.0",
+    "openai>=1.0.0",
     "python-dotenv>=1.0.0",
-    "cryptography>=41.0.0",
-    "xlsxwriter>=3.1.0",
-    "openpyxl>=3.1.0",
-    "fastparquet>=2023.10.0",
-    "streamlit-option-menu>=0.4.0",
-    "matplotlib>=3.10.0",
-    "plotly>=6.0.0",
-    "openai>=1.75.0",
-    "pydantic-ai",
-    "azure-keyvault-secrets>=4.9.0",
-    "azure-identity>=1.21.0",
-    "loguru>=0.7.0",
-    "llama-index>=0.12.32",
-    "ipykernel>=6.29.5",
+    "pydantic-settings>=2.0.0",
+    "sqlalchemy>=1.4.0, <2.0.0",
+    "pyarrow>=14.0.0",
     "duckdb-engine>=0.17.0",
-    "chardet>=5.2.0",
+    "loguru>=0.7.0",
+    "llama-index-llms-openai>=0.3.38",
 ]
 
 # =========================================
@@ -61,13 +53,13 @@ dependencies = [
 # =========================================
 
 [project.urls]
-"Source Code" = "https://github.com/yourusername/assortment-chatbot"
-"Issue Tracker" = "https://github.com/yourusername/assortment-chatbot/issues"
-"Documentation" = "https://yourusername.github.io/assortment-chatbot"
+"Source Code" = "https://github.com/yourusername/chatbot-assortment"
+"Issue Tracker" = "https://github.com/yourusername/chatbot-assortment/issues"
+"Documentation" = "https://yourusername.github.io/chatbot-assortment"
 
 # Entry point for the dashboard
 [project.scripts]
-assortment-chatbot = "assortment_chatbot.app:main"
+flat-chatbot = "flat_chatbot.app:main"
 
 # =========================================
 # Development Dependencies
@@ -83,6 +75,7 @@ dev = [
     "pandas-stubs>=2.2.3.250308",
     "types-pytz>=2025.2.0.20250326",
     "pylint>=3.3.6",
+    "ipykernel>=6.29.5",
 ]
 
 docs = [
@@ -105,11 +98,11 @@ default-groups = ["dev", "docs"]
 # =========================================
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/assortment_chatbot"]
+packages = ["flat_chatbot"]
 
 [tool.setuptools]
-package-dir = { "" = "src" }
-packages = ["assortment_chatbot"]
+package-dir = { "" = "." }
+packages = ["flat_chatbot"]
 
 # =========================================
 # Code Quality & Linting Configuration
@@ -151,7 +144,7 @@ ignore = ["E203", "E501", "T201"]
 
 # Isort settings
 [tool.ruff.lint.isort]
-known-first-party = ["assortment_chatbot"]
+known-first-party = ["flat_chatbot"]
 
 # Docstring style
 [tool.ruff.lint.pydocstyle]
@@ -174,12 +167,12 @@ disallow_incomplete_defs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["streamlit.*", "pywalker.*", "duckdb.*", "snowflake.*"]
+module = ["streamlit.*", "duckdb.*", "llama_index.*"]
 ignore_missing_imports = true
 
 # Pyright configuration
 [tool.pyright]
-include = ["src/assortment_chatbot"]
+include = ["flat_chatbot"]
 exclude = ["**/__pycache__", "**/.mypy_cache", "**/.pytest_cache"]
 
 [tool.black]
