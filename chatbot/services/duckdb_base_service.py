@@ -1,15 +1,16 @@
 """
-Base DuckDB service module.
+Base DuckDB service for data storage and querying.
 
-This module provides core DuckDB functionality for loading data and executing SQL queries.
+This module provides basic DuckDB functionality for working with data.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
 import duckdb
 import pandas as pd
 
-from flat_chatbot.logger import get_logger
+# Update import for flat structure
+from chatbot.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -25,7 +26,7 @@ class DuckDBService:
                     database will be used.
         """
         self.conn = duckdb.connect(database=db_path if db_path else ":memory:")
-        self.tables: List[str] = []
+        self.tables: list[str] = []
 
     def execute_query(self, query: str) -> pd.DataFrame:
         """Execute a SQL query.
@@ -40,7 +41,7 @@ class DuckDBService:
         return result
 
     def load_dataframe(
-        self, df: pd.DataFrame | List[pd.DataFrame], table_name: str | List[str]
+        self, df: pd.DataFrame | list[pd.DataFrame], table_name: str | list[str]
     ) -> bool:
         """Load a DataFrame or list of DataFrames into DuckDB with transaction support.
 
@@ -101,13 +102,13 @@ class DuckDBService:
             logger.error("Failed to load DataFrame: %s", e)
             return False
 
-    def get_schema_info(self) -> Dict[str, Any]:
+    def get_schema_info(self) -> dict[str, Any]:
         """Get schema information for all tables.
 
         Returns:
             Dict with schema information
         """
-        schema_info = {
+        schema_info: dict[str, Any] = {
             "tables": self.tables,
             "columns": {},
         }
@@ -152,11 +153,7 @@ class DuckDBService:
 
     def __del__(self) -> None:
         """Clean up database connection."""
-        try:
-            if hasattr(self, 'conn'):
-                self.conn.close()
-        except Exception:
-            pass
+        self.conn.close()
 
     def load_file_directly(self, file_path: str, table_name: str) -> bool:
         """Load a file directly into DuckDB using native loaders.

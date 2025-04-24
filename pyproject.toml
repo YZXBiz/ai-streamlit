@@ -6,9 +6,6 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 # =========================================
 # Project Core Metadata
 # =========================================
@@ -97,12 +94,9 @@ default-groups = ["dev", "docs"]
 # Build Configuration
 # =========================================
 
-[tool.hatch.build.targets.wheel]
-packages = ["flat_chatbot"]
-
 [tool.setuptools]
 package-dir = { "" = "." }
-packages = ["flat_chatbot"]
+packages = ["chatbot"]
 
 # =========================================
 # Code Quality & Linting Configuration
@@ -144,7 +138,7 @@ ignore = ["E203", "E501", "T201"]
 
 # Isort settings
 [tool.ruff.lint.isort]
-known-first-party = ["flat_chatbot"]
+known-first-party = ["chatbot"]
 
 # Docstring style
 [tool.ruff.lint.pydocstyle]
@@ -172,7 +166,7 @@ ignore_missing_imports = true
 
 # Pyright configuration
 [tool.pyright]
-include = ["flat_chatbot"]
+include = ["chatbot"]
 exclude = ["**/__pycache__", "**/.mypy_cache", "**/.pytest_cache"]
 
 [tool.black]

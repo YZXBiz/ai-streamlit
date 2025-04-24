@@ -1,13 +1,10 @@
-"""
-CSS styles for the Data File/Table Chatbot Streamlit application.
+import streamlit as st
 
-This module defines the CSS styling used throughout the application to create
-a consistent and visually appealing user interface. It includes styling for
-headers, tabs, status boxes, and hides various Streamlit UI elements for a 
-cleaner experience.
-"""
 
-CSS = """
+def inject_styles() -> None:
+    """Inject custom CSS styles into the Streamlit app."""
+    st.markdown(
+        """
 <style>
     .main-header {
         font-size: 2.5rem !important;
@@ -55,4 +52,6 @@ CSS = """
         visibility: hidden;
     }
 </style>
-"""
+""",
+        unsafe_allow_html=True,
+    )
