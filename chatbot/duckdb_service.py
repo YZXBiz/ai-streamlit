@@ -15,11 +15,14 @@ from llama_index.core.indices.struct_store import (
     SQLTableRetrieverQueryEngine,
 )
 from llama_index.core.indices.struct_store.sql_query import SQLDatabase
-from llama_index.core.schema import MediaResource, Node
+from llama_index.core.memory import ChatMemoryBuffer, ChatSummaryMemoryBuffer
+from llama_index.core.schema import Node
+from llama_index.core.storage.chat_store import BaseChatStore, SimpleChatStore
 from llama_index.embeddings.openai import OpenAIEmbedding
-from sqlalchemy import create_engine
 
-from assortment_chatbot.utils.logging import get_logger
+# Update import for flat structure
+from logger import get_logger
+from sqlalchemy import create_engine
 
 logger = get_logger(__name__)
 
@@ -82,7 +85,7 @@ class DuckDBService:
                 return True
             except Exception as e:
                 self.conn.execute("ROLLBACK")
-                logger.error(f"Failed to load DataFrames: {e}")
+                logger.error("Failed to load DataFrames: %s", e)
                 return False
         else:
             logger.error(
@@ -108,7 +111,7 @@ class DuckDBService:
             return True
         except Exception as e:
             self.conn.execute("ROLLBACK")
-            logger.error(f"Failed to load DataFrame: {e}")
+            logger.error("Failed to load DataFrame: %s", e)
             return False
 
     def get_schema_info(self) -> dict[str, Any]:
@@ -135,14 +138,30 @@ class DuckDBService:
         Returns:
             bool: True if successful
         """
-        # Drop all tables and views
-        for table in self.tables:
-            # First try to drop as view, then as table
-            self.conn.execute(f"DROP VIEW IF EXISTS {table}")
-            self.conn.execute(f"DROP TABLE IF EXISTS {table}")
+        try:
+            # Drop all tables and views
+            for table in self.tables:
+                try:
+                    # Try to drop as view
+                    self.conn.execute(f"DROP VIEW IF EXISTS {table}")
+                except Exception as e:
+                    # Ignore catalog/type mismatch errors
+                    if "is of type Table, trying to drop type View" not in str(e):
+                        logger.warning(f"Error dropping view {table}: {e}")
 
-        self.tables = []
-        return True
+                try:
+                    # Try to drop as table
+                    self.conn.execute(f"DROP TABLE IF EXISTS {table}")
+                except Exception as e:
+                    # Ignore catalog/type mismatch errors
+                    if "is of type View, trying to drop type Table" not in str(e):
+                        logger.warning(f"Error dropping table {table}: {e}")
+
+            self.tables = []
+            return True
+        except Exception as e:
+            logger.error(f"Failed to clear data: {e}")
+            return False
 
     def __del__(self):
         """Clean up database connection."""
@@ -181,19 +200,19 @@ class DuckDBService:
                     f"CREATE TABLE {table_name} AS SELECT * FROM read_json_auto('{file_path}')"
                 )
             else:
-                logger.error(f"Unsupported file extension: {file_extension}")
+                logger.error("Unsupported file extension: %s", file_extension)
                 self.conn.execute("ROLLBACK")
                 return False
 
             # Add to tables list if successful
             self.tables.append(table_name)
             self.conn.execute("COMMIT")
-            logger.info(f"Successfully loaded {file_path} into table {table_name}")
+            logger.info("Successfully loaded %s into table %s", file_path, table_name)
             return True
 
         except Exception as e:
             self.conn.execute("ROLLBACK")
-            logger.error(f"Failed to load file directly: {e}")
+            logger.error("Failed to load file directly: %s", e)
             return False
 
 
@@ -205,12 +224,25 @@ class EnhancedDuckDBService(DuckDBService):
     schema understanding, and contextual responses.
     """
 
-    def __init__(self, embed_model: OpenAIEmbedding, db_path: str | None = None):
+    def __init__(
+        self,
+        embed_model: OpenAIEmbedding,
+        db_path: str | None = None,
+        memory_type: Literal["simple", "summary"] = "simple",
+        token_limit: int = 3000,
+        chat_store: BaseChatStore | None = None,
+        chat_store_key: str = "default_session",
+    ):
         """Initialize the enhanced DuckDB service.
 
         Args:
+            embed_model: OpenAI embedding model for LlamaIndex
             db_path: Optional path to DuckDB database file. If None, an in-memory
                     database will be used.
+            memory_type: Type of chat memory to use ("simple" or "summary")
+            token_limit: Maximum number of tokens to store in memory
+            chat_store: Optional custom chat store for persistence
+            chat_store_key: Key to identify this chat session
         """
         # Initialize the base DuckDBService
         super().__init__(db_path)
@@ -221,6 +253,40 @@ class EnhancedDuckDBService(DuckDBService):
         self.advanced_query_engine = None
         self.table_index = None
         self.embed_model = embed_model
+
+        # Initialize chat memory
+        self._init_chat_memory(memory_type, token_limit, chat_store, chat_store_key)
+
+    def _init_chat_memory(
+        self,
+        memory_type: str,
+        token_limit: int,
+        chat_store: BaseChatStore | None,
+        chat_store_key: str,
+    ) -> None:
+        """Initialize the chat memory buffer.
+
+        Args:
+            memory_type: Type of memory to use
+            token_limit: Maximum tokens to store
+            chat_store: Optional custom chat store
+            chat_store_key: Session identifier
+        """
+        # Use provided chat store or create a default one
+        if chat_store is None:
+            chat_store = SimpleChatStore()
+
+        # Create appropriate memory buffer based on type
+        if memory_type == "summary":
+            self.memory = ChatSummaryMemoryBuffer.from_defaults(
+                token_limit=token_limit, chat_store=chat_store, chat_store_key=chat_store_key
+            )
+        else:  # default to simple
+            self.memory = ChatMemoryBuffer.from_defaults(
+                token_limit=token_limit, chat_store=chat_store, chat_store_key=chat_store_key
+            )
+
+        logger.info(f"Initialized {memory_type} chat memory with token limit {token_limit}")
 
     def initialize(self) -> None:
         """Initialize LlamaIndex components based on current database state."""
@@ -299,7 +365,7 @@ class EnhancedDuckDBService(DuckDBService):
             table_retriever=self.table_index.as_retriever(similarity_top_k=1),
         )
 
-        logger.info(f"Initialized query engines for tables: {', '.join(self.tables)}")
+        logger.info("Initialized query engines for tables: %s", ", ".join(self.tables))
 
     def _execute_duckdb_query(self, sql_query: str) -> pd.DataFrame:
         """Execute a SQL query against DuckDB.
@@ -341,7 +407,7 @@ class EnhancedDuckDBService(DuckDBService):
         query_type: Literal["sql", "natural_language"],
         complexity: Literal["simple", "advanced"] = "simple",
     ) -> dict[str, Any]:
-        """Process SQL or natural language queries.
+        """Process SQL or natural language queries with conversation memory.
 
         Args:
             query: The query string to process
@@ -355,6 +421,11 @@ class EnhancedDuckDBService(DuckDBService):
         if not self.table_schemas:
             self.initialize()
 
+        # Store user message in memory - using correct API
+        from llama_index.core.memory.chat_memory_buffer import ChatMessage
+
+        self.memory.put(ChatMessage(role="user", content=query))
+
         if query_type == "sql" and "JOIN" in query.upper():
             # Add optimization hints for complex joins
             query = f"PRAGMA enable_optimizer; {query}"
@@ -362,13 +433,19 @@ class EnhancedDuckDBService(DuckDBService):
         if query_type == "sql":
             # Direct SQL execution
             result_df = self.execute_query(query)
+            response = f"SQL query executed. {len(result_df)} rows returned."
+            # Store assistant response in memory
+            self.memory.put(ChatMessage(role="assistant", content=response))
             return {"success": True, "data": result_df, "query_type": "sql"}
         else:
             # Process natural language query
             if not self.simple_query_engine:
+                error_msg = "LlamaIndex query engines not initialized. Please load data first."
+                # Store assistant response in memory
+                self.memory.put(ChatMessage(role="assistant", content=error_msg))
                 return {
                     "success": False,
-                    "error": "LlamaIndex query engines not initialized. Please load data first.",
+                    "error": error_msg,
                     "query_type": "natural_language",
                 }
 
@@ -379,8 +456,21 @@ class EnhancedDuckDBService(DuckDBService):
                 else self.simple_query_engine
             )
 
-            # Execute the query
-            response = engine.query(query)
+            # Include chat history in the query context
+            chat_history = self.get_chat_history()
+
+            # Modify query to include context if we have chat history
+            if chat_history:
+                # Prepend the chat history to the query for context
+                contextualized_query = f"Given the following conversation history:\n{chat_history}\n\nNew question: {query}"
+            else:
+                contextualized_query = query
+
+            # Execute the query without the context parameter
+            response = engine.query(contextualized_query)
+
+            # Store assistant response in memory
+            self.memory.put(ChatMessage(role="assistant", content=response.response))
 
             return {
                 "success": True,
@@ -390,6 +480,41 @@ class EnhancedDuckDBService(DuckDBService):
                 "explanation": f"Converted natural language to SQL: {response.metadata['sql_query']}",
                 "query_type": "natural_language",
             }
+
+    def get_chat_history(self) -> str:
+        """Get the formatted chat history for context.
+
+        Returns:
+            Formatted string of chat history
+        """
+        messages = self.memory.get_all()
+        if not messages:
+            return ""
+
+        history = []
+        for message in messages:
+            prefix = "User: " if message.role == "user" else "Assistant: "
+            history.append(f"{prefix}{message.content}")
+
+        return "\n".join(history)
+
+    def clear_chat_history(self) -> None:
+        """Clear the chat history but keep the chat store."""
+        self.memory.reset()
+        logger.info("Chat history cleared")
+
+    def change_chat_session(self, new_session_key: str) -> None:
+        """Switch to a different chat session.
+
+        Args:
+            new_session_key: New session identifier
+        """
+        current_store = self.memory.chat_store
+        memory_type = "summary" if isinstance(self.memory, ChatSummaryMemoryBuffer) else "simple"
+        token_limit = self.memory.token_limit
+
+        self._init_chat_memory(memory_type, token_limit, current_store, new_session_key)
+        logger.info(f"Switched to chat session: {new_session_key}")
 
     def clear_data(self) -> bool:
         """Clear all data and reset LlamaIndex components.
@@ -406,6 +531,7 @@ class EnhancedDuckDBService(DuckDBService):
             self.simple_query_engine = None
             self.advanced_query_engine = None
             self.table_index = None
+            # Don't clear chat memory by default - that's a separate operation
 
         return success
 
@@ -413,3 +539,33 @@ class EnhancedDuckDBService(DuckDBService):
         """Clean up database connections."""
         # Call parent destructor
         super().__del__()
+
+
+if __name__ == "__main__":
+    import pandas as pd
+    from llama_index.embeddings.openai import OpenAIEmbedding
+    from settings import SETTINGS
+
+    # Initialize with memory options
+    db_service = EnhancedDuckDBService(
+        embed_model=OpenAIEmbedding(api_key=SETTINGS.OPENAI_API_KEY),
+        memory_type="summary",  # Use summarizing memory for longer conversations
+        token_limit=4000,  # Adjust token limit as needed
+        chat_store_key="user_123",  # Track sessions by user ID
+    )
+
+    df = pd.DataFrame({"name": ["John", "Jane", "Jim"], "age": [25, 30, 35]})
+    db_service.load_dataframe(df, "test")
+
+    # First query
+    output1 = db_service.process_query("top 5 records", "natural_language")
+
+    # Follow-up query (will use conversation context)
+    output2 = db_service.process_query("Who is older than that?", "natural_language")
+
+    #
+    output3 = db_service.process_query("What did I ask before?", "natural_language")
+
+    output1
+    print(output2["data"])
+    print(output3["data"])
