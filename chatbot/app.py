@@ -504,47 +504,50 @@ def main():
                         "📤 Send Question", use_container_width=True, type="primary"
                     )
 
-            # Process query when Submit/Enter is pressed
-            if submit_button and query:
-                # Automatically determine complexity based on number of tables
-                complexity = determine_complexity(svc.tables)
+            # Early return if form not submitted or query is empty
+            # This keeps the UI stable without proceeding to query processing
+            if not submit_button or not query:
+                return
+            
+            # Automatically determine complexity based on number of tables
+            complexity = determine_complexity(svc.tables)
 
-                # Enhance query with explicit table context
-                enhanced_query = enhance_query_with_context(query, svc.tables)
+            # Enhance query with explicit table context
+            enhanced_query = enhance_query_with_context(query, svc.tables)
 
-                with st.spinner("Processing your question...", show_time=True):
-                    try:
-                        # Set a timeout of 20 seconds for query processing
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            # Submit the query processing task to the executor
-                            future = executor.submit(
-                                svc.process_query, enhanced_query, "natural_language", complexity
+            with st.spinner("Processing your question...", show_time=True):
+                try:
+                    # Set a timeout of 20 seconds for query processing
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        # Submit the query processing task to the executor
+                        future = executor.submit(
+                            svc.process_query, enhanced_query, "natural_language", complexity
+                        )
+
+                        try:
+                            # Wait for the result with a timeout
+                            result = future.result(timeout=20)
+                            display_results(result)
+                        except concurrent.futures.TimeoutError:
+                            st.error(
+                                "Query processing timed out after 20 seconds. Please try a simpler query or check your data."
                             )
-
-                            try:
-                                # Wait for the result with a timeout
-                                result = future.result(timeout=20)
-                                display_results(result)
-                            except concurrent.futures.TimeoutError:
-                                st.error(
-                                    "Query processing timed out after 20 seconds. Please try a simpler query or check your data."
-                                )
-                    except Exception as e:
-                        error_msg = str(e)
-                        if "table" in error_msg.lower() and "does not exist" in error_msg.lower():
-                            # Special handling for table not found errors
-                            st.markdown(
-                                f"""<div class="error-box">
-                                    <strong>Table Error:</strong> {error_msg}
-                                    <br><br>This may happen if the AI attempts to use a table that doesn't exist.
-                                    <br>Available tables in your database are: <strong>{available_tables}</strong>
-                                    <br><br>Try rephrasing your question to specifically mention these table(s).
-                                    </div>""",
-                                unsafe_allow_html=True,
-                            )
-                        else:
-                            # General error handling
-                            st.error(f"An error occurred: {error_msg}")
+                except Exception as e:
+                    error_msg = str(e)
+                    if "table" in error_msg.lower() and "does not exist" in error_msg.lower():
+                        # Special handling for table not found errors
+                        st.markdown(
+                            f"""<div class="error-box">
+                                <strong>Table Error:</strong> {error_msg}
+                                <br><br>This may happen if the AI attempts to use a table that doesn't exist.
+                                <br>Available tables in your database are: <strong>{available_tables}</strong>
+                                <br><br>Try rephrasing your question to specifically mention these table(s).
+                                </div>""",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        # General error handling
+                        st.error(f"An error occurred: {error_msg}")
 
     # Tab 2: Tables & Schema Information
     with tab2:

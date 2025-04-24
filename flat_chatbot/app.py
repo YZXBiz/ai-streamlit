@@ -14,6 +14,7 @@ from flat_chatbot.ui.query import render_query_tab
 from flat_chatbot.ui.schema import render_schema_tab
 from flat_chatbot.ui.styles import CSS
 from flat_chatbot.ui.upload import render_upload_sidebar
+from flat_chatbot.services.duckdb_enhanced import get_enhanced_service
 
 st.set_page_config(
     page_title="Data File/Table Chatbot",
@@ -26,13 +27,25 @@ st.markdown(CSS, unsafe_allow_html=True)
 st.markdown("<h1 class='main-header'>🤖 Data File/Table Chatbot</h1>", unsafe_allow_html=True)
 
 controller = AppController()
+svc = get_enhanced_service()
 
 # Sidebar: data management
 with st.sidebar:
     render_upload_sidebar(controller)
 
-# Main tabs
-tab1, tab2, tab3 = st.tabs(["💬 Ask Questions", "📊 Tables & Schema", "📜 History"])
-render_query_tab(controller, tab1)
-render_schema_tab(controller, tab2)
-render_history_tab(controller, tab3)
+# Gate UI based on data availability
+tables = controller.get_tables()
+if not tables:
+    st.warning("Please upload at least one file to begin.")
+    st.markdown("""
+    ### How to use this app:
+    1. Upload a CSV or Parquet file using the sidebar
+    2. Once uploaded, you'll be able to ask questions about your data
+    3. View table schema and query history in the other tabs
+    """)
+else:
+    # Main tabs
+    tab1, tab2, tab3 = st.tabs(["💬 Ask Questions", "📊 Tables & Schema", "📜 History"])
+    render_query_tab(controller, tab1)
+    render_schema_tab(controller, tab2)
+    render_history_tab(controller, tab3)

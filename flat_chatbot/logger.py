@@ -1,22 +1,56 @@
 """
-Logging utilities for the assortment_chatbot application.
+Logging utilities for the flat_chatbot application.
 
-This module provides a consistent interface for logging throughout the application.
+This module provides a consistent interface for logging throughout the application
+using Loguru for advanced logging features.
 """
 
-import logging
 import os
 import sys
-from logging import Logger
+from pathlib import Path
+from loguru import logger
 
-# Configure logging format
-DEFAULT_LOG_FORMAT = (
-    "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
+# Find the project root directory (where pyproject.toml is located)
+def find_project_root():
+    current_dir = Path(__file__).resolve().parent
+    while current_dir != current_dir.parent:
+        if (current_dir / "pyproject.toml").exists():
+            return current_dir
+        current_dir = current_dir.parent
+    return Path.cwd()  # Fallback to current working directory
+
+# Get project root
+PROJECT_ROOT = find_project_root()
+LOG_FILE = PROJECT_ROOT / "app.log"
+
+# Configure default log format
+DEFAULT_LOG_FORMAT = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+
+# Remove default logger
+logger.remove()
+
+# Add console handler with INFO level
+logger.add(
+    sys.stderr,
+    format=DEFAULT_LOG_FORMAT,
+    level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+    colorize=True,
 )
-DEFAULT_LOG_LEVEL = logging.INFO
+
+# Add file handler with DEBUG level to root directory
+logger.add(
+    LOG_FILE,
+    format=DEFAULT_LOG_FORMAT,
+    level="DEBUG",
+    rotation="10 MB",  # Rotate when file reaches 10MB
+    retention="1 week",  # Keep logs for 1 week
+    compression="zip",  # Compress rotated logs
+    backtrace=True,     # Include backtrace for errors
+    diagnose=True,      # Add variables and values for errors
+)
 
 
-def get_logger(name: str) -> Logger:
+def get_logger(name: str):
     """
     Get a logger instance configured with standard settings.
 
@@ -28,22 +62,8 @@ def get_logger(name: str) -> Logger:
     Returns
     -------
     Logger
-        Configured logger instance
+        Configured Loguru logger instance
     """
-    logger = logging.getLogger(name)
-
-    if not logger.handlers:
-        # Set up console handler
-        console_handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-
-        # Set log level based on environment or default to INFO
-        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-        logger.setLevel(getattr(logging, log_level, logging.INFO))
-
-    # Prevent propagation to root logger
-    logger.propagate = False
-
-    return logger
+    # With Loguru, we return the main logger with context
+    # The name will be included in each log message for the module
+    return logger.bind(name=name)

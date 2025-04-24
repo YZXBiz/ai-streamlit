@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
-
+from llama_index.core.prompts import PromptTemplate
 
 @dataclass
 class Paths:
@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     QUERY_TIMEOUT: int = 20  # seconds
     
     # prompt templates (default prompts from llama_index are good enough)
-    USER_TEXT_TO_SQL_PROMPT: str = ""
-    USER_RESPONSE_SYNTHESIS_PROMPT: str = ""
-    USER_REFINE_SYNTHESIS_PROMPT: str = ""
+    USER_TEXT_TO_SQL_PROMPT: PromptTemplate | None = None
+    USER_RESPONSE_SYNTHESIS_PROMPT: PromptTemplate | None = None
+    USER_REFINE_SYNTHESIS_PROMPT: PromptTemplate | None = None
     # NOTE: Please check the original prompts in the llama_index library and follow the same format
     # Default prompts are: 
     # DEFAULT_TEXT_TO_SQL_PROMPT

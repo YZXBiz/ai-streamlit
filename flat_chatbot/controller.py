@@ -6,9 +6,9 @@ between the UI components and the backend DuckDB service. It handles data loadin
 query processing, and maintains application state.
 """
 
-import concurrent.futures
 import os
 import tempfile
+import concurrent.futures
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
@@ -18,8 +18,8 @@ from llama_index.llms.openai import OpenAI
 from flat_chatbot.config import SETTINGS
 from flat_chatbot.services.duckdb_enhanced import EnhancedDuckDBService
 
-import openai 
-openai.api_key = SETTINGS.OPENAI_API_KEY
+import os 
+os.environ["OPENAI_API_KEY"] = SETTINGS.OPENAI_API_KEY
 
 class AppController:
     """
@@ -45,7 +45,8 @@ class AppController:
             return None
         embed = OpenAIEmbedding(
                                 model=SETTINGS.EMBEDDING_MODEL,)
-        llm = OpenAI(model=SETTINGS.OPENAI_MODEL, 
+        llm = OpenAI(
+                     model=SETTINGS.OPENAI_MODEL, 
                      temperature=SETTINGS.OPENAI_TEMPERATURE, 
                      )
         return EnhancedDuckDBService(
@@ -60,7 +61,7 @@ class AppController:
             user_refine_synthesis_prompt=SETTINGS.USER_REFINE_SYNTHESIS_PROMPT,
         )
 
-    def upload_files(self, files: List[Any]) -> None:
+    def upload_files(self, files: List[Any]) -> bool:
         """
         Process uploaded files and load them into DuckDB tables.
         
@@ -71,7 +72,8 @@ class AppController:
             
         Returns
         -------
-        None
+        bool
+            True if any new files were processed, False otherwise
         """
         from flat_chatbot.ui.upload import table_exists
 
@@ -98,6 +100,7 @@ class AppController:
                 st.sidebar.error(f"Failed {tbl}")
         if any_new:
             self.svc.initialize()
+        return any_new
 
     def ask(self, query: str, complexity: str) -> Dict[str, Any]:
         """
@@ -116,14 +119,28 @@ class AppController:
             Results dictionary with success flag and data or error message
         """
         def _call() -> Dict[str, Any]:
+            # This is potentially problematic due to thread-safety issues with DuckDB/state,
+            # but restoring as requested.
             return self.svc.process_query(query, "natural_language", complexity)
 
         with concurrent.futures.ThreadPoolExecutor() as ex:
             future = ex.submit(_call)
             try:
-                return future.result(timeout=SETTINGS.QUERY_TIMEOUT)
+                # Add debug print before returning result
+                result = future.result(timeout=SETTINGS.QUERY_TIMEOUT)
+                from flat_chatbot.logger import get_logger
+                logger = get_logger(__name__)
+                tables_after_query = self.svc.get_tables() if self.svc else 'SVC NONE'
+                logger.debug(f'Tables after query in controller.ask: {tables_after_query}')
+                return result
             except concurrent.futures.TimeoutError:
                 return {"success": False, "error": f"Timeout after {SETTINGS.QUERY_TIMEOUT}s"}
+            except Exception as e:
+                # Catch potential errors during execution in thread
+                from flat_chatbot.logger import get_logger
+                logger = get_logger(__name__)
+                logger.exception("Error processing query in controller.ask thread")
+                return {"success": False, "error": f"An error occurred: {str(e)}"}
 
     def clear_all(self) -> None:
         """Remove all loaded tables and reset the processed files state."""

@@ -9,6 +9,9 @@ and visualizing the results including data tables and download options.
 import io
 import streamlit as st
 import pandas as pd
+from flat_chatbot.logger import get_logger
+
+logger = get_logger(__name__)
 
 def render_query_tab(controller, container):
     """
@@ -24,16 +27,20 @@ def render_query_tab(controller, container):
     """
     with container:
         tbls = controller.get_table_list()
+        st.write(f"DEBUG: Tables found by UI: {tbls}")
         if not tbls:
             st.warning("Upload data first")
             return
 
-        st.markdown("<div class='section-header'>Natural Language Query</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-header'>Ask your question about the data</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='info-box'><strong>Available Tables:</strong> {', '.join(tbls)}</div>", unsafe_allow_html=True)
 
         with st.form("query_form"):
             q = st.text_input("Ask your question...")
             submitted = st.form_submit_button("📤 Send Question")
+        
+        # Early return if form not submitted or query is empty
+        # This keeps the UI up and waiting for input instead of crashing with an error
         if not submitted or not q:
             return
 
