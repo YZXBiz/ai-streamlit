@@ -264,10 +264,8 @@ class EnhancedDuckDBService(DuckDBService):
                 f"Table '{table_name}' with description: collection of {table_name} data. "
                 f"Columns: {', '.join([f'{col} ({col_type})' for col, col_type in zip(schema_info['columns'], schema_info['types'], strict=True)])}"
             )
-            # Create Node instead of TextNode
-            node = Node(
-                text_resource=MediaResource(text=schema_text), metadata={"table_name": table_name}
-            )
+            # Create Node with text directly instead of using MediaResource
+            node = Node(text=schema_text, metadata={"table_name": table_name})
             schema_nodes.append(node)
 
         # Create vector index from schema nodes with explicit embedding model

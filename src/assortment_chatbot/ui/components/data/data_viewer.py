@@ -77,10 +77,6 @@ def data_viewer(df: pd.DataFrame) -> None:
     with tabs[0]:
         sample_size = min(10, len(display_df))
         st.dataframe(display_df.head(sample_size), use_container_width=True)
-        
-        if len(display_df) > 10:
-            with st.expander("Show more rows"):
-                st.dataframe(display_df.iloc[10:min(50, len(display_df))], use_container_width=True)
     
     # Summary Statistics tab
     with tabs[1]:
@@ -100,38 +96,4 @@ def data_viewer(df: pd.DataFrame) -> None:
             'Null Count': display_df.isna().sum().values,
             'Unique Values': [display_df[col].nunique() for col in display_df.columns]
         })
-        st.dataframe(col_info, use_container_width=True)
-    
-    # Advanced filtering (in an expander)
-    with st.expander("Advanced Filtering"):
-        st.write("Filter data by column values:")
-        
-        # Select a column to filter
-        filter_col = st.selectbox("Select column to filter:", display_df.columns)
-        
-        # Based on column type, show appropriate filter options
-        if pd.api.types.is_numeric_dtype(display_df[filter_col]):
-            min_val, max_val = float(display_df[filter_col].min()), float(display_df[filter_col].max())
-            filter_range = st.slider(
-                f"Filter range for {filter_col}:", 
-                min_value=min_val,
-                max_value=max_val,
-                value=(min_val, max_val)
-            )
-            filtered_df = display_df[(display_df[filter_col] >= filter_range[0]) & 
-                             (display_df[filter_col] <= filter_range[1])]
-        else:
-            # For non-numeric columns, show a multiselect
-            unique_values = display_df[filter_col].unique().tolist()
-            selected_values = st.multiselect(
-                f"Select values for {filter_col}:",
-                options=unique_values,
-                default=unique_values[:min(5, len(unique_values))]
-            )
-            if selected_values:
-                filtered_df = display_df[display_df[filter_col].isin(selected_values)]
-            else:
-                filtered_df = display_df.copy()
-        
-        st.write(f"Filtered data: {len(filtered_df)} rows")
-        st.dataframe(filtered_df.head(10), use_container_width=True) 
+        st.dataframe(col_info, use_container_width=True) 

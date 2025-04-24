@@ -110,17 +110,17 @@ def display_chat_interface(data=None) -> None:
     # Initialize chat history in session state if not present
     if "messages" not in st.session_state:
         st.session_state.messages = []
+        # Add welcome message for first-time users
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": "👋 Hello! I'm your data assistant. Ask me questions about your data and I'll analyze it for you.",
+            }
+        )
 
     # If data is passed directly, store it in session state
     if data is not None and not isinstance(data, type(None)):
         st.session_state.user_data = data
-
-    # Debug information about data
-    if SETTINGS.DEBUG_MODE and "user_data" in st.session_state:
-        st.sidebar.info(
-            f"Data info: {type(st.session_state.user_data).__name__} with "
-            f"{len(st.session_state.user_data)} rows × {st.session_state.user_data.shape[1]} columns"
-        )
 
     # Initialize assistant if not present
     if "data_assistant" not in st.session_state:
@@ -132,37 +132,36 @@ def display_chat_interface(data=None) -> None:
     # Make sure data is loaded
     assistant.load_data_from_session()
 
-    # Display tables loaded
+    # Display data status - more prominently in the main area, not sidebar
     available_tables = assistant.get_tables()
     if available_tables:
-        st.sidebar.success(f"Assortment data loaded: {', '.join(available_tables)}")
+        st.success(f"✅ Data loaded successfully! You can now ask questions about your data.")
     else:
-        st.sidebar.warning("No data loaded. Please upload your assortment data first.")
+        st.warning("⚠️ No data loaded. Please upload your data in the Data Uploader tab first.")
+        # Add example of what to do
+        st.info("Go to the 'Data Uploader' tab and upload a CSV or Excel file to get started.")
+        return  # Exit early if no data
 
-    # Display settings info if in debug mode
+    # Only show debug info if in debug mode
     if SETTINGS.DEBUG_MODE:
-        with st.sidebar.expander("Debug: Settings Info", expanded=False):
+        with st.expander("Debug Information", expanded=False):
             st.write(f"Environment: {SETTINGS.ENVIRONMENT}")
-            st.write(f"SQL Agent Model: {agent_settings['sql_agent_model']}")
-            st.write(f"Interpreter Model: {agent_settings['interpreter_model']}")
-            st.write(f"Temperature: {agent_settings['temperature']}")
-            st.write(f"DuckDB Path: {duckdb_settings['db_path']}")
-
-    # Chat history
-    assistant.get_chat_history()
-
-    # Clear chat button
-    if st.sidebar.button("Clear Chat History"):
-        assistant.clear_chat_history()
-        st.rerun()
+            st.write(f"Available tables: {', '.join(available_tables)}")
+            if "user_data" in st.session_state:
+                st.write(
+                    f"Data info: {type(st.session_state.user_data).__name__} with "
+                    f"{len(st.session_state.user_data)} rows × {st.session_state.user_data.shape[1]} columns"
+                )
 
     # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat input
-    if prompt := st.chat_input("Ask a question about your product assortment..."):
+    # Chat input - with better placeholder text
+    if prompt := st.chat_input(
+        "Ask a question about your data (e.g., 'Show me the top 5 products by sales')"
+    ):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
 
@@ -176,7 +175,7 @@ def display_chat_interface(data=None) -> None:
 
             try:
                 # Show loading spinner while processing
-                with st.spinner("Analyzing your assortment..."):
+                with st.spinner("Analyzing your data..."):
                     # Get response from assistant
                     response = assistant.process_query(prompt)
 
@@ -187,22 +186,28 @@ def display_chat_interface(data=None) -> None:
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
             except Exception as e:
-                # Show detailed error in debug mode
+                # Simplified error handling
+                error_msg = f"Sorry, I couldn't process that query: {str(e)}"
                 if SETTINGS.DEBUG_MODE:
                     import traceback
 
-                    error_msg = (
-                        f"Error analyzing query: {str(e)}\n\n```\n{traceback.format_exc()}\n```"
-                    )
-                else:
-                    error_msg = f"Error analyzing query: {str(e)}"
+                    error_msg += f"\n\n```\n{traceback.format_exc()}\n```"
 
                 response_placeholder.error(error_msg)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": f"❌ {error_msg}"}
                 )
 
-    # Add a clear button
-    if st.button("Clear Chat"):
-        st.session_state.messages = []
-        st.rerun()
+    # Clear chat button - moved to below the chat interface
+    col1, col2 = st.columns([5, 1])  # Create columns for better layout
+    with col2:
+        if st.button("Clear Chat", use_container_width=True):
+            st.session_state.messages = []
+            # Re-add welcome message
+            st.session_state.messages.append(
+                {
+                    "role": "assistant",
+                    "content": "👋 Chat cleared! What would you like to know about your data?",
+                }
+            )
+            st.rerun()
