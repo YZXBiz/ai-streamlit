@@ -31,22 +31,14 @@ dependencies = [
     "duckdb>=0.9.0",
     "pandas>=2.0.0",
     "pyarrow>=14.0.0",
-
     # LLM integration
-    "llama-index-core>=0.10.0",
-    "llama-index-readers-file>=0.1.0",
-    "llama-index-embeddings-openai>=0.1.0",
-    "llama-index-legacy>=0.9.0",
-    "llama-index-llms-openai>=0.3.38",
+    "llama-index>=0.9.0", # Use the unified package
     "openai>=1.0.0",
-
     # Database integrations
     "sqlalchemy>=1.4.0, <2.0.0",
     "duckdb-engine>=0.17.0",
-
     # File handling
     "openpyxl>=3.1.2",
-
     # Configuration and logging
     "python-dotenv>=1.0.0",
     "pydantic-settings>=2.0.0",
@@ -75,6 +67,7 @@ dev = [
     "ruff>=0.0.270",
     "black>=23.3.0",
     "pytest>=7.3.1",
+    "pytest-cov>=6.1.1", # Added pytest-cov for coverage reporting
     "pylint>=3.3.6",
 
     # Type checking stubs

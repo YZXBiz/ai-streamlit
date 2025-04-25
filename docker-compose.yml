@@ -1,66 +1,41 @@
-version: '3.8'
+version: "3.8"
 
 # Named volumes for persistent data
 volumes:
-  mongo_data:
   app_data:
   app_logs:
 
-
 services:
-  # Main application dashboard
-  dashboard:
+  # Main chatbot application
+  chatbot:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: data-chat-assistant
+    container_name: chatbot-assistant
     restart: unless-stopped
     ports:
       - "8501:8501"
     volumes:
       - app_data:/app/data
       - app_logs:/app/logs
-      - ./config:/app/config:ro
+      - ./.env:/app/.env:ro
     environment:
-      - DATA_DIR=/app/data
-      - LOGS_DIR=/app/logs
-      - ENV=dev
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - LOG_LEVEL=INFO
+      - DB_PATH=:memory:
+      - MEMORY_TYPE=summary
+      - MEMORY_TOKEN_LIMIT=4000
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_HEADLESS=true
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
-      - MONGODB_URI=mongodb://mongo:27017/datachat
-    depends_on:
-      - mongo
     networks:
       - app_network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8501" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8501"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    command: make dashboard
-
-  # MongoDB for data persistence
-  mongo:
-    image: mongo:6
-    container_name: data-chat-mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=datachat
-    networks:
-      - app_network
-    healthcheck:
-      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
 
 networks:
   app_network:

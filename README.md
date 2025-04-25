@@ -155,6 +155,91 @@ pytest tests/
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
 
+## Docker Support
+
+Run the application in a Docker container for consistent environment across deployments.
+
+### Building the Docker Image
+
+```bash
+docker build -t flat-chatbot:latest .
+```
+
+### Running the Container Locally
+
+```bash
+docker run -p 8501:8501 -e OPENAI_API_KEY=your_api_key_here flat-chatbot:latest
+```
+
+The application will be accessible at http://localhost:8501.
+
+### Environment Variables
+
+Pass environment variables to configure the application:
+
+```bash
+docker run -p 8501:8501 \
+  -e OPENAI_API_KEY=your_api_key_here \
+  -e DEBUG=True \
+  flat-chatbot:latest
+```
+
+## Deploying to Azure
+
+### Azure Container Registry (ACR)
+
+Deploy to Azure Container Registry using the included script:
+
+1. Update the configuration in `deploy_to_azure.sh`:
+   ```bash
+   ACR_NAME="your-acr-name"  # Replace with your registry name
+   IMAGE_NAME="flat-chatbot"
+   IMAGE_TAG="latest"
+   ```
+
+2. Run the deployment script:
+   ```bash
+   chmod +x deploy_to_azure.sh
+   ./deploy_to_azure.sh
+   ```
+
+### Running on Azure Container Instances (ACI)
+
+After deploying to ACR, create a container instance:
+
+```bash
+az container create \
+  --resource-group your-resource-group \
+  --name flat-chatbot-instance \
+  --image your-acr-name.azurecr.io/flat-chatbot:latest \
+  --dns-name-label flat-chatbot \
+  --ports 8501 \
+  --environment-variables OPENAI_API_KEY=your_api_key_here
+```
+
+The application will be accessible at http://flat-chatbot.[region].azurecontainer.io:8501.
+
+### Azure App Service
+
+For a more managed solution, deploy to Azure App Service:
+
+```bash
+az webapp create \
+  --resource-group your-resource-group \
+  --plan your-app-service-plan \
+  --name your-app-name \
+  --deployment-container-image-name your-acr-name.azurecr.io/flat-chatbot:latest
+```
+
+Set environment variables through the Azure Portal or CLI:
+
+```bash
+az webapp config appsettings set \
+  --resource-group your-resource-group \
+  --name your-app-name \
+  --settings OPENAI_API_KEY=your_api_key_here WEBSITES_PORT=8501
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

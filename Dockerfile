@@ -1,57 +1,18 @@
-FROM python:3.10-slim
+FROM ghcr.io/astral-sh/uv:latest
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_LINK_MODE=copy \
-    PATH="/root/.cargo/bin:${PATH}" \
-    LOGS_DIR=/app/logs \
-    LOG_LEVEL=INFO
-
-# Working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    git \
-    procps \
-    && rm -rf /var/lib/apt/lists/*
+# Set uv environment variables
+ENV UV_LINK_MODE=copy 
 
-# Install uv package manager
-RUN curl -sSf https://astral.sh/uv/install.sh | sh
+# Copy the entire project
+COPY . .
 
-# Copy dependency files first for better caching
-COPY pyproject.toml uv.lock Makefile ./
-
-# Install dependencies
+# Install everything in one go
 RUN uv sync
 
-# Copy application code
-COPY app ./app
-COPY dashboard ./dashboard
-COPY tests ./tests
-COPY config ./config
-COPY docs ./docs
-
-# Create required directories
-RUN mkdir -p data/internal data/external data/raw logs
-
-# Set permissions
-RUN chmod +x /app/app/main.py
-
-# Volume configuration for persistent data and logs
-VOLUME ["/app/data", "/app/logs"]
-
-# Expose port for Streamlit
+# Expose Streamlit port
 EXPOSE 8501
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8501 || exit 1
-
 # Command to run the application
-CMD ["make", "dashboard"]
+CMD ["uv", "run", "streamlit", "run", "src/chatbot/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
