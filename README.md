@@ -240,6 +240,50 @@ az webapp config appsettings set \
   --settings OPENAI_API_KEY=your_api_key_here WEBSITES_PORT=8501
 ```
 
+## GitHub Actions CI/CD
+
+This project is configured with GitHub Actions for continuous integration and deployment.
+
+### Workflows
+
+1. **CI/CD Pipeline** (`.github/workflows/ci.yml`):
+   - Triggers on pushes to `main` and `develop` branches, pull requests to these branches, and manual dispatch
+   - Runs tests, linting, and type checking
+   - Builds a Docker image for changes on `main` and `develop`
+   - Deploys to Azure when changes are pushed to `main`
+
+2. **Deploy to Azure** (`.github/workflows/deploy.yml`):
+   - Dedicated workflow for Azure deployment
+   - Builds and pushes Docker image to Azure Container Registry
+   - Updates the container instance in Azure
+
+### Required Secrets
+
+For the workflows to function properly, add these secrets to your GitHub repository:
+
+#### Azure Deployment Secrets
+- `AZURE_CLIENT_ID`: Azure service principal client ID
+- `AZURE_TENANT_ID`: Azure tenant ID
+- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
+- `ACR_NAME`: Azure Container Registry name
+- `ACR_LOGIN_SERVER`: ACR login server URL
+- `CONTAINER_INSTANCE_NAME`: Azure Container Instance name
+- `RESOURCE_GROUP_NAME`: Azure resource group name
+- `APP_URL`: The deployed application URL
+
+### Setting Up GitHub Actions
+
+1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+2. Add all required secrets
+3. For production deployment, create an environment named "production" and add the secrets to that environment
+
+### Running Workflows Manually
+
+1. Navigate to the "Actions" tab in your repository
+2. Select the workflow you want to run
+3. Click "Run workflow"
+4. Select the branch and trigger the workflow
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
