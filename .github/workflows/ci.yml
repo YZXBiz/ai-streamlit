@@ -117,7 +117,8 @@ jobs:
             --registry-password ${{ secrets.ACR_PASSWORD }} \
             --location westus2 \
             --cpu 0.5 \
-            --memory 1.0
+            --memory 1.0 \
+            --os-type Linux
 
       - name: Output app URL
         run: |
