@@ -115,12 +115,17 @@ update: ## Update all project dependencies to latest versions
 # DEVELOPMENT TOOLS
 ################################################################################
 
-.PHONY: run
+.PHONY: run run-dev
 
-run: ## Run the clustering dashboard
-	@echo "==> Starting Assortment Chatbot"
+run: ## Run the chatbot application
+	@echo "==> Starting DuckDB ChatGPT Interface"
 	@$(PYTHON) -m streamlit run src/chatbot/app.py --server.port 8501
-	@echo "✓ Dashboard server stopped"
+	@echo "✓ Chatbot application stopped"
+
+run-dev: ## Run the chatbot in development mode with auto-reload
+	@echo "==> Starting DuckDB ChatGPT Interface (Development Mode)"
+	@uv run -m streamlit run src/chatbot/app.py --server.port 8501 --server.headless false --server.runOnSave true
+	@echo "✓ Chatbot application stopped"
 
 kill:
 	@echo "==> Killing port 8501"
