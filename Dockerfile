@@ -1,11 +1,6 @@
-FROM python:3.11-slim
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
 WORKDIR /app
-
-# Install uv
-RUN apt-get update && apt-get install -y curl
-RUN curl -Ls https://astral.sh/uv/install.sh | bash
-ENV PATH="/root/.cargo/bin:$PATH"
 
 # Set uv environment variables
 ENV UV_LINK_MODE=copy 
