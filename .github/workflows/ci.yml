@@ -63,6 +63,8 @@ jobs:
           tags: flatbot:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
       - name: Test Docker image
         run: |
@@ -102,10 +104,11 @@ jobs:
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/flatbot:${{ github.sha }}
             ${{ secrets.ACR_LOGIN_SERVER }}/flatbot:latest
+          build-args: |
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
       - name: Create/Update Container Instance
         run: |
-          # Create Container Instance if it doesn't exist
           az container create \
             --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
             --name flatbot-container \
@@ -118,7 +121,8 @@ jobs:
             --location westus2 \
             --cpu 0.5 \
             --memory 1.0 \
-            --os-type Linux
+            --os-type Linux \
+            --environment-variables OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
       - name: Output app URL
         run: |
