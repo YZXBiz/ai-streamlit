@@ -10,7 +10,8 @@ import pandas as pd
 import pandasai as pai
 import streamlit as st
 
-from backend.data_source import CSVSource, ExcelSource, ParquetSource, SQLSource
+from backend.app.adapters.db_sources import SQLSource
+from backend.app.adapters.file_sources import CSVSource, ExcelSource, ParquetSource
 from frontend.components.session_manager import render_session_manager
 
 

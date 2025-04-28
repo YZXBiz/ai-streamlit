@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from backend.data_source.sql_source import SQLSource
+from backend.app.adapters.db_sources import SQLSource
 
 
 @pytest.fixture
@@ -57,9 +57,9 @@ def test_init_with_auto_dialect():
     assert source.dialect == "postgresql"
 
 
-@patch("backend.data_source.sql_source.sqlalchemy.create_engine")
-@patch("backend.data_source.sql_source.pd.read_sql")
-@patch("backend.data_source.sql_source.pai.DataFrame")
+@patch("backend.app.adapters.db_sources.sqlalchemy.create_engine")
+@patch("backend.app.adapters.db_sources.pd.read_sql")
+@patch("backend.app.adapters.db_sources.pai.DataFrame")
 def test_load(mock_dataframe, mock_read_sql, mock_create_engine, sample_dataframe):
     """Test loading data from a SQL database."""
     # Set up mocks

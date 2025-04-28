@@ -8,32 +8,7 @@ __version__ = "1.0.0"
 
 import os
 
-# Define the data_source module for backward compatibility
-# This allows imports like `from backend.data_source import CSVSource` to work
-import sys
-from types import ModuleType
-
 from pandasai import Agent
-
-# Re-export data source classes for backward compatibility
-from .app.adapters.db_sources import SQLSource
-from .app.adapters.file_sources import CSVSource, ExcelSource, ParquetSource
-from .app.ports.datasource import DataSource
-
-data_source = ModuleType("backend.data_source")
-data_source.__doc__ = (
-    "Data source classes (compatibility module, use backend.app.ports/adapters directly)"
-)
-
-# Add all data source classes to the module
-data_source.DataSource = DataSource
-data_source.CSVSource = CSVSource
-data_source.ExcelSource = ExcelSource
-data_source.ParquetSource = ParquetSource
-data_source.SQLSource = SQLSource
-
-# Register the module
-sys.modules["backend.data_source"] = data_source
 
 
 def create_analyzer():
