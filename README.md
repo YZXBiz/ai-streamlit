@@ -77,3 +77,34 @@ make clean
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Test Coverage Plan
+
+To achieve 100% test coverage for the backend, the following steps should be taken:
+
+1. Fix import issues in the existing tests to make them runnable.
+2. Complete tests for all uncovered modules:
+   - main.py
+   - core/config.py, core/security.py, and core/database/* modules
+   - All adapters (storage_local.py, llm_pandasai.py, db_duckdb.py, etc.)
+   - API endpoints and schemas
+   - All ports (vectorstore.py, llm.py, datasource.py, etc.)
+   - Domain models (user.py, datafile.py, dataframe.py, chat_session.py)
+   - Services (auth_service.py, file_service.py, chat_service.py, etc.)
+
+3. Follow these patterns for different types of tests:
+   - For **Ports**: Test that each port is a Protocol and has all required methods
+   - For **Adapters**: Test initialization and all public methods
+   - For **Services**: Test all business logic methods using mocked dependencies
+   - For **Domain Models**: Test model initialization and validation
+   - For **API Endpoints**: Test correct status codes and responses
+
+4. Add GitHub Actions workflow to automatically run tests and report coverage.
+
+### Testing Strategy
+
+- Use `pytest` for all tests
+- Use fixtures for common test setup
+- Mock external dependencies using unittest.mock
+- Use parameterized tests where appropriate
+- Aim for at least 95% line coverage and 90% branch coverage
+

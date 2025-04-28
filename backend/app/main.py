@@ -9,10 +9,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.app.api.deps import get_analyzer_service
-from backend.app.api.routers import auth, chat, files
-from backend.app.core.config import settings
-from backend.app.core.database.session import create_tables
+from .api.deps import get_analyzer_service
+from .api.routers import auth, chat, files
+from .core.config import settings
+from .core.database.session import create_tables
 
 
 @asynccontextmanager

@@ -1,26 +1,31 @@
-"""Dependency injection for FastAPI endpoints."""
+"""
+Dependency injection functions for FastAPI endpoints.
+
+This module provides functions that can be used as dependencies in FastAPI
+route handlers to inject services and other dependencies.
+"""
 
 from fastapi import HTTPException, status
 
-from backend.app.adapters.db_postgres import (
+from ..adapters.db_postgres import (
     PostgresChatSessionRepository,
     PostgresDataFileRepository,
     PostgresUserRepository,
 )
-from backend.app.adapters.llm_pandasai import PandasAiAdapter
-from backend.app.adapters.storage_local import LocalFileStorage
-from backend.app.adapters.vector_faiss import FAISSVectorStore
-from backend.app.core.config import settings
-from backend.app.core.database.database import get_async_session
-from backend.app.core.security import TokenData, get_current_user
-from backend.app.ports.llm import DataAnalysisService
-from backend.app.ports.repository import ChatSessionRepository, DataFileRepository, UserRepository
-from backend.app.ports.storage import FileStorage
-from backend.app.ports.vectorstore import VectorStore
-from backend.app.services.analyzer_service import AnalyzerService
-from backend.app.services.auth_service import AuthService
-from backend.app.services.chat_service import ChatService
-from backend.app.services.file_service import FileService
+from ..adapters.llm_pandasai import PandasAiAdapter
+from ..adapters.storage_local import LocalFileStorage
+from ..adapters.vector_faiss import FAISSVectorStore
+from ..core.config import settings
+from ..core.database.database import get_async_session
+from ..core.security import TokenData, get_current_user
+from ..ports.llm import DataAnalysisService
+from ..ports.repository import ChatSessionRepository, DataFileRepository, UserRepository
+from ..ports.storage import FileStorage
+from ..ports.vectorstore import VectorStore
+from ..services.analyzer_service import AnalyzerService
+from ..services.auth_service import AuthService
+from ..services.chat_service import ChatService
+from ..services.file_service import FileService
 
 
 # Repository dependencies

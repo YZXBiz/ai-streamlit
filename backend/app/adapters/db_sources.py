@@ -11,7 +11,7 @@ import pandas as pd
 import pandasai as pai
 from sqlalchemy import create_engine, text
 
-from backend.app.ports.datasource import DataSource
+from ..ports.datasource import DataSource
 
 
 class SQLSource(DataSource):
@@ -22,7 +22,7 @@ class SQLSource(DataSource):
         connection_string: str,
         query: str,
         name: str,
-        description: Optional[str] = None,
+        description: str | None = None,
     ):
         """
         Initialize the SQL data source.
@@ -45,10 +45,10 @@ class SQLSource(DataSource):
         """
         # Create a SQLAlchemy engine
         engine = create_engine(self.source)
-        
+
         # Read the query results into a pandas DataFrame
         with engine.connect() as connection:
             df = pd.read_sql(text(self.query), connection)
-        
+
         # Convert to PandasAI DataFrame
-        return pai.DataFrame(df, name=self.name, description=self.description) 
+        return pai.DataFrame(df, name=self.name, description=self.description)

@@ -1,12 +1,16 @@
-"""Database session configuration for SQLAlchemy."""
+"""
+Database session management.
+
+This module handles SQLAlchemy session creation and lifecycle management.
+"""
 
 from collections.abc import Generator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.app.core.config import settings
-from backend.app.core.database.models import Base
+from ..config import settings
+from .models import Base
 
 # Create async engine
 SQLALCHEMY_DATABASE_URL = (

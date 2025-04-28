@@ -1,11 +1,17 @@
-"""Database connection and session management."""
+"""
+Database core components.
+
+This module defines the SQLAlchemy Base class and session utilities.
+"""
+
+from collections.abc import AsyncGenerator
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from backend.app.core.config import settings
+from ..config import settings
 
 # Base class for SQLAlchemy models
 Base = declarative_base()

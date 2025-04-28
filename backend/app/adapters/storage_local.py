@@ -1,13 +1,19 @@
-"""Local file system implementation of the FileStorage interface."""
+"""
+LocalFileStorage adapter for file storage.
+
+This adapter implements the FileStorage interface to store files
+on the local filesystem.
+"""
 
 import os
 import shutil
 import uuid
 from pathlib import Path
+from typing import Optional
 
 from fastapi import UploadFile
 
-from backend.app.ports.storage import FileStorage
+from ..ports.storage import FileStorage
 
 
 class LocalFileStorage(FileStorage):

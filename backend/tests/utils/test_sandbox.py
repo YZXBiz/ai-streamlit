@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.app.adapters.sandbox import CodeSandbox
+from app.adapters.sandbox import CodeSandbox
 
 
 @pytest.fixture

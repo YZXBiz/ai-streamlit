@@ -8,8 +8,8 @@ import tempfile
 
 import pandas as pd
 
-from backend.app.domain.models.dataframe import DataFrameCollection
-from backend.app.services.dataframe_service import DataFrameService
+from ..domain.models.dataframe import DataFrameCollection
+from ..services.dataframe_service import DataFrameService
 
 
 class AnalyzerService:

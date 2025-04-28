@@ -1,13 +1,17 @@
-"""Authentication service."""
+"""
+Authentication service for user management.
+
+This service handles user authentication, registration, and token management.
+"""
 
 from datetime import timedelta
 
 from fastapi import HTTPException, status
 
-from backend.app.core.config import settings
-from backend.app.core.security import create_access_token, get_password_hash, verify_password
-from backend.app.domain.models.user import User
-from backend.app.ports.repository import UserRepository
+from ..core.config import settings
+from ..core.security import create_access_token, get_password_hash, verify_password
+from ..domain.models.user import User
+from ..ports.repository import UserRepository
 
 
 class AuthService:

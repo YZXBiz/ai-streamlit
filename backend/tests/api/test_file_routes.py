@@ -7,10 +7,10 @@ import pytest
 from fastapi import UploadFile
 from fastapi.testclient import TestClient
 
-from backend.app.api.routers.files import router
-from backend.app.domain.models.file import DataFile
-from backend.app.domain.models.user import User
-from backend.app.main import app
+from app.api.routers.files import router
+from app.domain.models.file import DataFile
+from app.domain.models.user import User
+from app.main import app
 
 
 @pytest.fixture

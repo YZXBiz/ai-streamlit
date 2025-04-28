@@ -1,14 +1,19 @@
-"""File service for handling uploads and data loading."""
+"""
+File service for handling file operations.
+
+This service handles file uploads, downloads, and related operations
+including preprocessing and registering files with the data analysis system.
+"""
 
 import os
 from typing import Any
 
 from fastapi import HTTPException, UploadFile, status
 
-from backend.app.domain.models.datafile import DataFile, FileType
-from backend.app.ports.llm import DataAnalysisService
-from backend.app.ports.repository import DataFileRepository
-from backend.app.ports.storage import FileStorage
+from ..domain.models.datafile import DataFile, FileType
+from ..ports.llm import DataAnalysisService
+from ..ports.repository import DataFileRepository
+from ..ports.storage import FileStorage
 
 
 class FileService:

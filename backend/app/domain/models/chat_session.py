@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 
 from .datafile import DataFile
 
@@ -10,8 +10,9 @@ from .datafile import DataFile
 class MessageSender(Enum):
     """Enum for message sender types."""
 
-    USER = auto()
-    ASSISTANT = auto()
+    USER = "USER"
+    ASSISTANT = "ASSISTANT"
+    SYSTEM = "SYSTEM"
 
 
 @dataclass

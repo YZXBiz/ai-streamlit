@@ -1,16 +1,20 @@
-"""SQLAlchemy ORM models for database tables."""
+"""
+SQLAlchemy ORM models for database tables.
+
+This module defines the database schema using SQLAlchemy ORM classes.
+"""
 
 from datetime import datetime
-from enum import Enum
+from enum import Enum as PyEnum
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 
-from backend.app.core.database.database import Base
+from .database import Base
 
 
-class MessageSenderEnum(str, Enum):
+class MessageSenderEnum(str, PyEnum):
     """Enum for message sender types."""
 
     USER = "USER"

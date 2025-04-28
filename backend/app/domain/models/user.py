@@ -19,6 +19,7 @@ class User:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
+    @property
     def full_name(self) -> str:
         """Return the user's full name."""
         if self.first_name and self.last_name:

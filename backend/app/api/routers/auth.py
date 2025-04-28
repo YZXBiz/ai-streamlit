@@ -1,11 +1,15 @@
-"""Authentication API endpoints."""
+"""
+Authentication API endpoints.
+
+This module defines the routes for user authentication and registration.
+"""
 
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from backend.app.api.deps import get_auth_service
-from backend.app.api.schemas import LoginRequest, Token, UserCreate, UserResponse
-from backend.app.services.auth_service import AuthService
+from ...services.auth_service import AuthService
+from ..deps import get_auth_service
+from ..schemas import LoginRequest, Token, UserCreate, UserResponse
 
 router = APIRouter(tags=["auth"])
 

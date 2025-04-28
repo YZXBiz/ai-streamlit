@@ -5,7 +5,7 @@ from collections.abc import Generator
 import pandas as pd
 import pytest
 
-from backend.app.adapters.db_duckdb import DuckDBManager
+from app.adapters.db_duckdb import DuckDBManager
 
 
 @pytest.fixture

@@ -1,11 +1,16 @@
-"""Repository interfaces for database operations."""
+"""
+Repository interfaces for data persistence.
+
+This module defines abstract base classes for repository operations
+that provide an interface between domain models and persistence.
+"""
 
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from backend.app.domain.models.chat_session import ChatSession, Message
-from backend.app.domain.models.datafile import DataFile
-from backend.app.domain.models.user import User
+from ..domain.models.chat_session import ChatSession, Message
+from ..domain.models.datafile import DataFile
+from ..domain.models.user import User
 
 # Generic type variable for repository operations
 T = TypeVar("T")

@@ -2,11 +2,13 @@
 
 from datetime import datetime
 
+import pandas as pd
 import pytest
 
-from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
-from backend.app.domain.models.datafile import DataFile, FileType
-from backend.app.domain.models.user import User
+from app.domain.models.chat_session import ChatSession, Message, MessageSender
+from app.domain.models.datafile import DataFile, FileType
+from app.domain.models.dataframe import DataFrameCollection
+from app.domain.models.user import User
 
 
 class TestUserModel:
@@ -198,14 +200,20 @@ class TestChatSessionModels:
             Message(id=2, content="Hi there", sender=MessageSender.ASSISTANT),
         ]
 
-        data_file = DataFile(id=3, filename="test.csv")
+        data_file = DataFile(
+            id=1,
+            filename="test.csv",
+            original_filename="original.csv",
+            file_path="/path/to/file",
+            file_type=FileType.CSV,
+        )
 
         session = ChatSession(
             id=1,
             user_id=2,
             name="Data Analysis",
-            description="Analyzing sales data",
-            data_file_id=3,
+            description="Analysis of sales data",
+            data_file_id=1,
             data_file=data_file,
             messages=messages,
             created_at=created_at,
@@ -216,46 +224,180 @@ class TestChatSessionModels:
         assert session.id == 1
         assert session.user_id == 2
         assert session.name == "Data Analysis"
-        assert session.description == "Analyzing sales data"
-        assert session.data_file_id == 3
+        assert session.description == "Analysis of sales data"
+        assert session.data_file_id == 1
         assert session.data_file is data_file
-        assert len(session.messages) == 2
-        assert session.messages[0].content == "Hello"
-        assert session.messages[1].content == "Hi there"
+        assert session.messages == messages
         assert session.created_at == created_at
         assert session.updated_at == updated_at
         assert session.last_active_at == last_active_at
 
     def test_add_message_method(self):
         """Test the add_message method."""
-        session = ChatSession(id=1)
+        session = ChatSession(id=1, name="Test Session")
 
+        # Add a message
         message = session.add_message("Hello", MessageSender.USER)
 
-        assert message.session_id == 1
-        assert message.sender == MessageSender.USER
+        assert isinstance(message, Message)
         assert message.content == "Hello"
+        assert message.sender == MessageSender.USER
+        assert message.session_id == 1
         assert len(session.messages) == 1
         assert session.messages[0] is message
 
     def test_add_user_message_method(self):
         """Test the add_user_message method."""
-        session = ChatSession(id=1)
+        session = ChatSession(id=1, name="Test Session")
 
-        message = session.add_user_message("How are you?")
+        # Add a user message
+        message = session.add_user_message("What is the average sales?")
 
-        assert message.session_id == 1
+        assert isinstance(message, Message)
+        assert message.content == "What is the average sales?"
         assert message.sender == MessageSender.USER
-        assert message.content == "How are you?"
+        assert message.session_id == 1
         assert len(session.messages) == 1
 
     def test_add_assistant_message_method(self):
         """Test the add_assistant_message method."""
-        session = ChatSession(id=1)
+        session = ChatSession(id=1, name="Test Session")
 
-        message = session.add_assistant_message("I'm fine, thanks!")
+        # Add an assistant message
+        message = session.add_assistant_message("The average sales is $1,234.56")
 
-        assert message.session_id == 1
+        assert isinstance(message, Message)
+        assert message.content == "The average sales is $1,234.56"
         assert message.sender == MessageSender.ASSISTANT
-        assert message.content == "I'm fine, thanks!"
+        assert message.session_id == 1
         assert len(session.messages) == 1
+
+
+class TestDataFrameCollection:
+    """Tests for the DataFrameCollection model."""
+
+    @pytest.fixture
+    def sample_dataframes(self):
+        """Create sample dataframes for testing."""
+        df1 = pd.DataFrame({"id": [1, 2, 3], "name": ["A", "B", "C"]})
+        df2 = pd.DataFrame({"id": [10, 20, 30], "value": [100, 200, 300]})
+        df3 = pd.DataFrame({"date": ["2023-01-01", "2023-01-02"], "sales": [1000, 2000]})
+        return [df1, df2, df3]
+
+    def test_collection_init_with_names(self, sample_dataframes):
+        """Test initialization with provided names."""
+        names = ["customers", "products", "sales"]
+        collection = DataFrameCollection(
+            sample_dataframes,
+            name="Sales Analysis",
+            dataframe_names=names,
+            description="Collection for sales analysis",
+        )
+
+        assert collection.name == "Sales Analysis"
+        assert collection.description == "Collection for sales analysis"
+        assert len(collection) == 3
+        assert collection.dataframe_names == names
+        assert collection.dataframes == sample_dataframes
+
+    def test_collection_init_without_names(self, sample_dataframes):
+        """Test initialization without provided names."""
+        collection = DataFrameCollection(sample_dataframes, name="Test Collection")
+
+        assert collection.name == "Test Collection"
+        assert collection.description == ""
+        assert len(collection) == 3
+        assert collection.dataframe_names == ["dataframe_0", "dataframe_1", "dataframe_2"]
+        assert collection.dataframes == sample_dataframes
+
+    def test_collection_init_with_partial_names(self, sample_dataframes):
+        """Test initialization with fewer names than dataframes."""
+        names = ["customers", "products"]
+        collection = DataFrameCollection(
+            sample_dataframes, name="Test Collection", dataframe_names=names
+        )
+
+        assert len(collection) == 3
+        assert collection.dataframe_names == ["customers", "products", "dataframe_2"]
+
+    def test_add_dataframe(self, sample_dataframes):
+        """Test adding a dataframe to the collection."""
+        collection = DataFrameCollection(
+            sample_dataframes[:2], name="Test Collection", dataframe_names=["df1", "df2"]
+        )
+
+        new_df = pd.DataFrame({"x": [1, 2], "y": [3, 4]})
+
+        # Add with custom name
+        result = collection.add_dataframe(new_df, "df3")
+        assert result is True
+        assert len(collection) == 3
+        assert collection.dataframe_names == ["df1", "df2", "df3"]
+        assert collection.dataframes[2] is new_df
+
+        # Add without name (should generate one)
+        another_df = pd.DataFrame({"a": [5, 6], "b": [7, 8]})
+        result = collection.add_dataframe(another_df)
+        assert result is True
+        assert len(collection) == 4
+        assert collection.dataframe_names == ["df1", "df2", "df3", "dataframe_3"]
+
+        # Try to add with duplicate name (should fail)
+        duplicate_df = pd.DataFrame({"c": [9, 10]})
+        result = collection.add_dataframe(duplicate_df, "df2")
+        assert result is False
+        assert len(collection) == 4  # No change
+
+    def test_remove_dataframe(self, sample_dataframes):
+        """Test removing a dataframe from the collection."""
+        collection = DataFrameCollection(
+            sample_dataframes, name="Test Collection", dataframe_names=["df1", "df2", "df3"]
+        )
+
+        # Remove existing dataframe
+        result = collection.remove_dataframe("df2")
+        assert result is True
+        assert len(collection) == 2
+        assert collection.dataframe_names == ["df1", "df3"]
+        assert collection.dataframes == [sample_dataframes[0], sample_dataframes[2]]
+
+        # Try to remove non-existent dataframe
+        result = collection.remove_dataframe("doesnt_exist")
+        assert result is False
+        assert len(collection) == 2  # No change
+
+    def test_get_dataframe(self, sample_dataframes):
+        """Test getting a dataframe by name."""
+        collection = DataFrameCollection(
+            sample_dataframes, name="Test Collection", dataframe_names=["df1", "df2", "df3"]
+        )
+
+        # Get existing dataframe
+        df = collection.get_dataframe("df2")
+        assert df is sample_dataframes[1]
+
+        # Try to get non-existent dataframe
+        df = collection.get_dataframe("doesnt_exist")
+        assert df is None
+
+    def test_get_dataframes(self, sample_dataframes):
+        """Test getting all dataframes."""
+        collection = DataFrameCollection(sample_dataframes, name="Test Collection")
+
+        dfs = collection.get_dataframes()
+        assert dfs == sample_dataframes
+
+    def test_get_query_context(self, sample_dataframes):
+        """Test getting query context."""
+        collection = DataFrameCollection(
+            sample_dataframes,
+            name="Sales Analysis",
+            dataframe_names=["customers", "products", "sales"],
+            description="Collection for sales analysis",
+        )
+
+        context = collection.get_query_context()
+        assert "Collection 'Sales Analysis'" in context
+        assert "Collection for sales analysis" in context
+        assert "Contains 3 dataframes" in context
+        assert "customers, products, sales" in context

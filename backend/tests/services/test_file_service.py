@@ -2,15 +2,56 @@
 
 import io
 import os
+import tempfile
+from typing import BinaryIO
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from app.domain.models.datafile import FileType
+from app.domain.models.file import DataFile
+from app.domain.models.user import User
+from app.ports.repository import DataFileRepository, FileRepository
+from app.ports.storage import FileStorage
+from app.services.file_service import FileService
 
-from backend.app.domain.models.file import DataFile
-from backend.app.domain.models.user import User
-from backend.app.ports.repository import FileRepository
-from backend.app.ports.storage import FileStorage
-from backend.app.services.file_service import FileService
+
+@pytest.fixture
+def mock_file_repo():
+    """Create a mock file repository for testing."""
+    repo = MagicMock(spec=DataFileRepository)
+
+    # Setup the get method to return a DataFile
+    repo.get.return_value = DataFile(
+        id=1,
+        user_id=1,
+        filename="test_file.csv",
+        original_filename="original.csv",
+        file_path="/path/to/file.csv",
+        file_size=1024,
+        file_type=FileType.CSV,
+        description="Test file",
+    )
+
+    # Setup the create method to return a DataFile with assigned ID
+    repo.create.side_effect = lambda data_file: DataFile(
+        id=1,
+        user_id=data_file.user_id,
+        filename=data_file.filename,
+        original_filename=data_file.original_filename,
+        file_path=data_file.file_path,
+        file_size=data_file.file_size,
+        file_type=data_file.file_type,
+        description=data_file.description,
+    )
+
+    return repo
+
+
+@pytest.fixture
+def temp_storage_path():
+    """Create a temporary directory for testing file storage."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
 
 
 @pytest.mark.asyncio
@@ -362,3 +403,125 @@ class TestFileService:
         assert content == file_content
         assert filename == "test_data.csv"
         assert content_type == "text/csv"
+
+    @pytest.mark.service
+    def test_init(self, mock_file_repo, temp_storage_path):
+        """Test initialization of FileService."""
+        service = FileService(file_repository=mock_file_repo, storage_path=temp_storage_path)
+
+        assert service.file_repository == mock_file_repo
+        assert service.storage_path == temp_storage_path
+        assert service.file_storage is not None
+
+    @pytest.mark.service
+    @patch("app.services.file_service.uuid.uuid4")
+    async def test_upload_file(self, mock_uuid, mock_file_repo, temp_storage_path):
+        """Test uploading a file."""
+        # Mock UUID for deterministic file names
+        mock_uuid.return_value = "test-uuid-1234"
+
+        service = FileService(file_repository=mock_file_repo, storage_path=temp_storage_path)
+
+        # Create a temporary file to upload
+        file_content = b"test,data\n1,2\n3,4"
+        original_filename = "data.csv"
+
+        # Create a mock UploadFile object
+        mock_file = MagicMock()
+        mock_file.filename = original_filename
+        mock_file.content_type = "text/csv"
+        mock_file.size = len(file_content)
+
+        # Mock the read method to return file_content
+        mock_file.read = MagicMock(return_value=file_content)
+
+        # Call the upload_file method
+        result = await service.upload_file(file=mock_file, user_id=1, description="Test upload")
+
+        # Check that the result is a DataFile with expected properties
+        assert isinstance(result, DataFile)
+        assert result.user_id == 1
+        assert result.original_filename == original_filename
+        assert result.file_type == FileType.CSV
+        assert result.description == "Test upload"
+
+        # Check that the file was saved to disk
+        expected_path = os.path.join(temp_storage_path, "1", "test-uuid-1234_data.csv")
+        assert os.path.exists(expected_path)
+
+        # Check file repository was called to create an entry
+        mock_file_repo.create.assert_called_once()
+
+        # Check the file contents
+        with open(expected_path, "rb") as f:
+            assert f.read() == file_content
+
+    @pytest.mark.service
+    async def test_get_file_by_id(self, mock_file_repo, temp_storage_path):
+        """Test getting a file by ID."""
+        service = FileService(file_repository=mock_file_repo, storage_path=temp_storage_path)
+
+        file = await service.get_file_by_id(file_id=1)
+
+        assert file is not None
+        assert file.id == 1
+        assert file.filename == "test_file.csv"
+
+        # Verify repository was called
+        mock_file_repo.get.assert_called_once_with(1)
+
+    @pytest.mark.service
+    async def test_get_files_by_user_id(self, mock_file_repo, temp_storage_path):
+        """Test getting files by user ID."""
+        # Setup mock to return a list of files
+        mock_files = [
+            DataFile(
+                id=1,
+                user_id=1,
+                filename="file1.csv",
+                original_filename="file1.csv",
+                file_path="/path/to/file1.csv",
+                file_size=1024,
+                file_type=FileType.CSV,
+                description="File 1",
+            ),
+            DataFile(
+                id=2,
+                user_id=1,
+                filename="file2.csv",
+                original_filename="file2.csv",
+                file_path="/path/to/file2.csv",
+                file_size=2048,
+                file_type=FileType.CSV,
+                description="File 2",
+            ),
+        ]
+        mock_file_repo.get_by_user_id.return_value = mock_files
+
+        service = FileService(file_repository=mock_file_repo, storage_path=temp_storage_path)
+
+        files = await service.get_files_by_user_id(user_id=1)
+
+        assert len(files) == 2
+        assert files[0].id == 1
+        assert files[1].id == 2
+
+        # Verify repository was called
+        mock_file_repo.get_by_user_id.assert_called_once_with(1)
+
+    @pytest.mark.service
+    @patch("app.services.file_service.os.remove")
+    async def test_delete_file(self, mock_remove, mock_file_repo, temp_storage_path):
+        """Test deleting a file."""
+        service = FileService(file_repository=mock_file_repo, storage_path=temp_storage_path)
+
+        result = await service.delete_file(file_id=1)
+
+        assert result is True
+
+        # Verify repository was called to get and delete
+        mock_file_repo.get.assert_called_once_with(1)
+        mock_file_repo.delete.assert_called_once_with(1)
+
+        # Verify os.remove was called to delete the file
+        mock_remove.assert_called_once_with("/path/to/file.csv")

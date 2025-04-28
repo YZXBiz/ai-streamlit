@@ -1,12 +1,18 @@
-"""Sandbox for secure code execution."""
+"""
+Sandbox for safe code execution.
+
+This module provides a sandboxed environment for executing code
+with restricted capabilities to prevent security issues.
+"""
 
 import ast
 import builtins
 import contextlib
 import io
-from typing import Any
+import sys
+from typing import Any, Dict, List, Optional, Set
 
-from backend.app.core.config import settings
+from ..core.config import settings
 
 
 class CodeSandbox:

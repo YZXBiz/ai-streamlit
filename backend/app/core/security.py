@@ -1,15 +1,20 @@
-"""Authentication and security utilities."""
+"""
+Security utilities for authentication and authorization.
+
+This module provides functions for password hashing, token generation,
+and verification for the authentication system.
+"""
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from backend.app.core.config import settings
+from .config import settings
 
 # Define password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -115,16 +120,16 @@ def decode_token(token: str) -> TokenData:
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
     """
     Get the current user from the JWT token.
-    
+
     This dependency will automatically extract the token from the Authorization header,
     decode it, and return the token data if valid.
-    
+
     Args:
         token: The JWT token from the Authorization header (injected by FastAPI)
-        
+
     Returns:
         TokenData: The decoded token data including username and user_id
-        
+
     Raises:
         HTTPException: If the token is invalid or expired
     """

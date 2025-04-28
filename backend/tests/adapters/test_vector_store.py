@@ -6,8 +6,8 @@ from collections.abc import AsyncGenerator
 
 import pytest
 
-from backend.app.adapters.vector_simple import SimpleTfidfVectorStore
-from backend.app.ports.vectorstore import VectorStore
+from app.adapters.vector_simple import SimpleTfidfVectorStore
+from app.ports.vectorstore import VectorStore
 
 
 @pytest.fixture

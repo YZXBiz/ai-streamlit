@@ -52,7 +52,7 @@ class Settings(BaseSettings):
         description="Secret key for JWT tokens (change this in production!)",
     )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        60 * 24,  # 1 day
+        1440,
         description="Token expiry time in minutes",
     )
 

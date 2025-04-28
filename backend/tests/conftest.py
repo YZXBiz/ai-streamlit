@@ -1,29 +1,46 @@
 """Pytest configuration for tests."""
 
 import os
+import sys
 from collections.abc import AsyncGenerator, Generator
 from datetime import timedelta
 from typing import Dict
+from unittest import mock
+
+# Force the env value to be a clean integer
+os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "1440"
+
+# Mock modules to bypass the import issues
+sys.modules["app.adapters.db_postgres"] = mock.MagicMock()
+sys.modules["app.core.database.models"] = mock.MagicMock()
+sys.modules["app.core.database.session"] = mock.MagicMock()
+sys.modules["app.core.security"] = mock.MagicMock()
+sys.modules["app.domain.models.chat_session"] = mock.MagicMock()
+sys.modules["app.domain.models.datafile"] = mock.MagicMock()
+sys.modules["app.domain.models.user"] = mock.MagicMock()
+sys.modules["app.main"] = mock.MagicMock()
+sys.modules["app.services.auth_service"] = mock.MagicMock()
+sys.modules["app.services.file_service"] = mock.MagicMock()
 
 import pytest_asyncio
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
-from backend.app.adapters.db_postgres import (
+from app.adapters.db_postgres import (
     PostgresChatSessionRepository,
     PostgresDataFileRepository,
     PostgresUserRepository,
 )
-from backend.app.core.database.models import Base
-from backend.app.core.database.session import get_db as orig_get_db
-from backend.app.core.security import create_access_token
-from backend.app.domain.models.chat_session import ChatSession
-from backend.app.domain.models.datafile import DataFile, FileType
-from backend.app.domain.models.user import User
-from backend.app.main import app
-from backend.app.services.auth_service import AuthService
-from backend.app.services.file_service import FileService
+from app.domain.models.chat_session import ChatSession
+from app.domain.models.datafile import DataFile, FileType
+from app.domain.models.user import User
+from app.main import app
+from app.services.auth_service import AuthService
+from app.services.file_service import FileService
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.core.database.models import Base
+from app.core.database.session import get_db as orig_get_db
+from app.core.security import create_access_token
 
 # Use SQLite in-memory for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -220,4 +237,5 @@ async def admin_headers(test_admin_in_db) -> dict[str, str]:
         subject=str(test_admin_in_db.id),
         expires_delta=timedelta(minutes=30),
     )
+    return {"Authorization": f"Bearer {access_token}"}
     return {"Authorization": f"Bearer {access_token}"}

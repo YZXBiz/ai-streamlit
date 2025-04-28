@@ -1,16 +1,21 @@
-"""FAISS implementation of the VectorStore interface."""
+"""
+FAISS vector store for efficient similarity search.
+
+This adapter implements a vector store using Facebook AI Similarity Search (FAISS)
+for fast and efficient similarity searching of text embeddings.
+"""
 
 import os
 import pickle
 import uuid
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from backend.app.core.config import settings
-from backend.app.ports.vectorstore import VectorStore
+from ..core.config import settings
+from ..ports.vectorstore import VectorStore
 
 
 class FAISSVectorStore(VectorStore):

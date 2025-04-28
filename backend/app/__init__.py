@@ -7,8 +7,8 @@ following clean architecture principles.
 
 __version__ = "0.1.0"
 
-from backend.app.services.analyzer_service import AnalyzerService
-from backend.app.services.dataframe_service import DataFrameService as DataFrameService
+from .services.analyzer_service import AnalyzerService
+from .services.dataframe_service import DataFrameService as DataFrameService
 
 
 def create_analyzer() -> AnalyzerService:

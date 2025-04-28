@@ -1,16 +1,20 @@
-"""Chat API endpoints."""
+"""
+Chat API endpoints.
+
+This module defines the routes for chat sessions and message handling.
+"""
 
 from fastapi import APIRouter, Depends, status
 
-from backend.app.api.deps import get_chat_service, get_current_active_user
-from backend.app.api.schemas import (
+from ...core.security import TokenData
+from ...services.chat_service import ChatService
+from ..deps import get_chat_service, get_current_active_user
+from ..schemas import (
     ChatSessionCreate,
     ChatSessionResponse,
     MessageCreate,
     MessageResponse,
 )
-from backend.app.core.security import TokenData
-from backend.app.services.chat_service import ChatService
 
 router = APIRouter(tags=["chat"])
 

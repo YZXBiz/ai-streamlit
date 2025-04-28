@@ -1,8 +1,8 @@
 """
-Domain models for the application.
+Domain model classes for the PandasAI Chat Application.
 
-This package contains the core domain entities and value objects.
+These models represent the core business entities in our application.
 """
 
-from backend.app.domain.models.dataframe import DataFrameCollection as DataFrameCollection
-from backend.app.domain.models.user import User as User
+from .dataframe import DataFrameCollection as DataFrameCollection
+from .user import User as User

@@ -2,16 +2,17 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 
 
 class FileType(Enum):
     """Enum for file types supported by the application."""
 
-    CSV = auto()
-    EXCEL = auto()
-    PARQUET = auto()
-    JSON = auto()
+    CSV = "CSV"
+    EXCEL = "EXCEL"
+    PARQUET = "PARQUET"
+    JSON = "JSON"
+    SQL = "SQL"
 
 
 @dataclass
@@ -39,4 +40,6 @@ class DataFile:
             return ".parquet"
         elif self.file_type == FileType.JSON:
             return ".json"
+        elif self.file_type == FileType.SQL:
+            return ".sql"
         return ""

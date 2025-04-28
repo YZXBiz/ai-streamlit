@@ -10,7 +10,7 @@ from typing import Any, Optional, Union
 import pandas as pd
 import pandasai as pai
 
-from backend.app.ports.datasource import DataSource
+from ..ports.datasource import DataSource
 
 
 class CSVSource(DataSource):
@@ -20,7 +20,7 @@ class CSVSource(DataSource):
         self,
         source: str,
         name: str,
-        description: Optional[str] = None,
+        description: str | None = None,
         **kwargs: Any,
     ):
         """
@@ -44,7 +44,7 @@ class CSVSource(DataSource):
         """
         # Read the CSV file into a pandas DataFrame
         df = pd.read_csv(self.source, **self.kwargs)
-        
+
         # Convert to PandasAI DataFrame
         return pai.DataFrame(df, name=self.name, description=self.description)
 
@@ -56,8 +56,8 @@ class ExcelSource(DataSource):
         self,
         source: str,
         name: str,
-        description: Optional[str] = None,
-        sheet_name: Optional[Union[str, int]] = 0,
+        description: str | None = None,
+        sheet_name: str | int | None = 0,
         **kwargs: Any,
     ):
         """
@@ -83,7 +83,7 @@ class ExcelSource(DataSource):
         """
         # Read the Excel file into a pandas DataFrame
         df = pd.read_excel(self.source, sheet_name=self.sheet_name, **self.kwargs)
-        
+
         # Convert to PandasAI DataFrame
         return pai.DataFrame(df, name=self.name, description=self.description)
 
@@ -95,7 +95,7 @@ class ParquetSource(DataSource):
         self,
         source: str,
         name: str,
-        description: Optional[str] = None,
+        description: str | None = None,
         **kwargs: Any,
     ):
         """
@@ -119,6 +119,6 @@ class ParquetSource(DataSource):
         """
         # Read the Parquet file into a pandas DataFrame
         df = pd.read_parquet(self.source, **self.kwargs)
-        
+
         # Convert to PandasAI DataFrame
-        return pai.DataFrame(df, name=self.name, description=self.description) 
+        return pai.DataFrame(df, name=self.name, description=self.description)

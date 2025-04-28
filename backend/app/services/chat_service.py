@@ -1,14 +1,19 @@
-"""Chat service for managing chat sessions and queries."""
+"""
+Chat service for managing user conversational interactions.
+
+This service handles all aspects of chat interactions including
+session management, message history, and AI response generation.
+"""
 
 from datetime import datetime
 from typing import Any
 
 from fastapi import HTTPException, status
 
-from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
-from backend.app.ports.llm import DataAnalysisService
-from backend.app.ports.repository import ChatSessionRepository, DataFileRepository
-from backend.app.ports.vectorstore import VectorStore
+from ..domain.models.chat_session import ChatSession, Message, MessageSender
+from ..ports.llm import DataAnalysisService
+from ..ports.repository import ChatSessionRepository, DataFileRepository
+from ..ports.vectorstore import VectorStore
 
 
 class ChatService:

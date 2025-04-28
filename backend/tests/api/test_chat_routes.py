@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.api.deps import get_chat_service, get_current_user
-from backend.app.domain.models.chat import ChatSession, Message
-from backend.app.domain.models.user import User
-from backend.app.main import app
+from app.api.deps import get_chat_service, get_current_user
+from app.domain.models.chat_session import ChatSession, Message
+from app.domain.models.user import User
+from app.main import app
 
 
 @pytest.mark.asyncio

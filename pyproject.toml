@@ -42,9 +42,12 @@ dependencies = [
     "ruff>=0.11.7",
     "passlib>=1.7.4",
     "python-jose>=3.3.0",
-    "sentence-transformers>=2.4.0",
+    "sentence-transformers>=2.4.0,<3.0.0",
     "pydantic-settings>=2.9.1",
     "email-validator>=2.0.0",
+    "httpx==0.24.1", # Version compatible with FastAPI 0.103.1 and starlette 0.27.0
+    "torch==2.2.2", # Last version supporting macOS x86_64
+    "openai>=1.76.0",
 ]
 
 # Project URLs
@@ -64,7 +67,13 @@ frontend-app = "frontend.app:main"
 
 # Development Dependencies
 [dependency-groups]
-dev = ["black>=23.0.0", "isort>=5.0.0", "mypy>=1.0.0", "pylint>=2.0.0"]
+dev = [
+    "black>=23.0.0",
+ "ipykernel>=6.29.5",
+ "isort>=5.0.0",
+ "mypy>=1.0.0",
+ "pylint>=2.0.0",
+]
 test = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 
 docs = [

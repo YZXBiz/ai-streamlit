@@ -1,11 +1,15 @@
-"""File upload and management API endpoints."""
+"""
+File management API endpoints.
+
+This module defines the routes for file uploads, downloads, and management.
+"""
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
-from backend.app.api.deps import get_current_active_user, get_file_service
-from backend.app.api.schemas import DataFileResponse
-from backend.app.core.security import TokenData
-from backend.app.services.file_service import FileService
+from ...core.security import TokenData
+from ...services.file_service import FileService
+from ..deps import get_current_active_user, get_file_service
+from ..schemas import DataFileResponse
 
 router = APIRouter(tags=["files"])
 

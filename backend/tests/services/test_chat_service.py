@@ -4,12 +4,105 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from app.domain.models.chat_session import ChatSession, Message, MessageSender
+from app.domain.models.datafile import DataFile, FileType
+from app.domain.models.message import MessageRole
+from app.domain.models.user import User
+from app.ports.llm import LLMService
+from app.ports.repository import ChatSessionRepository, MessageRepository
+from app.ports.vectorstore import VectorStore
+from app.services.chat_service import ChatService
 from fastapi import HTTPException
 
-from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
-from backend.app.domain.models.datafile import DataFile, FileType
-from backend.app.domain.models.user import User
-from backend.app.services.chat_service import ChatService
+
+@pytest.fixture
+def mock_session_repo():
+    """Create a mock chat session repository."""
+    repo = MagicMock(spec=ChatSessionRepository)
+
+    # Setup the get method to return a ChatSession
+    repo.get.return_value = ChatSession(
+        id=1, user_id=1, name="Test Session", description="Test chat session", data_file_id=1
+    )
+
+    # Setup the create method to return a ChatSession with assigned ID
+    repo.create.side_effect = lambda session: ChatSession(
+        id=1,
+        user_id=session.user_id,
+        name=session.name,
+        description=session.description,
+        data_file_id=session.data_file_id,
+    )
+
+    return repo
+
+
+@pytest.fixture
+def mock_message_repo():
+    """Create a mock message repository."""
+    repo = MagicMock(spec=MessageRepository)
+
+    # Setup the get_by_session_id method to return messages
+    repo.get_by_session_id.return_value = [
+        Message(
+            id=1,
+            session_id=1,
+            role=MessageRole.USER,
+            content="Hello, can you analyze this data?",
+            created_at="2023-01-01T00:00:00",
+        ),
+        Message(
+            id=2,
+            session_id=1,
+            role=MessageRole.ASSISTANT,
+            content="I'd be happy to analyze the data. What would you like to know?",
+            created_at="2023-01-01T00:00:01",
+        ),
+    ]
+
+    # Setup the create method to return a Message with assigned ID
+    repo.create.side_effect = lambda message: Message(
+        id=len(repo.get_by_session_id.return_value) + 1,
+        session_id=message.session_id,
+        role=message.role,
+        content=message.content,
+        created_at=message.created_at,
+    )
+
+    return repo
+
+
+@pytest.fixture
+def mock_llm_service():
+    """Create a mock LLM service."""
+    service = MagicMock(spec=LLMService)
+
+    # Setup the get_chat_response method to return a response
+    service.get_chat_response.return_value = "I've analyzed the data. The average is 42."
+
+    return service
+
+
+@pytest.fixture
+def mock_vector_store():
+    """Create a mock vector store."""
+    store = MagicMock(spec=VectorStore)
+
+    # Setup the search_similar method to return similar messages
+    store.search_similar.return_value = [
+        {
+            "id": "1",
+            "metadata": {"role": "user", "content": "What is the average?", "session_id": "1"},
+            "score": 0.95,
+        },
+        {
+            "id": "2",
+            "metadata": {"role": "assistant", "content": "The average is 42.", "session_id": "1"},
+            "score": 0.90,
+        },
+    ]
+
+    return store
 
 
 @pytest.mark.asyncio
@@ -541,3 +634,162 @@ class TestChatService:
         assert result[1].content == "Hi there"
         session_repo.get.assert_called_once_with(1)
         session_repo.get_messages.assert_called_once_with(1, 0, 100)
+
+    @pytest.mark.service
+    def test_init(self, mock_session_repo, mock_message_repo, mock_llm_service, mock_vector_store):
+        """Test initialization of ChatService."""
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        assert service.session_repository == mock_session_repo
+        assert service.message_repository == mock_message_repo
+        assert service.llm_service == mock_llm_service
+        assert service.vector_store == mock_vector_store
+
+    @pytest.mark.service
+    async def test_create_session(
+        self, mock_session_repo, mock_message_repo, mock_llm_service, mock_vector_store
+    ):
+        """Test creating a new chat session."""
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        session = await service.create_session(
+            user_id=1, data_file_id=1, name="Test Session", description="Test chat session"
+        )
+
+        assert session.id == 1
+        assert session.user_id == 1
+        assert session.data_file_id == 1
+        assert session.name == "Test Session"
+
+        # Verify repository was called
+        mock_session_repo.create.assert_called_once()
+
+    @pytest.mark.service
+    async def test_get_session(
+        self, mock_session_repo, mock_message_repo, mock_llm_service, mock_vector_store
+    ):
+        """Test getting a chat session by ID."""
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        session = await service.get_session(session_id=1)
+
+        assert session.id == 1
+        assert session.name == "Test Session"
+
+        # Verify repository was called
+        mock_session_repo.get.assert_called_once_with(1)
+
+    @pytest.mark.service
+    async def test_get_sessions_by_user(
+        self, mock_session_repo, mock_message_repo, mock_llm_service, mock_vector_store
+    ):
+        """Test getting chat sessions by user ID."""
+        # Setup mock to return a list of sessions
+        mock_sessions = [
+            ChatSession(
+                id=1, user_id=1, name="Session 1", description="First session", data_file_id=1
+            ),
+            ChatSession(
+                id=2, user_id=1, name="Session 2", description="Second session", data_file_id=2
+            ),
+        ]
+        mock_session_repo.get_by_user_id.return_value = mock_sessions
+
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        sessions = await service.get_sessions_by_user(user_id=1)
+
+        assert len(sessions) == 2
+        assert sessions[0].id == 1
+        assert sessions[1].id == 2
+
+        # Verify repository was called
+        mock_session_repo.get_by_user_id.assert_called_once_with(1)
+
+    @pytest.mark.service
+    async def test_get_messages(
+        self, mock_session_repo, mock_message_repo, mock_llm_service, mock_vector_store
+    ):
+        """Test getting messages for a session."""
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        messages = await service.get_messages(session_id=1)
+
+        assert len(messages) == 2
+        assert messages[0].role == MessageRole.USER
+        assert messages[1].role == MessageRole.ASSISTANT
+
+        # Verify repository was called
+        mock_message_repo.get_by_session_id.assert_called_once_with(1)
+
+    @pytest.mark.service
+    @patch("app.services.chat_service.get_timestamp")
+    async def test_send_message(
+        self,
+        mock_timestamp,
+        mock_session_repo,
+        mock_message_repo,
+        mock_llm_service,
+        mock_vector_store,
+    ):
+        """Test sending a message and getting a response."""
+        # Mock timestamp for deterministic test
+        mock_timestamp.return_value = "2023-01-01T00:00:02"
+
+        service = ChatService(
+            session_repository=mock_session_repo,
+            message_repository=mock_message_repo,
+            llm_service=mock_llm_service,
+            vector_store=mock_vector_store,
+        )
+
+        # Get existing messages first to populate history
+        existing_messages = await service.get_messages(session_id=1)
+
+        user_message, assistant_message = await service.send_message(
+            session_id=1, content="What is the average value?", data_file_id=1
+        )
+
+        # Check user message
+        assert user_message.session_id == 1
+        assert user_message.role == MessageRole.USER
+        assert user_message.content == "What is the average value?"
+
+        # Check assistant message
+        assert assistant_message.session_id == 1
+        assert assistant_message.role == MessageRole.ASSISTANT
+        assert assistant_message.content == "I've analyzed the data. The average is 42."
+
+        # Verify repositories were called
+        assert mock_message_repo.create.call_count == 2  # Once for user message, once for assistant
+
+        # Verify LLM service was called with conversation history
+        mock_llm_service.get_chat_response.assert_called_once()
+
+        # Verify embeddings were stored in vector store
+        assert mock_vector_store.store_embedding.call_count == 2

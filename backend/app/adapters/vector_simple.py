@@ -1,13 +1,18 @@
-"""Simple TF-IDF vector store implementation."""
+"""
+Simple TF-IDF vector store for text search.
+
+This provides a basic vector store implementation for storing and
+retrieving text using TF-IDF and cosine similarity.
+"""
 
 import os
 import pickle
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from backend.app.ports.vectorstore import VectorStore
+from ..ports.vectorstore import VectorStore
 
 
 class SimpleTfidfVectorStore(VectorStore):

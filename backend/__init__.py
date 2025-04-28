@@ -16,9 +16,9 @@ from types import ModuleType
 from pandasai import Agent
 
 # Re-export data source classes for backward compatibility
-from backend.app.adapters.db_sources import SQLSource
-from backend.app.adapters.file_sources import CSVSource, ExcelSource, ParquetSource
-from backend.app.ports.datasource import DataSource
+from .app.adapters.db_sources import SQLSource
+from .app.adapters.file_sources import CSVSource, ExcelSource, ParquetSource
+from .app.ports.datasource import DataSource
 
 data_source = ModuleType("backend.data_source")
 data_source.__doc__ = (

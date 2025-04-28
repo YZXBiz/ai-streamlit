@@ -9,7 +9,7 @@ import tempfile
 import pandas as pd
 import sqlalchemy
 
-from backend.app.domain.models.dataframe import DataFrameCollection
+from ..domain.models.dataframe import DataFrameCollection
 
 
 class DataFrameService:

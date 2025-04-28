@@ -1,18 +1,22 @@
-"""PostgreSQL repository implementations."""
+"""
+PostgreSQL repository implementations.
+
+This module implements the repository interfaces using SQLAlchemy ORM and PostgreSQL.
+"""
 
 import builtins
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-from backend.app.core.database.models import ChatSession as ChatSessionModel
-from backend.app.core.database.models import DataFile as DataFileModel
-from backend.app.core.database.models import Message as MessageModel
-from backend.app.core.database.models import User as UserModel
-from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
-from backend.app.domain.models.datafile import DataFile, FileType
-from backend.app.domain.models.user import User
-from backend.app.ports.repository import ChatSessionRepository, DataFileRepository, UserRepository
+from ..core.database.models import ChatSession as ChatSessionModel
+from ..core.database.models import DataFile as DataFileModel
+from ..core.database.models import Message as MessageModel
+from ..core.database.models import User as UserModel
+from ..domain.models.chat_session import ChatSession, Message, MessageSender
+from ..domain.models.datafile import DataFile, FileType
+from ..domain.models.user import User
+from ..ports.repository import ChatSessionRepository, DataFileRepository, UserRepository
 
 
 class PostgresUserRepository(UserRepository):

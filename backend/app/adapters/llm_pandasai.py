@@ -1,17 +1,21 @@
-"""PandasAI adapter for the DataAnalysisService interface."""
+"""
+PandasAI LLM service adapter.
+
+This module provides the PandasAI integration for data analysis services.
+"""
 
 import os
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import pandasai as pai
 from pandasai import Agent, DataFrame
 from pandasai.config import Config
 
-from backend.app.adapters.db_duckdb import DuckDBManager
-from backend.app.adapters.sandbox import CodeSandbox
-from backend.app.core.config import settings
-from backend.app.ports.llm import DataAnalysisService
+from ..adapters.db_duckdb import DuckDBManager
+from ..adapters.sandbox import CodeSandbox
+from ..core.config import settings
+from ..ports.llm import DataAnalysisService
 
 
 class PandasAiAdapter(DataAnalysisService):
@@ -39,15 +43,13 @@ class PandasAiAdapter(DataAnalysisService):
 
         # Initialize the PandasAI Agent with configuration
         config = Config(
-            {
-                "display": "streamlit",
-                "save_charts": True,
-                "save_charts_path": settings.CHARTS_DIR,
-                "enforce_privacy": settings.ENFORCE_PRIVACY,
-                "enable_cache": settings.ENABLE_CACHE,
-                "max_retries": settings.MAX_RETRIES,
-                "use_error_correction_framework": True,
-            }
+            display="streamlit",
+            save_charts=True,
+            save_charts_path=settings.CHARTS_DIR,
+            enforce_privacy=settings.ENFORCE_PRIVACY,
+            enable_cache=settings.ENABLE_CACHE,
+            max_retries=settings.MAX_RETRIES,
+            use_error_correction_framework=True,
         )
 
         # Create a sandbox for secure code execution
