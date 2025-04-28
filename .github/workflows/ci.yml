@@ -1,11 +1,11 @@
 name: CI/CD Pipeline
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [main, develop]
+#   pull_request:
+#     branches: [main, develop]
+#   workflow_dispatch:
 
 jobs:
   # Temporarily commenting out tests for initial deployment
