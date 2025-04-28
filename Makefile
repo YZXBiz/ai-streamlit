@@ -1,13 +1,10 @@
 ################################################################################
-# STORE CLUSTERING - DASHBOARD MAKEFILE
+# PANDASAI CHATBOT APPLICATION MAKEFILE
 ################################################################################
-#
-# Author: Jackson Yang <Jackson.Yang@cvshealth.com>
-# Version: 1.0.0
 #
 # Description:
 #   This Makefile provides targets for developing and running the
-#   Store Clustering dashboard.
+#   PandasAI chatbot application.
 #
 ################################################################################
 
@@ -16,16 +13,11 @@
 # PROJECT CONFIGURATION
 ################################################################################
 
-# Package information
-PACKAGE_NAME := store-clustering-dashboard
-VERSION := 1.0.0
-AUTHOR := Jackson Yang
-
 # Python command - use uv run for environment-specific configurations
 PYTHON := uv run
 
 # Directory paths
-SRC_DIR := dashboard
+SRC_DIR := src
 TESTS_DIR := tests
 LOGS_DIR := $(shell pwd)/logs
 
@@ -52,38 +44,28 @@ export UV_LINK_MODE
 # HELP & INFORMATION
 ################################################################################
 
-.PHONY: help print-env version
+.PHONY: help print-env
 
 help: ## Display this help message
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mStore Clustering Dashboard Help\033[0m\n"} \
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mPandasAI Chatbot Help\033[0m\n"} \
 		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } \
 		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Usage examples:"
 	@echo "  make install             # Install dependencies"
-	@echo "  make dashboard           # Start the dashboard"
+	@echo "  make run                 # Start the PandasAI application"
 	@echo ""
 	@echo "Environment variables priority:"
-	@echo "  1. Command line (make dashboard DATA_DIR=/custom/path)"
+	@echo "  1. Command line (make run DATA_DIR=/custom/path)"
 	@echo "  2. Shell environment variables"
 	@echo "  3. Variables from .env file"
 	@echo "  4. Default values in Makefile"
-	@echo ""
-	@echo "Project info:"
-	@echo "  Version: $(VERSION)"
-	@echo "  Author:  $(AUTHOR)"
 	@echo ""
 
 print-env: ## Display current environment variable values
 	@echo "==> Current environment configuration:"
 	@echo "- DATA_DIR: $(DATA_DIR)"
 	@echo "- ENV: $(ENV)"
-
-version: ## Display version and author information
-	@echo "=================================================="
-	@echo "  $(PACKAGE_NAME) version $(VERSION)"
-	@echo "  Developed by $(AUTHOR)"
-	@echo "=================================================="
 
 ##@ Environment Setup
 ################################################################################
@@ -92,7 +74,7 @@ version: ## Display version and author information
 
 .PHONY: install update
 
-install: ## Install uv package manager and project dependencies
+install: ## Install project dependencies using uv
 	@echo "==> Checking if uv is installed..."
 	@if ! command -v uv >/dev/null 2>&1; then \
 		echo "Installing uv package manager..."; \
@@ -110,61 +92,88 @@ update: ## Update all project dependencies to latest versions
 	@uv lock --upgrade && uv sync
 	@echo "✓ Dependencies updated successfully"
 
-##@ Development Tools
+##@ Application
 ################################################################################
-# DEVELOPMENT TOOLS
+# APPLICATION COMMANDS
 ################################################################################
 
-.PHONY: run run-dev
+.PHONY: run run-dev run-backend kill
 
-run: ## Run the chatbot application
-	@echo "==> Starting DuckDB ChatGPT Interface"
-	@$(PYTHON) -m streamlit run src/chatbot/app.py --server.port 8501
-	@echo "✓ Chatbot application stopped"
+run: ## Run the PandasAI frontend application
+	@echo "==> Starting PandasAI Frontend"
+	@$(PYTHON) -m streamlit run frontend/app.py --server.port 8503
+	@echo "✓ PandasAI Frontend stopped"
 
-run-dev: ## Run the chatbot in development mode with auto-reload
-	@echo "==> Starting DuckDB ChatGPT Interface (Development Mode)"
-	@uv run -m streamlit run src/chatbot/app.py --server.port 8501 --server.headless false --server.runOnSave true
-	@echo "✓ Chatbot application stopped"
+run-dev: ## Run the application in development mode with auto-reload
+	@echo "==> Starting application in development mode"
+	@$(PYTHON) -m streamlit run frontend/app.py --server.port 8503 --server.headless false --server.runOnSave true
+	@echo "✓ Application stopped"
 
-kill:
-	@echo "==> Killing port 8501"
-	@kill -9 $(shell lsof -t -i:8501)
-	@echo "✓ Port 8501 killed"
+run-backend: ## Run the PandasAI Backend API
+	@echo "==> Starting PandasAI Backend API"
+	@cd backend && $(PYTHON) -m app.main
+	@echo "✓ Backend API stopped"
+
+kill: ## Kill processes on specific ports
+	@echo "==> Killing port 8503"
+	@kill -9 $$(lsof -t -i:8503) 2>/dev/null || echo "No process running on port 8503"
+	@echo "✓ Port 8503 killed"
 
 ##@ Code Quality & Testing
 ################################################################################
 # CODE QUALITY & TESTING
 ################################################################################
 
-.PHONY: format lint type-check check-all test
+.PHONY: format lint type-check check-all test test-backend test-frontend test-all clean
 
 # Code Quality
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
-	@$(PYTHON) -m ruff format $(SRC_DIR) $(TESTS_DIR)
+	@$(PYTHON) -m ruff format $(SRC_DIR) $(TESTS_DIR) frontend backend
 	@echo "✓ Code formatting complete"
 
 lint: ## Lint code and auto-fix issues where possible
 	@echo "==> Linting code with ruff"
-	@$(PYTHON) -m ruff check $(SRC_DIR) $(TESTS_DIR) --fix
+	@$(PYTHON) -m ruff check $(SRC_DIR) $(TESTS_DIR) frontend backend --fix
 	@echo "✓ Code linting complete"
 
 type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
-	@$(PYTHON) -m mypy $(SRC_DIR)
+	@$(PYTHON) -m mypy $(SRC_DIR) frontend backend
 	@echo "==> Running pyright type checker"
-	-@$(PYTHON) -m pyright $(SRC_DIR)
+	-@$(PYTHON) -m pyright $(SRC_DIR) frontend backend
 	@echo "✓ Type checking complete (warnings may be present)"
 
-check-all: format lint type-check ## Run all code quality checks 
+check-all: format lint type-check ## Run all code quality checks
 	@echo "✓ All code quality checks completed successfully"
 
 # Testing
-test: ## Run tests for dashboard components
-	@echo "==> Running tests for dashboard components"
+test: ## Run tests for common components
+	@echo "==> Running tests for common components"
 	@$(PYTHON) -m pytest $(TESTS_DIR) -v
 	@echo "✓ Tests completed"
+
+test-backend: ## Run tests for the backend
+	@echo "==> Running tests for backend components"
+	@$(PYTHON) -m pytest backend/tests -v
+	@echo "✓ Tests completed"
+
+test-frontend: ## Run tests for the frontend
+	@echo "==> Running tests for frontend components"
+	@$(PYTHON) -m pytest frontend/tests -v
+	@echo "✓ Tests completed"
+
+test-all: test test-backend test-frontend ## Run all tests
+	@echo "✓ All tests completed"
+
+clean: ## Clean Python cache files
+	@echo "==> Cleaning cache files"
+	@rm -rf .pytest_cache
+	@find . -type d -name __pycache__ -exec rm -rf {} +
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name "*.pyd" -delete
+	@echo "✓ Cache files cleaned"
 
 ##@ Documentation
 ################################################################################

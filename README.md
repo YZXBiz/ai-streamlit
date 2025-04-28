@@ -1,297 +1,79 @@
-# Flat Chatbot - Natural Language for Data
+# Data Analyzer
 
-A modern, intuitive application for querying data using natural language and SQL with DuckDB and LlamaIndex integration.
-
-![DuckDB Natural Language Query](https://img.shields.io/badge/DuckDB-Natural%20Language%20Query-yellow)
-![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue)
-![LlamaIndex](https://img.shields.io/badge/LlamaIndex-Latest-green)
-![Streamlit](https://img.shields.io/badge/Streamlit-Latest-red)
+A framework for managing and analyzing pandas DataFrames.
 
 ## Features
 
-### Core Functionality
-- **Natural Language Queries**: Ask questions about your data in plain English
-- **SQL Query Interface**: Write and execute raw SQL queries
-- **Multiple Data Formats**: Support for CSV, Parquet, JSON, and Excel files
-- **Schema Inference**: Automatic detection of column types and structures
-- **Smart Query Context**: Uses conversation history for better follow-up questions
+- Load data from various sources (CSV, Excel, Parquet, SQL)
+- Organize DataFrames with names and descriptions
+- Create collections of DataFrames for cross-dataframe analysis
+- Define relationships between DataFrames
+- Get DataFrame statistics and previews
 
-### Enhanced User Experience
-- **Interactive UI**: Clean, tabbed interface with modern design
-- **Real-time Feedback**: Immediate results with progress indicators
-- **Data Visualization**: Automatic visualization of query results
-- **Export Options**: Download results as CSV, Excel, or JSON
-- **Query History**: Track and re-run previous queries
-- **Smart Suggestions**: Contextual example queries based on your data
+## Installation
 
-### Technical Features
-- **Modular Architecture**: Clean separation of UI, business logic, and services
-- **LlamaIndex Integration**: Vector search and embeddings-based query understanding
-- **Memory Management**: Efficient handling of large datasets
-- **Session Management**: Persistent chat sessions
-- **Error Handling**: Helpful suggestions for common errors
-
-## Architecture
-
-The application follows a clean, modular architecture:
-
-```
-flat_chatbot/
-├── app.py              # Main entry point
-├── config.py           # Configuration settings
-├── controller.py       # Business logic orchestration
-├── logger.py           # Custom logging
-├── services/           # Service layer components
-│   ├── duckdb_base.py  # Base DuckDB functionality
-│   └── duckdb_enhanced.py # Natural language integration
-└── ui/                 # User interface components
-    ├── components.py   # Reusable UI elements
-    ├── history.py      # Chat history display
-    ├── query.py        # Query interface
-    ├── schema.py       # Schema display
-    └── upload.py       # File upload handling
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.10 or higher
-- OpenAI API Key (for embeddings and language model)
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/flat-chatbot.git
-   cd flat-chatbot
-   ```
-
-2. Create a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Create a `.env` file with your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_api_key_here
-   ```
-
-### Running the Application
-
-Start the application with:
+This project requires Python 3.10 or newer.
 
 ```bash
-streamlit run app.py
+# Clone the repository
+git clone https://github.com/yourusername/data-analyzer.git
+cd data-analyzer
+
+# Install dependencies using UV
+make install
 ```
 
-The application will be available at http://localhost:8501 in your web browser.
+## Usage
 
-## Usage Guide
+Basic usage example:
 
-### Data Upload
+```python
+from backend import create_analyzer
 
-1. Navigate to the "Upload Data" tab
-2. Select one or more data files to upload (CSV, Excel, Parquet, or JSON)
-3. Optionally provide a custom table name
-4. Click "Load Data" to process files
+# Create an analyzer instance
+analyzer = create_analyzer()
 
-### Querying Data
+# Load a CSV file
+df = analyzer.load_csv("path/to/data.csv", "my_data", "Description of the data")
 
-#### Natural Language Queries
+# Get a preview of the data
+preview = analyzer.get_dataframe_preview("my_data", rows=5)
+print(preview)
 
-1. Go to the "Ask Questions" tab
-2. Type a question in natural language, such as:
-   - "What's the average age of users?"
-   - "Show me the top 5 countries by total sales"
-   - "How many transactions occurred each month?"
-3. Select simple or advanced query mode
-4. Click "Run Query" to see results
+# Get statistics about the data
+stats = analyzer.get_dataframe_stats("my_data")
+print(stats)
 
-#### SQL Queries
-
-1. Go to the "SQL Query" tab
-2. Write your SQL query, such as:
-   - `SELECT * FROM users LIMIT 10;`
-   - `SELECT country, SUM(sales) FROM transactions GROUP BY country ORDER BY SUM(sales) DESC LIMIT 5;`
-3. Click "Execute SQL" to run the query
-
-### Exploring Results
-
-- View the natural language response and data table
-- Explore data statistics and visualizations
-- Download results in CSV, Excel, or JSON format
-- View the generated SQL query for natural language questions
-
-## Configuration
-
-Adjust settings in the `config.py` file:
-
-- `query_timeout`: Maximum seconds for query execution
-- `token_limit`: Token limit for conversation memory
-- Various path settings for data and logs
+# Load another DataFrame and create a collection
+df2 = analyzer.load_csv("path/to/other_data.csv", "other_data")
+collection = analyzer.create_collection(
+    ["my_data", "other_data"], 
+    "my_collection", 
+    "A collection of related data"
+)
+```
 
 ## Development
 
-### Testing
-
-Run tests with:
+Run tests:
 
 ```bash
-pytest tests/
+make test
 ```
 
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -m 'Add feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
-
-## Docker Support
-
-Run the application in a Docker container for consistent environment across deployments.
-
-### Building the Docker Image
+Run the application:
 
 ```bash
-docker build -t flat-chatbot:latest .
+make run
 ```
 
-### Running the Container Locally
+Clean up temporary files:
 
 ```bash
-docker run -p 8501:8501 -e OPENAI_API_KEY=your_api_key_here flat-chatbot:latest
+make clean
 ```
-
-The application will be accessible at http://localhost:8501.
-
-### Environment Variables
-
-Pass environment variables to configure the application:
-
-```bash
-docker run -p 8501:8501 \
-  -e OPENAI_API_KEY=your_api_key_here \
-  -e DEBUG=True \
-  flat-chatbot:latest
-```
-
-## Deploying to Azure
-
-### Azure Container Registry (ACR)
-
-Deploy to Azure Container Registry using the included script:
-
-1. Update the configuration in `deploy_to_azure.sh`:
-   ```bash
-   ACR_NAME="your-acr-name"  # Replace with your registry name
-   IMAGE_NAME="flat-chatbot"
-   IMAGE_TAG="latest"
-   ```
-
-2. Run the deployment script:
-   ```bash
-   chmod +x deploy_to_azure.sh
-   ./deploy_to_azure.sh
-   ```
-
-### Running on Azure Container Instances (ACI)
-
-After deploying to ACR, create a container instance:
-
-```bash
-az container create \
-  --resource-group your-resource-group \
-  --name flat-chatbot-instance \
-  --image your-acr-name.azurecr.io/flat-chatbot:latest \
-  --dns-name-label flat-chatbot \
-  --ports 8501 \
-  --environment-variables OPENAI_API_KEY=your_api_key_here
-```
-
-The application will be accessible at http://flat-chatbot.[region].azurecontainer.io:8501.
-
-### Azure App Service
-
-For a more managed solution, deploy to Azure App Service:
-
-```bash
-az webapp create \
-  --resource-group your-resource-group \
-  --plan your-app-service-plan \
-  --name your-app-name \
-  --deployment-container-image-name your-acr-name.azurecr.io/flat-chatbot:latest
-```
-
-Set environment variables through the Azure Portal or CLI:
-
-```bash
-az webapp config appsettings set \
-  --resource-group your-resource-group \
-  --name your-app-name \
-  --settings OPENAI_API_KEY=your_api_key_here WEBSITES_PORT=8501
-```
-
-## GitHub Actions CI/CD
-
-This project is configured with GitHub Actions for continuous integration and deployment.
-
-### Workflows
-
-1. **CI/CD Pipeline** (`.github/workflows/ci.yml`):
-   - Triggers on pushes to `main` and `develop` branches, pull requests to these branches, and manual dispatch
-   - Runs tests, linting, and type checking
-   - Builds a Docker image for changes on `main` and `develop`
-   - Deploys to Azure when changes are pushed to `main`
-
-2. **Deploy to Azure** (`.github/workflows/deploy.yml`):
-   - Dedicated workflow for Azure deployment
-   - Builds and pushes Docker image to Azure Container Registry
-   - Updates the container instance in Azure
-
-### Required Secrets
-
-For the workflows to function properly, add these secrets to your GitHub repository:
-
-#### Azure Deployment Secrets
-- `AZURE_CLIENT_ID`: Azure service principal client ID
-- `AZURE_TENANT_ID`: Azure tenant ID
-- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
-- `ACR_NAME`: Azure Container Registry name
-- `ACR_LOGIN_SERVER`: ACR login server URL
-- `CONTAINER_INSTANCE_NAME`: Azure Container Instance name
-- `RESOURCE_GROUP_NAME`: Azure resource group name
-- `APP_URL`: The deployed application URL
-
-### Setting Up GitHub Actions
-
-1. Go to your GitHub repository → Settings → Secrets and variables → Actions
-2. Add all required secrets
-3. For production deployment, create an environment named "production" and add the secrets to that environment
-
-### Running Workflows Manually
-
-1. Navigate to the "Actions" tab in your repository
-2. Select the workflow you want to run
-3. Click "Run workflow"
-4. Select the branch and trigger the workflow
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [LlamaIndex](https://github.com/run-llama/llama_index) for natural language processing
-- [DuckDB](https://github.com/duckdb/duckdb) for efficient data querying
-- [Streamlit](https://github.com/streamlit/streamlit) for the interactive UI
-- [OpenAI](https://openai.com/) for embeddings and language processing
 
