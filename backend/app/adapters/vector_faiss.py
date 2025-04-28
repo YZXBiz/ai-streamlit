@@ -8,7 +8,7 @@ for fast and efficient similarity searching of text embeddings.
 import os
 import pickle
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import faiss
 import numpy as np

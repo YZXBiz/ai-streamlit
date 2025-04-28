@@ -9,8 +9,7 @@ import ast
 import builtins
 import contextlib
 import io
-import sys
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from ..core.config import settings
 

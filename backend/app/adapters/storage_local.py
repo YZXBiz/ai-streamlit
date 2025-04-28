@@ -9,7 +9,6 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from fastapi import UploadFile
 

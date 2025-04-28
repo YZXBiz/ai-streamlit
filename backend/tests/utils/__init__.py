@@ -1,6 +1,4 @@
-"""Tests for utility functions and classes.
+"""Test utilities package.
 
-This package contains tests for utility functions and classes
-used throughout the application, as well as minimal test examples
-and sandbox tests for experimental code.
+This package contains utilities and helper functions for testing the backend.
 """

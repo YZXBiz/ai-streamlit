@@ -124,7 +124,7 @@ kill: ## Kill processes on specific ports
 # CODE QUALITY & TESTING
 ################################################################################
 
-.PHONY: format lint type-check check-all test test-backend test-frontend test-all clean
+.PHONY: format lint type-check check-all test test-backend test-backend-integration test-frontend test-all clean
 
 # Code Quality
 format: ## Format code with ruff formatter
@@ -157,6 +157,17 @@ test-backend: ## Run tests for the backend
 	@echo "==> Running tests for backend components"
 	@$(PYTHON) -m pytest backend/tests -v
 	@echo "✓ Tests completed"
+
+test-backend-integration: ## Run integration tests for the backend
+	@echo "==> Running integration tests for backend components"
+	@$(PYTHON) -m pytest backend/tests/test_integration.py -v
+	@echo "✓ Integration tests completed"
+
+test-backend-coverage: ## Run backend tests with coverage reporting
+	@echo "==> Running backend tests with coverage"
+	@mkdir -p reports/coverage
+	@$(PYTHON) -m pytest backend/tests -v --cov=backend --cov-report=term --cov-report=html:reports/coverage
+	@echo "✓ Tests completed with coverage report"
 
 test-frontend: ## Run tests for the frontend
 	@echo "==> Running tests for frontend components"

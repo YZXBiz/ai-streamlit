@@ -5,7 +5,11 @@ This module provides functions that can be used as dependencies in FastAPI
 route handlers to inject services and other dependencies.
 """
 
-from fastapi import HTTPException, status
+import os
+from collections.abc import AsyncGenerator, Callable
+from typing import Optional
+
+from fastapi import Depends, HTTPException, status
 
 from ..adapters.db_postgres import (
     PostgresChatSessionRepository,
@@ -26,6 +30,9 @@ from ..services.analyzer_service import AnalyzerService
 from ..services.auth_service import AuthService
 from ..services.chat_service import ChatService
 from ..services.file_service import FileService
+
+# Testing mode flag - can be set by tests to enable test-specific behavior
+TESTING = os.environ.get("TESTING", "").lower() in ("true", "1", "t")
 
 
 # Repository dependencies
