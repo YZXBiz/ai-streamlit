@@ -2,6 +2,12 @@ import os
 
 import streamlit as st
 from dotenv import load_dotenv
+from streamlit_cookies_manager import EncryptedCookieManager
+
+# App configuration - MUST be the first Streamlit command
+st.set_page_config(
+    page_title="Chatbot", page_icon="💬", layout="wide", initial_sidebar_state="expanded"
+)
 
 # Import components and utilities
 from app.components import chat_interface, file_uploader, reset_chat
@@ -10,14 +16,119 @@ from app.utils.auth_utils import login_form, logout
 # Load environment variables
 load_dotenv()
 
-# App configuration
-st.set_page_config(
-    page_title="Chatbot", page_icon="💬", layout="wide", initial_sidebar_state="expanded"
+# Add custom styling with more visual interest
+st.markdown(
+    """
+<style>
+    /* Rich sidebar background */
+    [data-testid="stSidebarContent"] {
+        background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+    }
+    
+    /* Stylish section cards */
+    .sidebar-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Card headers */
+    .card-header {
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 8px;
+    }
+    
+    /* Button styling */
+    div.stButton > button {
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        border: none !important;
+        padding: 10px 16px !important;
+        transition: all 0.3s ease !important;
+        font-size: 14px !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    div.stButton > button:hover {
+        background-color: rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Primary button - standout */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
+        color: white !important;
+    }
+    
+    div.stButton > button[kind="primary"]:hover {
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
+        box-shadow: 0 4px 12px rgba(0, 210, 255, 0.4) !important;
+    }
+    
+    /* About section */
+    .about-box {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .about-box h4 {
+        margin: 0 0 10px 0;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    
+    .about-box p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 10px 0;
+    }
+    
+    .about-box .footer {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        margin-top: 5px;
+    }
+</style>
+""",
+    unsafe_allow_html=True,
 )
 
-# Session state initialization
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+# Get cookie manager - instantiate in the main file
+cookies = EncryptedCookieManager(
+    prefix="chatbot",
+    password=os.getenv(
+        "COOKIE_SECRET", "fallback-secret-key"
+    ),  # Use environment variable with fallback
+)
+
+# Check authentication at startup
+if cookies.ready():
+    # Check for auth cookie
+    if cookies.get("user_authenticated") == "true":
+        st.session_state.authenticated = True
+    else:
+        st.session_state.authenticated = False
+
 if "agent" not in st.session_state:
     st.session_state.agent = None
 if "df" not in st.session_state:
@@ -51,34 +162,67 @@ def main():
 
     # Login if not authenticated
     if not st.session_state.authenticated:
-        login_form()
+        if login_form():
+            # Set cookie on successful login - expires in 7 days
+            cookies["user_authenticated"] = "true"
+            # Force an immediate save
+            cookies.save()
+            st.session_state.authenticated = True
+            st.rerun()
         return
 
     # Sidebar
     with st.sidebar:
-        st.title("Options")
+        # User actions section in a card
+        st.markdown(
+            """
+        <div class="sidebar-card">
+            <div class="card-header">🔐 User Actions</div>
+        """,
+            unsafe_allow_html=True,
+        )
 
-        # Logout button
-        if st.button("Logout"):
-            logout()
-            st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚪 Logout", use_container_width=True, type="primary"):
+                # Clear cookie on logout
+                if cookies.ready():
+                    cookies.delete("user_authenticated")
+                    cookies.save()
+                logout()
+                st.rerun()
+        with col2:
+            if st.button("🔄 New Chat", use_container_width=True):
+                reset_session()
 
-        # Reset session option
-        reset_session()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # Reset chat history
+        # Chat controls in a card
+        st.markdown(
+            """
+        <div class="sidebar-card">
+            <div class="card-header">💬 Chat Options</div>
+        """,
+            unsafe_allow_html=True,
+        )
+
         reset_chat()
 
-        # About section
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("About")
-        st.sidebar.info(
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # About section in a card
+        st.markdown(
             """
-            This app allows you to chat with your data using natural language.
-            Upload a CSV or Excel file and ask questions about your data.
-            
-            Powered by AI and Streamlit.
-            """
+        <div class="sidebar-card">
+            <div class="card-header">ℹ️ About</div>
+            <div class="about-box">
+                <h4>Data Chat Assistant</h4>
+                <p>Upload your data and ask questions using natural language.</p>
+                <div class="footer">Powered by AI and Streamlit.</div>
+            </div>
+        </div>
+            """,
+            unsafe_allow_html=True,
         )
 
     # Main area
