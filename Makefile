@@ -97,7 +97,7 @@ update: ## Update all project dependencies to latest versions
 # APPLICATION COMMANDS
 ################################################################################
 
-.PHONY: run run-dev run-backend kill
+.PHONY: run run-dev run-backend run-pandasai kill
 
 run: ## Run the PandasAI frontend application
 	@echo "==> Starting PandasAI Frontend"
@@ -114,10 +114,17 @@ run-backend: ## Run the PandasAI Backend API
 	@cd backend && $(PYTHON) -m app.main
 	@echo "✓ Backend API stopped"
 
+run-pandasai: ## Run the PandasAI Streamlit app
+	@echo "==> Starting PandasAI Streamlit App"
+	@$(PYTHON) -m streamlit run app/main.py --server.port 8504
+	@echo "✓ PandasAI Streamlit App stopped"
+
 kill: ## Kill processes on specific ports
 	@echo "==> Killing port 8503"
 	@kill -9 $$(lsof -t -i:8503) 2>/dev/null || echo "No process running on port 8503"
-	@echo "✓ Port 8503 killed"
+	@echo "==> Killing port 8504"
+	@kill -9 $$(lsof -t -i:8504) 2>/dev/null || echo "No process running on port 8504"
+	@echo "✓ Ports killed"
 
 ##@ Code Quality & Testing
 ################################################################################
