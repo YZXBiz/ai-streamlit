@@ -1,12 +1,19 @@
-"""Utility functions for the application."""
+"""Utility module for the application."""
 
 # Expose utility functions at package level
-from app.utils.auth_utils import login_form, logout, authenticate
-from app.utils.pandasai_utils import (
+from app.utils.auth_utils import (
+    authenticate,
+    get_default_credentials,
+    hash_password,
+    login_form,
+    logout,
+    verify_password,
+)
+from app.utils.data_utils import (
+    display_data_info,
     initialize_agent,
     load_dataframe,
     process_response,
-    display_data_info
 )
 
 __all__ = [
@@ -16,5 +23,5 @@ __all__ = [
     "initialize_agent",
     "load_dataframe",
     "process_response",
-    "display_data_info"
-] 
+    "display_data_info",
+]

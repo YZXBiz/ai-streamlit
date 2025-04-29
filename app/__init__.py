@@ -1,5 +1,5 @@
-"""PandasAI Chat Application"""
+"""Chatbot Application"""
 
 __version__ = "0.1.0"
 
-# App package initialization 
+# App package initialization

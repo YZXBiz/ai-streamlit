@@ -1,10 +1,10 @@
 ################################################################################
-# PANDASAI CHATBOT APPLICATION MAKEFILE
+# CHATBOT APPLICATION MAKEFILE
 ################################################################################
 #
 # Description:
 #   This Makefile provides targets for developing and running the
-#   PandasAI chatbot application.
+#   Chatbot application.
 #
 ################################################################################
 
@@ -47,13 +47,13 @@ export UV_LINK_MODE
 .PHONY: help print-env
 
 help: ## Display this help message
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mPandasAI Chatbot Help\033[0m\n"} \
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1mChatbot Help\033[0m\n"} \
 		/^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } \
 		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Usage examples:"
 	@echo "  make install             # Install dependencies"
-	@echo "  make run                 # Start the PandasAI application"
+	@echo "  make run                 # Start the Chatbot application"
 	@echo ""
 	@echo "Environment variables priority:"
 	@echo "  1. Command line (make run DATA_DIR=/custom/path)"
@@ -99,10 +99,10 @@ update: ## Update all project dependencies to latest versions
 
 .PHONY: run kill
 
-run: ## Run the PandasAI Streamlit application
-	@echo "==> Starting PandasAI App"
+run: ## Run the Chatbot Streamlit application
+	@echo "==> Starting Chatbot App"
 	@$(PYTHON) -m streamlit run app/main.py --server.port 8504
-	@echo "✓ PandasAI App stopped"
+	@echo "✓ Chatbot App stopped"
 
 kill: ## Kill processes on specific ports
 	@echo "==> Killing port 8504"

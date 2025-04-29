@@ -1,8 +1,9 @@
 import os
+
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from app.utils.pandasai_utils import process_response
+from app.utils.data_utils import process_response
 
 
 def display_chat_history():
@@ -33,7 +34,7 @@ def add_message(role, content_type, content):
 
 
 def handle_user_question(question):
-    """Process a user question and get response from PandasAI."""
+    """Process a user question and get response from the AI."""
     # Add user question to chat history
     add_message("user", "text", question)
 
@@ -48,11 +49,11 @@ def handle_user_question(question):
         add_message("assistant", "text", "Please upload a data file first.")
         return
 
-    # Get response from PandasAI
+    # Get response from AI
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                # Process the question with PandasAI
+                # Process the question with AI
                 response = st.session_state.agent.chat(question)
 
                 # Process the response
@@ -103,4 +104,4 @@ def reset_chat():
     """Reset the chat history."""
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
-        st.rerun() 
+        st.rerun()

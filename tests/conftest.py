@@ -2,9 +2,10 @@
 
 import os
 import sys
-import pytest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 import streamlit as st
 
 # Add root to path to ensure imports work correctly
@@ -30,26 +31,38 @@ def mock_streamlit():
         "markdown": MagicMock(),
         "write": MagicMock(),
         "dataframe": MagicMock(),
-        "chat_message": MagicMock(return_value=MagicMock(__enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock())),
-        "spinner": MagicMock(return_value=MagicMock(__enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock())),
+        "chat_message": MagicMock(
+            return_value=MagicMock(
+                __enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock()
+            )
+        ),
+        "spinner": MagicMock(
+            return_value=MagicMock(
+                __enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock()
+            )
+        ),
         "title": MagicMock(),
         "pyplot": MagicMock(),
         "image": MagicMock(),
-        "sidebar": MagicMock(return_value=MagicMock(__enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock())),
+        "sidebar": MagicMock(
+            return_value=MagicMock(
+                __enter__=MagicMock(return_value=MagicMock()), __exit__=MagicMock()
+            )
+        ),
         "rerun": MagicMock(),
-        "set_page_config": MagicMock()
+        "set_page_config": MagicMock(),
     }
-    
+
     # Apply all the patches
     patches = [patch.object(st, name, mock) for name, mock in streamlit_mocks.items()]
-    
+
     # Start all patches
     for p in patches:
         p.start()
-    
+
     # Yield the mocks
     yield streamlit_mocks
-    
+
     # Stop all patches
     for p in patches:
         p.stop()
@@ -57,14 +70,15 @@ def mock_streamlit():
 
 class SessionStateMock(dict):
     """Mock class for Streamlit's session_state that allows attribute access."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
     def __getattr__(self, key):
         if key in self:
             return self[key]
         return None
-        
+
     def __setattr__(self, key, value):
         self[key] = value
 
@@ -80,18 +94,16 @@ def mock_session_state():
 @pytest.fixture
 def sample_dataframe():
     """Create a sample DataFrame for testing."""
-    return pd.DataFrame({
-        'A': [1, 2, 3, 4, 5],
-        'B': [10, 20, 30, 40, 50],
-        'C': ['a', 'b', 'c', 'd', 'e']
-    })
+    return pd.DataFrame(
+        {"A": [1, 2, 3, 4, 5], "B": [10, 20, 30, 40, 50], "C": ["a", "b", "c", "d", "e"]}
+    )
 
 
 @pytest.fixture
 def mock_agent():
-    """Create a mock PandasAI agent."""
+    """Create a mock AI agent."""
     agent = MagicMock()
-    agent.chat.return_value = "This is a mock response from PandasAI"
+    agent.chat.return_value = "This is a mock response from the AI"
     return agent
 
 
@@ -101,4 +113,4 @@ def mock_uploaded_file():
     mock_file = MagicMock()
     mock_file.name = "test_data.csv"
     mock_file.getvalue.return_value = b"A,B,C\n1,10,a\n2,20,b\n3,30,c\n4,40,d\n5,50,e"
-    return mock_file 
+    return mock_file

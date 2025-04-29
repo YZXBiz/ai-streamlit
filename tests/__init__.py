@@ -1,1 +1,1 @@
-"""Test package for the PandasAI Chat application.""" 
+"""Test package for the Chatbot application."""

@@ -173,4 +173,4 @@ def display_data_info(df):
     numerics = df.select_dtypes(include=["number"])
     if not numerics.empty:
         st.subheader("Numerical Statistics")
-        st.dataframe(numerics.describe()) 
+        st.dataframe(numerics.describe())

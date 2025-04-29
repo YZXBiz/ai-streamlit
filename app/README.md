@@ -1,4 +1,4 @@
-# PandasAI Chat Application
+# Chatbot Application
 
 ## Application Structure
 
@@ -14,7 +14,7 @@ app/
 ├── utils/                     # Utility functions
 │   ├── __init__.py            # Exports utility functions
 │   ├── auth_utils.py          # Authentication utilities
-│   └── pandasai_utils.py      # PandasAI integration utilities
+│   └── data_utils.py          # Data processing utilities
 │
 ├── __init__.py                # Application package init
 └── main.py                    # Application entry point
@@ -30,7 +30,7 @@ The application is organized into packages by their technical role:
    
 2. **Utils**: Helper functions and utilities
    - Authentication utilities for user login/logout
-   - PandasAI integration utilities for data processing and analysis
+   - Data processing utilities for AI-powered data analysis
 
 ## Application Flow
 
@@ -38,7 +38,7 @@ The application is organized into packages by their technical role:
 2. Authentication is handled through `utils/auth_utils.py`
 3. File uploads are managed by `components/uploader_components.py`
 4. Chat interactions are handled by `components/chat_components.py`
-5. PandasAI integration is available in `utils/pandasai_utils.py`
+5. AI integration is available in `utils/data_utils.py`
 
 ## Adding New Functionality
 

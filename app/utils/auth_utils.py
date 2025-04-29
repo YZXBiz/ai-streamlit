@@ -1,8 +1,9 @@
-import streamlit as st
-import os
-from dotenv import load_dotenv
 import hashlib
 import hmac
+import os
+
+import streamlit as st
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -31,12 +32,12 @@ def verify_password(password, hashed_password):
 def authenticate(username, password):
     """Authenticate a user with username and password."""
     default_username, default_password = get_default_credentials()
-    
+
     # For development, use simple comparison
     # In production, use hashed passwords
     if username == default_username and password == default_password:
         return True
-    
+
     return False
 
 
@@ -47,7 +48,7 @@ def login_form():
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         submit = st.form_submit_button("Login")
-        
+
         if submit:
             if authenticate(username, password):
                 st.session_state.authenticated = True
@@ -56,7 +57,7 @@ def login_form():
             else:
                 st.error("Invalid username or password")
                 return False
-    
+
     return False
 
 
@@ -70,5 +71,5 @@ def logout():
         st.session_state.df = None
     if "chat_history" in st.session_state:
         st.session_state.chat_history = []
-    
-    return True 
+
+    return True
