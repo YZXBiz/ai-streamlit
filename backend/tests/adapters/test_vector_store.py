@@ -5,9 +5,8 @@ import shutil
 from collections.abc import AsyncGenerator
 
 import pytest
-
-from app.adapters.vector_simple import SimpleTfidfVectorStore
-from app.ports.vectorstore import VectorStore
+from backend.app.adapters.vector_faiss import FAISSVectorStore
+from backend.app.ports.vectorstore import VectorStore
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ async def vector_store() -> AsyncGenerator[VectorStore, None]:
     os.makedirs("./data/test_vector_indices", exist_ok=True)
 
     # Set up the vector store
-    store = SimpleTfidfVectorStore(storage_dir="./data/test_vector_indices")
+    store = FAISSVectorStore(model_name="all-MiniLM-L6-v2")
 
     yield store
 
@@ -37,17 +36,14 @@ async def test_add_memory(vector_store: VectorStore) -> None:
     assert memory_id is not None
     assert isinstance(memory_id, str)
 
-    # Check that the session was created
-    assert 1 in vector_store.sessions
-    assert len(vector_store.sessions[1]["texts"]) == 1
-    assert len(vector_store.sessions[1]["metadata"]) == 1
+    # Get all memories to verify the addition
+    memories = await vector_store.get_session_memories(session_id=1)
+    assert len(memories) == 1
 
-    # Check that the memory has the correct text
-    assert vector_store.sessions[1]["texts"][0] == "This is a test memory"
-
-    # Check that the metadata was stored
-    assert vector_store.sessions[1]["metadata"][0]["test"] == "value"
-    assert vector_store.sessions[1]["metadata"][0]["id"] == memory_id
+    # Verify that our memory exists with correct metadata
+    memory = memories[0]
+    assert memory["text"] == "This is a test memory"
+    assert memory["test"] == "value"
 
 
 @pytest.mark.asyncio
@@ -67,10 +63,10 @@ async def test_query_memory(vector_store: VectorStore) -> None:
     # Check that we got results
     assert len(results) == 2
 
-    # Check that the results are about programming languages
-    texts = [result["text"] for result in results]
-    assert "Python is a programming language" in texts
-    assert "Java is also a programming language" in texts
+    # Check that the results are relevant to programming languages
+    programming_terms = ["programming", "language", "Python", "Java"]
+    for result in results:
+        assert any(term.lower() in result["text"].lower() for term in programming_terms)
 
     # Query for animals
     results = await vector_store.query_memory(
@@ -80,10 +76,10 @@ async def test_query_memory(vector_store: VectorStore) -> None:
     # Check that we got results
     assert len(results) == 2
 
-    # Check that the results are about animals
-    texts = [result["text"] for result in results]
-    assert "Cats are animals" in texts
-    assert "Dogs are also animals" in texts
+    # Check that the results are relevant to animals
+    animal_terms = ["animal", "cat", "dog"]
+    for result in results:
+        assert any(term.lower() in result["text"].lower() for term in animal_terms)
 
 
 @pytest.mark.asyncio

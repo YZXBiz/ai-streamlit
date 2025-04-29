@@ -4,11 +4,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from app.domain.models.user import User
-from app.ports.repository import UserRepository
-from app.services.auth_service import AuthService
+from backend.app.domain.models.user import User
+from backend.app.ports.repository import UserRepository
+from backend.app.services.auth_service import AuthService
 
-from app.core.security import verify_password
+from backend.app.core.security import verify_password
 
 
 @pytest.fixture
@@ -238,5 +238,4 @@ class TestAuthService:
 
         token = await service.login(username="testuser", password="wrongpassword")
 
-        assert token is None
         assert token is None

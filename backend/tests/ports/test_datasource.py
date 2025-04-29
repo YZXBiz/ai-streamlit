@@ -9,7 +9,7 @@ import pytest
 
 def test_datasource_constants():
     """Test datasource module constants."""
-    from app.ports.datasource import DataSource
+    from backend.app.ports.datasource import DataSource
 
     assert hasattr(DataSource, "__abstractmethods__")
 
@@ -20,14 +20,14 @@ class TestDataSource:
     @pytest.mark.port
     def test_data_source_is_abc(self):
         """Test that DataSource is an ABC."""
-        from app.ports.datasource import DataSource
+        from backend.app.ports.datasource import DataSource
 
         assert issubclass(DataSource, ABC)
 
     @pytest.mark.port
     def test_data_source_methods(self):
         """Test that DataSource has the expected methods."""
-        from app.ports.datasource import DataSource
+        from backend.app.ports.datasource import DataSource
 
         # Check required methods
         assert hasattr(DataSource, "load")
@@ -36,7 +36,7 @@ class TestDataSource:
     @pytest.mark.port
     def test_data_source_init_signature(self):
         """Test that DataSource.__init__ has the expected signature."""
-        from app.ports.datasource import DataSource
+        from backend.app.ports.datasource import DataSource
 
         sig = inspect.signature(DataSource.__init__)
         params = sig.parameters
@@ -47,13 +47,13 @@ class TestDataSource:
         assert "description" in params
 
         # Check parameter types and defaults
-        assert params["description"].annotation == "Optional[str]"
+        assert "Optional[str]" in str(params["description"].annotation)
         assert params["description"].default is None
 
     @pytest.mark.port
     def test_data_source_init_functionality(self):
         """Test that DataSource.__init__ sets attributes correctly."""
-        from app.ports.datasource import DataSource
+        from backend.app.ports.datasource import DataSource
 
         # Create a concrete subclass for testing
         class TestConcreteDataSource(DataSource):
@@ -79,7 +79,7 @@ class TestDataSource:
         """Test that DataSource.load has the expected signature."""
         import pandasai as pai
 
-        from app.ports.datasource import DataSource
+        from backend.app.ports.datasource import DataSource
 
         sig = inspect.signature(DataSource.load)
         params = sig.parameters

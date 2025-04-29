@@ -5,10 +5,10 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from app.domain.models.chat_session import ChatSession, Message, MessageSender
-from app.domain.models.datafile import DataFile, FileType
-from app.domain.models.dataframe import DataFrameCollection
-from app.domain.models.user import User
+from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
+from backend.app.domain.models.datafile import DataFile, FileType
+from backend.app.domain.models.dataframe import DataFrameCollection
+from backend.app.domain.models.user import User
 
 
 class TestUserModel:
@@ -67,15 +67,15 @@ class TestUserModel:
             first_name="John",
             last_name="Doe",
         )
-        assert user1.full_name() == "John Doe"
+        assert user1.full_name == "John Doe"
 
-        # Without first and last name
+        # With only username (no first/last name)
         user2 = User(username="user2", email="user2@example.com")
-        assert user2.full_name() == "user2"
+        assert user2.full_name == "user2"
 
         # With only first name
         user3 = User(username="user3", email="user3@example.com", first_name="Jane")
-        assert user3.full_name() == "user3"
+        assert user3.full_name == "user3"
 
 
 class TestDataFileModel:

@@ -10,7 +10,7 @@ from fastapi import UploadFile
 
 def test_storage_constants():
     """Test storage module constants."""
-    from app.ports.storage import FileStorage
+    from backend.app.ports.storage import FileStorage
 
     assert hasattr(FileStorage, "__abstractmethods__")
 
@@ -21,14 +21,14 @@ class TestFileStorage:
     @pytest.mark.port
     def test_file_storage_is_abc(self):
         """Test that FileStorage is an ABC."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         assert issubclass(FileStorage, ABC)
 
     @pytest.mark.port
     def test_file_storage_methods(self):
         """Test that FileStorage has the expected methods."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         # Check required methods
         assert hasattr(FileStorage, "save_file")
@@ -40,7 +40,7 @@ class TestFileStorage:
     @pytest.mark.port
     def test_save_file_signature(self):
         """Test that save_file has the expected signature."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         sig = inspect.signature(FileStorage.save_file)
         params = sig.parameters
@@ -53,7 +53,7 @@ class TestFileStorage:
         # Check parameter types from type annotations
         assert params["file"].annotation == UploadFile
         assert params["user_id"].annotation == int
-        assert params["custom_filename"].annotation == "str | None"
+        assert str(params["custom_filename"].annotation) == "str | None"
         assert params["custom_filename"].default is None
 
         # Check return type
@@ -62,7 +62,7 @@ class TestFileStorage:
     @pytest.mark.port
     def test_get_file_path_signature(self):
         """Test that get_file_path has the expected signature."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         sig = inspect.signature(FileStorage.get_file_path)
         params = sig.parameters
@@ -81,7 +81,7 @@ class TestFileStorage:
     @pytest.mark.port
     def test_delete_file_signature(self):
         """Test that delete_file has the expected signature."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         sig = inspect.signature(FileStorage.delete_file)
         params = sig.parameters
@@ -100,7 +100,7 @@ class TestFileStorage:
     @pytest.mark.port
     def test_file_exists_signature(self):
         """Test that file_exists has the expected signature."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         sig = inspect.signature(FileStorage.file_exists)
         params = sig.parameters
@@ -119,7 +119,7 @@ class TestFileStorage:
     @pytest.mark.port
     def test_get_file_size_signature(self):
         """Test that get_file_size has the expected signature."""
-        from app.ports.storage import FileStorage
+        from backend.app.ports.storage import FileStorage
 
         sig = inspect.signature(FileStorage.get_file_size)
         params = sig.parameters

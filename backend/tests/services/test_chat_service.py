@@ -4,14 +4,14 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.domain.models.chat_session import ChatSession, Message, MessageSender
-from app.domain.models.datafile import DataFile, FileType
-from app.domain.models.message import MessageRole
-from app.domain.models.user import User
-from app.ports.llm import LLMService
-from app.ports.repository import ChatSessionRepository, MessageRepository
-from app.ports.vectorstore import VectorStore
-from app.services.chat_service import ChatService
+from backend.app.domain.models.chat_session import ChatSession, Message, MessageSender
+from backend.app.domain.models.datafile import DataFile, FileType
+from backend.app.domain.models.message import MessageRole
+from backend.app.domain.models.user import User
+from backend.app.ports.llm import LLMService
+from backend.app.ports.repository import ChatSessionRepository, MessageRepository
+from backend.app.ports.vectorstore import VectorStore
+from backend.app.services.chat_service import ChatService
 from fastapi import HTTPException
 
 

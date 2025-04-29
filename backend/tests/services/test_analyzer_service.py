@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-from app.services.analyzer_service import AnalyzerService
-from app.services.dataframe_service import DataFrameService
+from backend.app.services.analyzer_service import AnalyzerService
+from backend.app.services.dataframe_service import DataFrameService
 from fastapi import UploadFile
 
 from ..utils.test_pandasai_utils import MockAgent, get_test_dataframe

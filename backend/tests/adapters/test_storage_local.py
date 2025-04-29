@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 
 import pytest
-from app.adapters.storage_local import LocalFileStorage
+from backend.app.adapters.storage_local import LocalFileStorage
 
 
 @pytest.fixture
@@ -155,4 +155,4 @@ class TestLocalFileStorage:
         
         # Check that the path follows the expected format
         expected_path = Path(temp_storage_path) / str(user_id) / f"{file_id}_test.txt"
-        assert Path(path) == expected_path         assert Path(path) == expected_path 
+        assert Path(path) == expected_path 

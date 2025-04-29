@@ -7,12 +7,12 @@ from typing import BinaryIO
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from app.domain.models.datafile import FileType
-from app.domain.models.file import DataFile
-from app.domain.models.user import User
-from app.ports.repository import DataFileRepository, FileRepository
-from app.ports.storage import FileStorage
-from app.services.file_service import FileService
+from backend.app.domain.models.datafile import FileType
+from backend.app.domain.models.file import DataFile
+from backend.app.domain.models.user import User
+from backend.app.ports.repository import DataFileRepository, FileRepository
+from backend.app.ports.storage import FileStorage
+from backend.app.services.file_service import FileService
 
 
 @pytest.fixture

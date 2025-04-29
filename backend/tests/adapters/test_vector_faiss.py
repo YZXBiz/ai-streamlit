@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import numpy as np
 import pytest
-from app.adapters.vector_faiss import FAISSVectorStore
+from backend.app.adapters.vector_faiss import FAISSVectorStore
 
 
 @pytest.fixture
@@ -129,4 +129,4 @@ class TestFAISSVectorStore:
             collection="test_collection",
             limit=3
         )
-        assert len(results) == 0         assert len(results) == 0 
+        assert len(results) == 0 

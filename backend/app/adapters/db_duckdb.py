@@ -5,7 +5,10 @@ from typing import Any
 
 import duckdb
 import pandas as pd
+import pandasai as pai
 from pandasai import DataFrame
+
+from backend.app.ports.datasource import DataSource
 
 
 class DuckDBManager:
@@ -213,24 +216,171 @@ class DuckDBManager:
         Returns:
             Dictionary with table information
         """
-        if table_name not in self.tables:
-            raise ValueError(f"Table not found: {table_name}")
+        schema = self.get_table_schema(table_name)
+        row_count = self.get_row_count(table_name)
+        metadata = self.tables.get(table_name, {})
 
-        info = self.tables[table_name].copy()
-        info["schema"] = self.get_table_schema(table_name)
-        info["row_count"] = self.get_row_count(table_name)
-
-        return info
+        return {
+            "name": table_name,
+            "schema": schema,
+            "row_count": row_count,
+            "source": metadata.get("source", "unknown"),
+            "type": metadata.get("type", "unknown"),
+        }
 
     def drop_table(self, table_name: str) -> None:
         """
-        Drop a table.
+        Drop a table from DuckDB.
 
         Args:
             table_name: Name of the table to drop
         """
-        if table_name not in self.tables:
-            return
+        try:
+            # Try to drop as a TABLE
+            self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        except duckdb.CatalogException:
+            # If that fails, try to drop as a VIEW
+            try:
+                self.conn.execute(f"DROP VIEW IF EXISTS {table_name}")
+            except Exception as e:
+                # If both fail, report the error
+                print(f"Failed to drop {table_name}: {e}")
 
-        self.conn.execute(f"DROP TABLE IF EXISTS {table_name}")
-        del self.tables[table_name]
+        # Remove from tracked tables
+        if table_name in self.tables:
+            del self.tables[table_name]
+
+
+class DuckDBDataSource(DataSource):
+    """
+    DuckDB-backed data source implementation.
+
+    This adapter can be initialized with either:
+    1. A file path (DuckDB will load the file)
+    2. A pandas DataFrame (DuckDB will register it as a table)
+    """
+
+    def __init__(
+        self,
+        file_path: str = None,
+        df: pd.DataFrame = None,
+        table_name: str = None,
+        description: str = "",
+    ):
+        """
+        Initialize the DuckDB data source.
+
+        Args:
+            file_path: Path to a data file (CSV, Parquet, Excel)
+            df: Pandas DataFrame to wrap
+            table_name: Name to register the table as (optional)
+            description: Optional description for the data
+        """
+        # Determine the data source name/identifier
+        source = file_path if file_path else "dataframe"
+        name = table_name or (
+            os.path.basename(file_path).split(".")[0] if file_path else "data_table"
+        )
+
+        # Call parent constructor
+        super().__init__(source=source, name=name, description=description)
+
+        # Store local attributes
+        self.file_path = file_path
+        self.df = df
+        self.table_name = name
+
+        # Initialize DuckDB manager
+        self.connection = duckdb.connect(":memory:")
+
+        # Load the data
+        if file_path:
+            self._load_file()
+        elif df is not None:
+            self._register_dataframe()
+
+    def _load_file(self):
+        """Load the file into DuckDB."""
+        if not os.path.exists(self.file_path):
+            raise FileNotFoundError(f"File not found: {self.file_path}")
+
+        # Determine file type from extension
+        file_ext = os.path.splitext(self.file_path)[1].lower()
+
+        # Create the table
+        if file_ext == ".csv":
+            self.connection.execute(
+                f"CREATE TABLE {self.table_name} AS SELECT * FROM read_csv_auto('{self.file_path}')"
+            )
+        elif file_ext in (".parquet", ".pq"):
+            self.connection.execute(
+                f"CREATE TABLE {self.table_name} AS SELECT * FROM parquet_scan('{self.file_path}')"
+            )
+        elif file_ext in (".xlsx", ".xls"):
+            # For Excel, we need to use pandas as an intermediate step
+            temp_df = pd.read_excel(self.file_path)
+            self.connection.register(self.table_name, temp_df)
+        else:
+            raise ValueError(f"Unsupported file type: {file_ext}")
+
+    def _register_dataframe(self):
+        """Register the DataFrame with DuckDB."""
+        self.connection.register(self.table_name, self.df)
+
+    def load(self) -> pai.DataFrame:
+        """
+        Load data from the source into a PandasAI DataFrame.
+
+        Returns:
+            pai.DataFrame: A PandasAI DataFrame containing the loaded data
+        """
+        # Get the data as a pandas DataFrame
+        pandas_df = self.get_df()
+
+        # Convert to PandasAI DataFrame
+        return pai.DataFrame(pandas_df, name=self.name, description=self.description)
+
+    def get_df(self) -> pd.DataFrame:
+        """Get the data as a pandas DataFrame."""
+        if self.df is not None:
+            return self.df
+
+        # Query from DuckDB
+        return self.connection.execute(f"SELECT * FROM {self.table_name}").fetchdf()
+
+    def get_raw_data(self) -> str:
+        """Get the data as a raw string."""
+        df = self.get_df()
+        return df.to_csv(index=False)
+
+    def get_metadata(self) -> dict:
+        """Get metadata about the data source."""
+        schema = self.get_schema()
+
+        metadata = {
+            "table_name": self.table_name,
+            "description": self.description,
+            "row_count": len(self.get_df()),
+            "column_count": len(schema["columns"]) if schema else 0,
+        }
+
+        if self.file_path:
+            metadata["file_path"] = self.file_path
+            metadata["file_size"] = os.path.getsize(self.file_path)
+            metadata["file_type"] = os.path.splitext(self.file_path)[1].lower()[1:]
+
+        return metadata
+
+    def get_schema(self) -> dict:
+        """Get the schema of the data."""
+        result = self.connection.execute(f"DESCRIBE {self.table_name}").fetchdf()
+
+        columns = []
+        for _, row in result.iterrows():
+            columns.append({"name": row["column_name"], "type": row["column_type"]})
+
+        return {"columns": columns}
+
+    def execute_query(self, query: str) -> pd.DataFrame:
+        """Execute a SQL query on the data."""
+        return self.connection.execute(query).fetchdf()

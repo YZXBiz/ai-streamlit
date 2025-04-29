@@ -8,7 +8,7 @@ import pytest
 
 def test_llm_constants():
     """Test LLM module constants."""
-    from app.ports.llm import DataAnalysisService
+    from backend.app.ports.llm import DataAnalysisService
 
     assert hasattr(DataAnalysisService, "__abstractmethods__")
 
@@ -19,14 +19,14 @@ class TestDataAnalysisService:
     @pytest.mark.port
     def test_data_analysis_service_is_abc(self):
         """Test that DataAnalysisService is an ABC."""
-        from app.ports.llm import DataAnalysisService
+        from backend.app.ports.llm import DataAnalysisService
 
         assert issubclass(DataAnalysisService, ABC)
 
     @pytest.mark.port
     def test_data_analysis_service_methods(self):
         """Test that DataAnalysisService has the expected methods."""
-        from app.ports.llm import DataAnalysisService
+        from backend.app.ports.llm import DataAnalysisService
 
         # Check required methods
         assert hasattr(DataAnalysisService, "load_dataframe")
@@ -40,7 +40,7 @@ class TestDataAnalysisService:
         """Test that DataAnalysisService methods have the expected signatures."""
         import inspect
 
-        from app.ports.llm import DataAnalysisService
+        from backend.app.ports.llm import DataAnalysisService
 
         # Check load_dataframe method
         sig = inspect.signature(DataAnalysisService.load_dataframe)

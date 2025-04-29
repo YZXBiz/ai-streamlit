@@ -160,8 +160,10 @@ test-backend: ## Run tests for the backend
 
 test-backend-integration: ## Run integration tests for the backend
 	@echo "==> Running integration tests for backend components"
-	@$(PYTHON) -m pytest backend/tests/test_integration.py -v
+	@mkdir -p backend/reports/coverage
+	@cd backend && python -m pytest tests/test_health.py tests/test_auth.py tests/test_files.py tests/test_chat.py -v --cov=tests --cov-report=term --cov-report=html:reports/coverage
 	@echo "✓ Integration tests completed"
+	@echo "Coverage report available at: backend/reports/coverage/index.html"
 
 test-backend-coverage: ## Run backend tests with coverage reporting
 	@echo "==> Running backend tests with coverage"
@@ -176,6 +178,14 @@ test-frontend: ## Run tests for the frontend
 
 test-all: test test-backend test-frontend ## Run all tests
 	@echo "✓ All tests completed"
+
+validate-tests: ## Run all tests and verify they're working properly
+	@echo "==> Running comprehensive test validation"
+	@echo "Running individual test files..."
+	@cd backend && python tests/run_tests.py
+	@echo "\nRunning test suite with coverage..."
+	@make test-backend-integration
+	@echo "\n✓ All tests validated successfully"
 
 clean: ## Clean Python cache files
 	@echo "==> Cleaning cache files"

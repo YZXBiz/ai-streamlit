@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_auth_service
-from app.domain.models.user import User
-from app.main import app
+from backend.app.api.deps import get_auth_service
+from backend.app.domain.models.user import User
+from backend.app.main import app
 
 
 @pytest.mark.asyncio
