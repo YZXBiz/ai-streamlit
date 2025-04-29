@@ -7,22 +7,26 @@ import hmac
 # Load environment variables
 load_dotenv()
 
+
 def get_default_credentials():
     """Get default username and password from environment variables."""
     default_username = os.getenv("DEFAULT_USERNAME", "admin")
     default_password = os.getenv("DEFAULT_PASSWORD", "password")
     return default_username, default_password
 
+
 def hash_password(password):
     """Hash a password for storing."""
     salt = os.getenv("PASSWORD_SALT", "default_salt").encode()
     return hmac.new(salt, password.encode(), hashlib.sha256).hexdigest()
+
 
 def verify_password(password, hashed_password):
     """Verify a stored password against a provided password."""
     salt = os.getenv("PASSWORD_SALT", "default_salt").encode()
     password_hash = hmac.new(salt, password.encode(), hashlib.sha256).hexdigest()
     return password_hash == hashed_password
+
 
 def authenticate(username, password):
     """Authenticate a user with username and password."""
@@ -34,6 +38,7 @@ def authenticate(username, password):
         return True
     
     return False
+
 
 def login_form():
     """Display login form and handle authentication."""
@@ -53,6 +58,7 @@ def login_form():
                 return False
     
     return False
+
 
 def logout():
     """Log out the current user."""

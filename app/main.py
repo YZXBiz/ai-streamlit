@@ -1,9 +1,10 @@
-import streamlit as st
 import os
+import streamlit as st
 from dotenv import load_dotenv
-from app.utils.auth import login_form, logout
-from app.components.uploader import file_uploader
-from app.components.chat import chat_interface, reset_chat
+
+# Import components and utilities
+from app.components import chat_interface, reset_chat, file_uploader
+from app.utils.auth_utils import login_form, logout
 
 # Load environment variables
 load_dotenv()
@@ -32,6 +33,7 @@ if "api_key" not in st.session_state:
 
 # Reset session
 def reset_session():
+    """Reset all session state variables and restart the session."""
     if st.button("Start New Session"):
         # Clear session state
         st.session_state.agent = None
@@ -42,6 +44,7 @@ def reset_session():
 
 # Main app
 def main():
+    """Main application entry point."""
     # Title and description
     st.title("🐼 PandasAI Chat")
     st.markdown("Upload your data and chat with it using natural language")

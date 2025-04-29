@@ -17,7 +17,7 @@
 PYTHON := uv run
 
 # Directory paths
-SRC_DIR := src
+APP_DIR := app
 TESTS_DIR := tests
 LOGS_DIR := $(shell pwd)/logs
 
@@ -97,31 +97,14 @@ update: ## Update all project dependencies to latest versions
 # APPLICATION COMMANDS
 ################################################################################
 
-.PHONY: run run-dev run-backend run-pandasai kill
+.PHONY: run kill
 
-run: ## Run the PandasAI frontend application
-	@echo "==> Starting PandasAI Frontend"
-	@$(PYTHON) -m streamlit run frontend/app.py --server.port 8503
-	@echo "✓ PandasAI Frontend stopped"
-
-run-dev: ## Run the application in development mode with auto-reload
-	@echo "==> Starting application in development mode"
-	@$(PYTHON) -m streamlit run frontend/app.py --server.port 8503 --server.headless false --server.runOnSave true
-	@echo "✓ Application stopped"
-
-run-backend: ## Run the PandasAI Backend API
-	@echo "==> Starting PandasAI Backend API"
-	@cd backend && $(PYTHON) -m app.main
-	@echo "✓ Backend API stopped"
-
-run-pandasai: ## Run the PandasAI Streamlit app
-	@echo "==> Starting PandasAI Streamlit App"
+run: ## Run the PandasAI Streamlit application
+	@echo "==> Starting PandasAI App"
 	@$(PYTHON) -m streamlit run app/main.py --server.port 8504
-	@echo "✓ PandasAI Streamlit App stopped"
+	@echo "✓ PandasAI App stopped"
 
 kill: ## Kill processes on specific ports
-	@echo "==> Killing port 8503"
-	@kill -9 $$(lsof -t -i:8503) 2>/dev/null || echo "No process running on port 8503"
 	@echo "==> Killing port 8504"
 	@kill -9 $$(lsof -t -i:8504) 2>/dev/null || echo "No process running on port 8504"
 	@echo "✓ Ports killed"
@@ -131,68 +114,40 @@ kill: ## Kill processes on specific ports
 # CODE QUALITY & TESTING
 ################################################################################
 
-.PHONY: format lint type-check check-all test test-backend test-backend-integration test-frontend test-all clean
+.PHONY: format lint type-check check-all test test-coverage clean
 
 # Code Quality
 format: ## Format code with ruff formatter
 	@echo "==> Formatting code with ruff"
-	@$(PYTHON) -m ruff format $(SRC_DIR) $(TESTS_DIR) frontend backend
+	@$(PYTHON) -m ruff format $(APP_DIR) $(TESTS_DIR)
 	@echo "✓ Code formatting complete"
 
 lint: ## Lint code and auto-fix issues where possible
 	@echo "==> Linting code with ruff"
-	@$(PYTHON) -m ruff check $(SRC_DIR) $(TESTS_DIR) frontend backend --fix
+	@$(PYTHON) -m ruff check $(APP_DIR) $(TESTS_DIR) --fix
 	@echo "✓ Code linting complete"
 
 type-check: ## Run type checking with mypy and pyright
 	@echo "==> Running mypy type checker"
-	@$(PYTHON) -m mypy $(SRC_DIR) frontend backend
+	@$(PYTHON) -m mypy $(APP_DIR)
 	@echo "==> Running pyright type checker"
-	-@$(PYTHON) -m pyright $(SRC_DIR) frontend backend
+	-@$(PYTHON) -m pyright $(APP_DIR)
 	@echo "✓ Type checking complete (warnings may be present)"
 
 check-all: format lint type-check ## Run all code quality checks
 	@echo "✓ All code quality checks completed successfully"
 
 # Testing
-test: ## Run tests for common components
-	@echo "==> Running tests for common components"
+test: ## Run tests
+	@echo "==> Running tests"
 	@$(PYTHON) -m pytest $(TESTS_DIR) -v
 	@echo "✓ Tests completed"
 
-test-backend: ## Run tests for the backend
-	@echo "==> Running tests for backend components"
-	@$(PYTHON) -m pytest backend/tests -v
-	@echo "✓ Tests completed"
-
-test-backend-integration: ## Run integration tests for the backend
-	@echo "==> Running integration tests for backend components"
-	@mkdir -p backend/reports/coverage
-	@cd backend && python -m pytest tests/test_health.py tests/test_auth.py tests/test_files.py tests/test_chat.py -v --cov=tests --cov-report=term --cov-report=html:reports/coverage
-	@echo "✓ Integration tests completed"
-	@echo "Coverage report available at: backend/reports/coverage/index.html"
-
-test-backend-coverage: ## Run backend tests with coverage reporting
-	@echo "==> Running backend tests with coverage"
+test-coverage: ## Run tests with coverage reporting
+	@echo "==> Running tests with coverage"
 	@mkdir -p reports/coverage
-	@$(PYTHON) -m pytest backend/tests -v --cov=backend --cov-report=term --cov-report=html:reports/coverage
+	@$(PYTHON) -m pytest $(TESTS_DIR) -v --cov=$(APP_DIR) --cov-report=term --cov-report=html:reports/coverage
 	@echo "✓ Tests completed with coverage report"
-
-test-frontend: ## Run tests for the frontend
-	@echo "==> Running tests for frontend components"
-	@$(PYTHON) -m pytest frontend/tests -v
-	@echo "✓ Tests completed"
-
-test-all: test test-backend test-frontend ## Run all tests
-	@echo "✓ All tests completed"
-
-validate-tests: ## Run all tests and verify they're working properly
-	@echo "==> Running comprehensive test validation"
-	@echo "Running individual test files..."
-	@cd backend && python tests/run_tests.py
-	@echo "\nRunning test suite with coverage..."
-	@make test-backend-integration
-	@echo "\n✓ All tests validated successfully"
 
 clean: ## Clean Python cache files
 	@echo "==> Cleaning cache files"

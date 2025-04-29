@@ -1,5 +1,6 @@
 import streamlit as st
-from app.utils.pandasai_helper import load_dataframe, initialize_agent, display_data_info
+from app.utils.pandasai_utils import load_dataframe, initialize_agent, display_data_info
+
 
 def file_uploader():
     """Render the file upload interface and process uploaded files."""
@@ -74,7 +75,4 @@ def file_uploader():
         ]
         
         for question in example_questions:
-            st.markdown(f"- {question}")
-
-# Make sure the function is available for import
-__all__ = ['file_uploader'] 
+            st.markdown(f"- {question}") 

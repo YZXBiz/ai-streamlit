@@ -1,9 +1,8 @@
 import os
-
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from app.utils.pandasai_helper import process_response
+from app.utils.pandasai_utils import process_response
 
 
 def display_chat_history():
@@ -104,4 +103,4 @@ def reset_chat():
     """Reset the chat history."""
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
-        st.rerun()
+        st.rerun() 
