@@ -198,8 +198,16 @@ def reset_session():
 def main():
     """Main application entry point."""
     # Title and description
-    st.title("💬 Chatbot")
-    st.markdown("Upload your data and chat with it using natural language")
+    st.markdown(
+        """
+    <div style="text-align: center; padding: 1rem; margin-bottom: 2rem;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬 Chatbot</h1>
+        <p style="font-size: 1.2rem; color: #4e4376; font-weight: 300;">Upload your data and chat with it using natural language</p>
+        <div style="height: 4px; width: 100px; background: linear-gradient(90deg, #00d2ff, #3a7bd5); margin: 1rem auto;"></div>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Login if not authenticated
     if not st.session_state.authenticated:
