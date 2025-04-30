@@ -20,16 +20,16 @@ def render_output_type_selector():
         # Use a select box instead of radio buttons
         output_type = st.selectbox(
             "",  # Remove the label since we have a card header
-            ["Auto", "Text", "Dataframe", "Chart"],
+            ["Auto", "String", "Dataframe", "Plot"],
             index=0,
         )
 
         # Map UI-friendly names to PandasAI parameter values
         if output_type == "Auto":
             return None
-        elif output_type == "Text":
+        elif output_type == "String":
             return "string"
         elif output_type == "Dataframe":
             return "dataframe"
-        elif output_type == "Chart":
-            return "chart"
+        elif output_type == "Plot":
+            return "plot"

@@ -1,6 +1,7 @@
 from typing import Any
 
 import streamlit as st
+from pandasai import Agent
 
 from app.models.agent_model import AgentModel
 from app.views.chat_view import (
@@ -59,7 +60,7 @@ class ChatController:
             display_user_message(user_question)
 
             # Get the agent from session state
-            agent = st.session_state.get("agent")
+            agent: Agent = st.session_state.get("agent")
             if not agent:
                 display_error("Please upload a data file first.")
                 self.add_message("assistant", "text", "Please upload a data file first.")
@@ -85,21 +86,21 @@ class ChatController:
                     # Add response to chat history
                     response_type = response.type
 
-                    if response_type == "chart":
-                        self.add_message("assistant", "image", response.value)
+                    if response_type == "plot":
+                        self.add_message("assistant", "plot", response.value)
                     elif response_type == "string":
-                        self.add_message("assistant", "text", response.value)
+                        self.add_message("assistant", "string", response.value)
                     elif response_type == "dataframe":
                         self.add_message("assistant", "dataframe", response.value)
                     else:
-                        self.add_message("assistant", "text", str(response))
+                        self.add_message("assistant", "string", str(response))
 
                     return True
 
                 except Exception as e:
                     error_msg = f"Error generating response: {str(e)}"
                     display_error(error_msg)
-                    self.add_message("assistant", "text", error_msg)
+                    self.add_message("assistant", "string", error_msg)
                     return False
 
         return False

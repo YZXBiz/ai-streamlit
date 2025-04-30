@@ -13,12 +13,13 @@ class AgentModel:
 
     def __init__(self) -> None:
         self.default_config: dict[str, Any] = {}
-        # self.default_config: dict[str, Any] = {
-        #     "save_charts": False,
-        #     "verbose": True,
-        #     "return_intermediate_steps": False,
-        #     "enable_cache": False,  # Disable cache to prevent issues with multiple dataframes
-        # }
+        self.default_config: dict[str, Any] = {
+            # "save_charts": False,
+            # "verbose": True,
+            # "return_intermediate_steps": False,
+            # "enable_cache": False,  # Disable cache to prevent issues with multiple dataframes
+            "temperature": 0.5,
+        }
 
     def create_agent(
         self, data: pd.DataFrame | dict[str, pd.DataFrame], api_key: str
