@@ -2,12 +2,11 @@
 
 # Expose utility functions at package level
 from app.utils.auth_utils import (
-    authenticate,
-    get_default_credentials,
-    hash_password,
-    login_form,
-    logout,
-    verify_password,
+    Authenticator,
+    CredentialManager,
+    SessionManager,
+    auth_manager,
+    session_manager,
 )
 from app.utils.data_utils import (
     display_data_info,
@@ -17,9 +16,11 @@ from app.utils.data_utils import (
 )
 
 __all__ = [
-    "login_form",
-    "logout",
-    "authenticate",
+    "auth_manager",
+    "session_manager",
+    "CredentialManager",
+    "Authenticator",
+    "SessionManager",
     "initialize_agent",
     "load_dataframe",
     "process_response",

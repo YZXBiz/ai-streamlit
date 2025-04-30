@@ -12,7 +12,7 @@ from streamlit_cookies_manager import EncryptedCookieManager
 
 # Import components and utilities
 from app.components import chat_interface, file_uploader, reset_chat
-from app.utils.auth_utils import login_form, logout
+from app.utils.auth_utils import auth_manager, session_manager
 
 # Load environment variables
 load_dotenv()
@@ -211,7 +211,7 @@ def main():
 
     # Login if not authenticated
     if not st.session_state.authenticated:
-        if login_form():
+        if auth_manager.login_form():
             # Set cookie on successful login - expires in 7 days
             cookies["user_authenticated"] = "true"
             # Force an immediate save
@@ -244,7 +244,7 @@ def main():
                 if cookies.ready():
                     cookies["user_authenticated"] = ""
                     cookies.save()
-                logout()
+                session_manager.logout()
                 st.rerun()
         with col2:
             if st.button(
