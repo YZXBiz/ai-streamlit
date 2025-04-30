@@ -10,8 +10,8 @@ class AgentModel:
     Model for managing PandasAI agents and their configuration.
     """
 
-    def __init__(self):
-        self.default_config = {
+    def __init__(self) -> None:
+        self.default_config: dict[str, bool] = {
             "save_charts": False,
             "verbose": True,
             "return_intermediate_steps": False,

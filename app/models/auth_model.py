@@ -9,7 +9,7 @@ class AuthModel:
     Model for handling authentication and user credentials.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the auth model with salt from settings."""
         self.salt = settings.password_salt.encode()
 

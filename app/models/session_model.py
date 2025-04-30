@@ -1,17 +1,20 @@
+from typing import Any, ClassVar, Optional
+
+
 class SessionModel:
     """
     Model for managing session state.
     This is a singleton to ensure there's only one instance.
     """
 
-    _instance = None
+    _instance: ClassVar[Optional["SessionModel"]] = None
 
-    def __new__(cls):
+    def __new__(cls) -> "SessionModel":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize_session(self, session_state):
+    def initialize_session(self, session_state: dict[str, Any]) -> None:
         """
         Initialize the session state with default values.
 
@@ -38,7 +41,7 @@ class SessionModel:
         if "first_question_asked" not in session_state:
             session_state.first_question_asked = False
 
-    def logout(self, session_state):
+    def logout(self, session_state: dict[str, Any]) -> bool:
         """
         Log out the current user by clearing session state.
 
@@ -68,7 +71,7 @@ class SessionModel:
 
         return True
 
-    def reset_chat(self, session_state):
+    def reset_chat(self, session_state: dict[str, Any]) -> bool:
         """
         Reset only the chat history while keeping the current dataset.
 
@@ -82,7 +85,7 @@ class SessionModel:
         session_state.first_question_asked = False
         return True
 
-    def reset_session(self, session_state):
+    def reset_session(self, session_state: dict[str, Any]) -> bool:
         """
         Reset all session state variables except authentication.
 

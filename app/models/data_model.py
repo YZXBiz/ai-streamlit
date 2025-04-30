@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import pandas as pd
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 
 class DataModel:
@@ -10,7 +11,7 @@ class DataModel:
     """
 
     @staticmethod
-    def load_dataframe(uploaded_file) -> tuple[pd.DataFrame | None, str | None]:
+    def load_dataframe(uploaded_file: UploadedFile) -> tuple[pd.DataFrame | None, str | None]:
         """
         Load a dataframe from an uploaded file.
 

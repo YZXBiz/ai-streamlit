@@ -1,3 +1,5 @@
+from typing import Any
+
 import streamlit as st
 
 from app.models.agent_model import AgentModel
@@ -13,11 +15,11 @@ from app.views.chat_view import (
 class ChatController:
     """Controller for handling chat operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the chat controller with agent model."""
         self.agent_model = AgentModel()
 
-    def add_message(self, role, content_type, content):
+    def add_message(self, role: str, content_type: str, content: Any) -> None:
         """
         Add a message to the chat history.
 
@@ -33,7 +35,7 @@ class ChatController:
             {"role": role, "type": content_type, "content": content}
         )
 
-    def handle_chat(self):
+    def handle_chat(self) -> bool:
         """
         Handle the chat interaction with the agent.
 

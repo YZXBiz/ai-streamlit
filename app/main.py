@@ -9,7 +9,7 @@ st.set_page_config(
 from app.controllers.app_controller import AppController
 
 
-def main():
+def main() -> None:
     """Main application entry point."""
     app = AppController()
     app.run()

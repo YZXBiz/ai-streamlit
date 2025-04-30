@@ -8,12 +8,12 @@ from app.views.auth_view import render_login_form, show_login_error, show_login_
 class AuthController:
     """Controller for handling authentication logic."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the auth controller with the auth model."""
         self.auth_model = AuthModel()
         self.cookie_manager = self._setup_cookie_manager()
 
-    def _setup_cookie_manager(self):
+    def _setup_cookie_manager(self) -> EncryptedCookieManager:
         """Initialize and configure the encrypted cookie manager."""
         from app.settings import settings
 
@@ -32,7 +32,7 @@ class AuthController:
 
         return cookie_manager
 
-    def handle_login(self):
+    def handle_login(self) -> bool:
         """
         Handle the login process.
 
@@ -58,7 +58,7 @@ class AuthController:
 
         return False
 
-    def handle_logout(self):
+    def handle_logout(self) -> bool:
         """
         Handle the logout process.
 
@@ -75,7 +75,7 @@ class AuthController:
 
         return True
 
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         """
         Check if the user is authenticated.
 

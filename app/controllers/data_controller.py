@@ -9,12 +9,12 @@ from app.views.uploader_view import render_uploader, show_upload_error, show_upl
 class DataController:
     """Controller for handling data operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data controller with models."""
         self.data_model = DataModel()
         self.agent_model = AgentModel()
 
-    def handle_file_upload(self):
+    def handle_file_upload(self) -> bool:
         """
         Handle the file upload process.
 
@@ -69,7 +69,7 @@ class DataController:
 
         return False
 
-    def has_data(self):
+    def has_data(self) -> bool:
         """
         Check if data has been uploaded and agent is initialized.
 

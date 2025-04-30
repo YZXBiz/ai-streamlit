@@ -11,14 +11,14 @@ from app.views.sidebar_view import render_sidebar
 class AppController:
     """Main controller that orchestrates the application flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the app controller with other controllers."""
         self.session_model = SessionModel()
         self.auth_controller = AuthController()
         self.data_controller = DataController()
         self.chat_controller = ChatController()
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Initialize the application state."""
         # Apply custom styling
         apply_styling()
@@ -29,7 +29,7 @@ class AppController:
         # Render the header
         render_header()
 
-    def run(self):
+    def run(self) -> None:
         """Run the main application control flow."""
         self.initialize()
 
