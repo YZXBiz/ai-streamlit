@@ -1,6 +1,6 @@
 import streamlit as st
 
-from app.utils.data_utils import display_data_info, initialize_agent, load_dataframe
+from app.utils.data_utils import initialize_agent, load_dataframe
 
 
 def file_uploader():

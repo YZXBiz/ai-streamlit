@@ -234,7 +234,7 @@ def main():
             ):
                 # Clear cookie on logout
                 if cookies.ready():
-                    cookies.delete("user_authenticated")
+                    cookies["user_authenticated"] = ""
                     cookies.save()
                 logout()
                 st.rerun()
