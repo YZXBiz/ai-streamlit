@@ -47,3 +47,49 @@ class DataModel:
             return df, None
         except Exception as e:
             return None, str(e)
+            
+    @staticmethod
+    def load_multiple_dataframes(
+        uploaded_files: list[UploadedFile]
+    ) -> tuple[dict[str, pd.DataFrame], list[str]]:
+        """
+        Load multiple dataframes from uploaded files with auto-generated table names.
+
+        Args:
+            uploaded_files: List of uploaded file objects
+
+        Returns:
+            A tuple of (dictionary of dataframes, list of error messages)
+        """
+        dataframes = {}
+        errors = []
+        # Track used table names to avoid duplicates
+        used_names: set[str] = set()
+
+        for file in uploaded_files:
+            # Load the dataframe
+            df, error = DataModel.load_dataframe(file)
+            
+            if error:
+                errors.append(f"Error loading {file.name}: {error}")
+                continue
+            
+            # Generate table name from filename (without extension)
+            base_name = os.path.splitext(file.name)[0].lower().replace(" ", "_")
+            
+            # Handle duplicate names by adding version numbers
+            table_name = base_name
+            version = 1
+            
+            while table_name in used_names:
+                # If name already exists, add version number
+                table_name = f"{base_name}_v{version}"
+                version += 1
+            
+            # Mark this name as used
+            used_names.add(table_name)
+                
+            # Add to dictionary of dataframes
+            dataframes[table_name] = df
+            
+        return dataframes, errors

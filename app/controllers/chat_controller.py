@@ -42,8 +42,12 @@ class ChatController:
         Returns:
             True if a message was processed, False otherwise
         """
-        file_name = st.session_state.get("file_name", "Dataset")
-        user_question = render_chat_interface(file_name)
+        # Get file names and table names from session state
+        file_names = st.session_state.get("file_names", [])
+        table_names = st.session_state.get("table_names", [])
+        
+        # Render chat interface with table information
+        user_question = render_chat_interface(file_names, table_names)
 
         if user_question:
             # Add user message to history and display it

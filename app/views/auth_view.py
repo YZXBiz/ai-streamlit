@@ -3,25 +3,29 @@ import streamlit as st
 
 def render_login_form():
     """
-    Render the login form and get user credentials.
+    Render the login form interface.
 
     Returns:
-        Tuple of (username, password, submit_clicked)
+        A tuple of (username, password, login_clicked)
     """
-    with st.form("login_form"):
-        st.title("🔒 Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("Login")
+    st.title("🔒 Login")
+    st.write("Please log in to access the data analysis dashboard.")
 
-        return username, password, submit
+    with st.form("login_form"):
+        username = st.text_input("Username", placeholder="Enter your username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        login_button = st.form_submit_button("Login", type="primary", use_container_width=True)
+
+        st.write("*Default login: username 'admin', password 'password'*")
+
+    return username, password, login_button
 
 
 def show_login_success():
     """Show a success message after login."""
-    st.success("Login successful!")
+    st.success("Login successful! You can now access the dashboard.")
 
 
 def show_login_error():
     """Show an error message for failed login."""
-    st.error("Invalid username or password")
+    st.error("Invalid username or password. Please try again.")

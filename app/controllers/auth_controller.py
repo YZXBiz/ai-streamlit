@@ -1,61 +1,77 @@
 import streamlit as st
 from streamlit_cookies_manager import EncryptedCookieManager
 
-from app.models.auth_model import AuthModel
-from app.views.auth_view import render_login_form, show_login_error, show_login_success
+from app.models.session_model import SessionModel
+from app.settings import settings
+from app.views.auth_view import render_login_form, show_login_success
 
 
 class AuthController:
-    """Controller for handling authentication logic."""
+    """Controller for handling authentication."""
 
     def __init__(self) -> None:
-        """Initialize the auth controller with the auth model."""
-        self.auth_model = AuthModel()
+        """Initialize the auth controller with session model and cookie manager."""
+        self.session_model = SessionModel()
         self.cookie_manager = self._setup_cookie_manager()
 
     def _setup_cookie_manager(self) -> EncryptedCookieManager:
         """Initialize and configure the encrypted cookie manager."""
-        from app.settings import settings
-
         # Create cookie manager with security key from settings
         cookie_manager = EncryptedCookieManager(
             prefix="chatbot",
             password=settings.cookie_secret,
         )
 
-        # Check for existing authentication in cookies
+        # Try to load cookies
         if cookie_manager.ready():
+            # Check for existing authentication in cookies
             if cookie_manager.get("user_authenticated") == "true":
-                st.session_state.authenticated = True
+                st.session_state.logged_in = True
             else:
-                st.session_state.authenticated = False
+                st.session_state.logged_in = False
 
         return cookie_manager
+
+    def is_authenticated(self) -> bool:
+        """
+        Check if user is authenticated.
+
+        Returns:
+            True if authenticated, False otherwise
+        """
+        return st.session_state.get("logged_in", False)
 
     def handle_login(self) -> bool:
         """
         Handle the login process.
 
         Returns:
-            True if login was successful, False otherwise
+            True if login is successful, False otherwise
         """
-        username, password, submit = render_login_form()
+        username, password, login_clicked = render_login_form()
 
-        if submit:
-            if self.auth_model.authenticate(username, password):
-                # Update session state
-                st.session_state.authenticated = True
+        if login_clicked:
+            if self._validate_credentials(username, password):
+                # Set authenticated flag
+                st.session_state.logged_in = True
 
-                # Set cookie
+                # Store authentication in cookies
                 if self.cookie_manager.ready():
                     self.cookie_manager["user_authenticated"] = "true"
                     self.cookie_manager.save()
 
+                # Show success message
                 show_login_success()
+
+                # Reinitialize session while keeping authenticated state
+                self.session_model.initialize_session(st.session_state)
+
                 return True
             else:
-                show_login_error()
+                st.error("Invalid credentials")
+                return False
 
+        # Not logged in yet
         return False
 
     def handle_logout(self) -> bool:
@@ -63,23 +79,35 @@ class AuthController:
         Handle the logout process.
 
         Returns:
-            True if logout was successful
+            True if logout is successful
         """
         # Clear cookie on logout
         if self.cookie_manager.ready():
             self.cookie_manager["user_authenticated"] = ""
             self.cookie_manager.save()
 
-        # Update session state
-        st.session_state.authenticated = False
+        # Reset session and clear user data
+        self.session_model.reset_session(st.session_state)
+
+        # Make sure user is logged out
+        st.session_state.logged_in = False
 
         return True
 
-    def is_authenticated(self) -> bool:
+    def _validate_credentials(self, username: str, password: str) -> bool:
         """
-        Check if the user is authenticated.
+        Validate the provided credentials.
+
+        Args:
+            username: The username to check
+            password: The password to check
 
         Returns:
-            True if the user is authenticated, False otherwise
+            True if credentials are valid, False otherwise
         """
-        return st.session_state.get("authenticated", False)
+        # Get default credentials from settings
+        default_username = settings.default_username
+        default_password = settings.default_password
+
+        # Simple credential validation
+        return username == default_username and password == default_password

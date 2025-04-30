@@ -3,23 +3,42 @@ import os
 import streamlit as st
 
 
-def render_chat_interface(file_name):
+def render_chat_interface(file_names=None, table_names=None):
     """
     Render the chat interface with input field.
 
     Args:
-        file_name: Name of the file being analyzed
+        file_names: List of file names being analyzed
+        table_names: List of table names available
 
     Returns:
         The user's question if one was submitted, otherwise None
     """
-    st.subheader(f"Chat with your data: {file_name}")
+    if isinstance(file_names, list) and len(file_names) > 0:
+        st.subheader(f"Chat with your data: {', '.join(file_names)}")
+    else:
+        st.subheader("Chat with your data")
+
+    # Display available tables if more than one
+    if table_names and len(table_names) > 1:
+        with st.expander("Available Tables"):
+            for table in table_names:
+                st.write(f"- `{table}`")
+
+            st.write(
+                "Tip: You can ask questions that span multiple tables. For best results, reference table names in your questions."
+            )
 
     # Display chat history
     display_chat_history()
 
     # Input for new question
-    user_question = st.chat_input("Ask a question about your data...")
+    if table_names and len(table_names) > 1:
+        placeholder = "Ask a question about your data (e.g., 'join the tables and show...')"
+    else:
+        placeholder = "Ask a question about your data..."
+
+    user_question = st.chat_input(placeholder)
 
     return user_question
 

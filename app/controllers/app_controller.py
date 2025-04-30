@@ -58,6 +58,10 @@ class AppController:
         if not self.data_controller.has_data():
             # Show file upload interface if no data is loaded
             if self.data_controller.handle_file_upload():
+                # Clear any form state before rerunning
+                for key in list(st.session_state.keys()):
+                    if key.startswith("file_upload_form"):
+                        del st.session_state[key]
                 st.rerun()
         else:
             # Show chat interface if data is loaded

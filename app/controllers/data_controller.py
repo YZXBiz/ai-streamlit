@@ -1,3 +1,5 @@
+import logging
+
 import streamlit as st
 
 from app.models.agent_model import AgentModel
@@ -19,16 +21,21 @@ class DataController:
         Handle the file upload process.
 
         Returns:
-            True if file was successfully processed, False otherwise
+            True if files were successfully processed, False otherwise
         """
-        uploaded_file, continue_clicked = render_uploader()
+        uploaded_files, continue_clicked = render_uploader()
 
-        if uploaded_file is not None:
-            # Process the uploaded file
-            df, error = self.data_model.load_dataframe(uploaded_file)
+        if uploaded_files and continue_clicked:
+            # Process the uploaded files with automatic table naming
+            dataframes, errors = self.data_model.load_multiple_dataframes(uploaded_files)
 
-            if error:
-                show_upload_error(error)
+            if errors:
+                for error in errors:
+                    show_upload_error(error)
+                return False
+
+            if not dataframes:
+                show_upload_error("No valid data files were uploaded")
                 return False
 
             # Get the API key from settings
@@ -37,8 +44,15 @@ class DataController:
                 show_upload_error("OpenAI API key not found")
                 return False
 
-            # Create the agent
-            agent, error = self.agent_model.create_agent(df, api_key)
+            # Log information about the dataframes being processed
+            logging.info(f"Creating agent with {len(dataframes)} dataframes")
+            for name, df in dataframes.items():
+                logging.info(
+                    f"Dataframe '{name}' has shape {df.shape} and columns: {', '.join(df.columns)}"
+                )
+
+            # Create the agent with multiple dataframes
+            agent, error = self.agent_model.create_agent(dataframes, api_key)
 
             if error:
                 show_upload_error(f"Error initializing agent: {error}")
@@ -46,26 +60,43 @@ class DataController:
 
             # Store in session state
             st.session_state.agent = agent
-            st.session_state.df = df
-            st.session_state.file_name = uploaded_file.name
+            st.session_state.dfs = dataframes
+            st.session_state.table_names = list(dataframes.keys())
+
+            # Store filenames for display purposes
+            file_names = [file.name for file in uploaded_files]
+            st.session_state.file_names = file_names
 
             # Add a welcome message to chat history
             if "chat_history" not in st.session_state:
                 st.session_state.chat_history = []
 
             if not st.session_state.chat_history:
+                table_count = len(dataframes)
+                tables_str = ", ".join(f"'{name}'" for name in dataframes.keys())
+
+                # Create detailed welcome message showing table info
+                welcome_msg = f"I've analyzed your data from {table_count} tables: {tables_str}."
+
+                if table_count > 1:
+                    welcome_msg += " You can ask questions that span multiple tables - I'll automatically join related data when needed."
+                    # Add hints about table structure
+                    welcome_msg += "\n\nData overview:"
+                    for name, df in dataframes.items():
+                        row_count = len(df)
+                        col_count = len(df.columns)
+                        welcome_msg += f"\n- '{name}': {row_count} rows, {col_count} columns"
+
                 st.session_state.chat_history.append(
                     {
                         "role": "assistant",
                         "type": "text",
-                        "content": f"I've analyzed your data from '{uploaded_file.name}'. You can now ask me questions about it!",
+                        "content": welcome_msg,
                     }
                 )
 
-            show_upload_success(uploaded_file.name)
-
-            if continue_clicked:
-                return True
+            show_upload_success(file_names)
+            return True
 
         return False
 
