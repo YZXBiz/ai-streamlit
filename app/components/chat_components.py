@@ -12,9 +12,6 @@ def display_chat_history():
                 st.write(message["content"])
             elif message["type"] == "dataframe":
                 st.dataframe(message["content"])
-            elif message["type"] == "figure":
-                # Display matplotlib figure directly
-                st.pyplot(message["content"])
             elif message["type"] == "image":
                 try:
                     # Display image from file path
@@ -52,7 +49,13 @@ def handle_user_question(question):
         with st.spinner("Thinking..."):
             try:
                 # Process the question with AI
-                response = st.session_state.agent.chat(question)
+                # First message uses chat(), subsequent messages use follow_up()
+                if "first_question_asked" not in st.session_state:
+                    response = st.session_state.agent.chat(question)
+                    st.session_state.first_question_asked = True
+                else:
+                    # Use agent.follow_up for subsequent questions
+                    response = st.session_state.agent.follow_up(question)
 
                 # Process the response (PandasAI v3 returns objects with attributes)
                 response_type = response.type
@@ -112,4 +115,7 @@ def reset_chat():
         help="Clear only the conversation history while keeping the current dataset",
     ):
         st.session_state.chat_history = []
+        # Reset first question flag to start a new conversation
+        if "first_question_asked" in st.session_state:
+            del st.session_state.first_question_asked
         st.rerun()
