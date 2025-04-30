@@ -5,6 +5,7 @@ from app.controllers.chat_controller import ChatController
 from app.controllers.data_controller import DataController
 from app.models.session_model import SessionModel
 from app.views.layout_view import apply_styling, render_header
+from app.views.output_type_selector import render_output_type_selector
 from app.views.sidebar_view import render_sidebar
 
 
@@ -54,6 +55,11 @@ class AppController:
             self.session_model.reset_chat(st.session_state)
             st.rerun()
 
+        # Render output type selector when chat is available
+        output_type = None
+        if self.data_controller.has_data():
+            output_type = render_output_type_selector()
+
         # Main content area based on application state
         if not self.data_controller.has_data():
             # Show file upload interface if no data is loaded
@@ -65,4 +71,4 @@ class AppController:
                 st.rerun()
         else:
             # Show chat interface if data is loaded
-            self.chat_controller.handle_chat()
+            self.chat_controller.handle_chat(output_type=output_type)

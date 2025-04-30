@@ -35,9 +35,13 @@ class ChatController:
             {"role": role, "type": content_type, "content": content}
         )
 
-    def handle_chat(self) -> bool:
+    def handle_chat(self, output_type: str = None) -> bool:
         """
         Handle the chat interaction with the agent.
+
+        Args:
+            output_type: The desired output type ("auto", "string", "dataframe", "chart").
+                         Defaults to None (auto)
 
         Returns:
             True if a message was processed, False otherwise
@@ -45,7 +49,7 @@ class ChatController:
         # Get file names and table names from session state
         file_names = st.session_state.get("file_names", [])
         table_names = st.session_state.get("table_names", [])
-        
+
         # Render chat interface with table information
         user_question = render_chat_interface(file_names, table_names)
 
@@ -68,7 +72,7 @@ class ChatController:
             with display_thinking_spinner():
                 try:
                     response = self.agent_model.process_question(
-                        agent, user_question, is_first_question
+                        agent, user_question, is_first_question, output_type=output_type
                     )
 
                     # Update the first question flag

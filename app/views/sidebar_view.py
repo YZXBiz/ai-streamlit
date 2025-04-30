@@ -13,6 +13,11 @@ def render_sidebar():
     actions = {"logout": False, "new_chat": False, "clear_chat": False}
 
     with st.sidebar:
+        # About section at the top
+        render_about_section()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         # User actions section
         render_card_header("🔐 User Actions", help_text="Actions for managing your session")
 
@@ -54,10 +59,5 @@ def render_sidebar():
             help="Clear only the conversation history while keeping the current dataset",
         ):
             actions["clear_chat"] = True
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # About section
-        render_about_section()
 
     return actions

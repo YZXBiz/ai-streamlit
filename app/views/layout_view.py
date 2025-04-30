@@ -132,8 +132,10 @@ def render_about_section():
     <div class="sidebar-card">
         <div class="card-header">ℹ️ About</div>
         <div class="about-box">
-            <h4>Data Chat Assistant</h4>
-            <p>Upload your data and ask questions using natural language.</p>
+            <ul>
+                <li>Upload your data and ask questions using natural language.</li>
+                <li>Do not ask any irrelevant questions like "what is the weather in Tokyo?"</li>
+            </ul>
             <div class="footer">Created by Jackson Yang with ❤️</div>
         </div>
     </div>

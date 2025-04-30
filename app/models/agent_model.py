@@ -88,7 +88,9 @@ class AgentModel:
             logging.error(f"Error creating agent: {str(e)}")
             return None, str(e)
 
-    def process_question(self, agent: Agent, question: str, is_first_question: bool) -> Any:
+    def process_question(
+        self, agent: Agent, question: str, is_first_question: bool, output_type: str = None
+    ) -> Any:
         """
         Process a user question through the agent.
 
@@ -96,14 +98,16 @@ class AgentModel:
             agent: The PandasAI agent
             question: The user question to process
             is_first_question: Whether this is the first question in the conversation
+            output_type: The desired output type ("auto", "string", "dataframe", "chart").
+                         Defaults to None (auto)
 
         Returns:
             The agent's response
         """
         try:
             if is_first_question:
-                return agent.chat(question)
+                return agent.chat(question, output_type=output_type)
             else:
-                return agent.follow_up(question)
+                return agent.follow_up(question, output_type=output_type)
         except Exception as e:
             raise Exception(f"Error processing question: {str(e)}") from e
