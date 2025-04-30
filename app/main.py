@@ -132,6 +132,9 @@ cookies = EncryptedCookieManager(
 )
 
 # Check authentication at startup
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
 if cookies.ready():
     # Check for auth cookie
     if cookies.get("user_authenticated") == "true":
