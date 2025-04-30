@@ -9,10 +9,14 @@ from app.utils.auth_utils import (
     session_manager,
 )
 from app.utils.data_utils import (
-    display_data_info,
-    initialize_agent,
-    load_dataframe,
-    process_response,
+    AgentManager,
+    DataLoader,
+    DataVisualizer,
+    ResponseProcessor,
+    agent_manager,
+    data_loader,
+    data_visualizer,
+    response_processor,
 )
 
 __all__ = [
@@ -21,8 +25,12 @@ __all__ = [
     "CredentialManager",
     "Authenticator",
     "SessionManager",
-    "initialize_agent",
-    "load_dataframe",
-    "process_response",
-    "display_data_info",
+    "DataLoader",
+    "AgentManager",
+    "ResponseProcessor",
+    "DataVisualizer",
+    "data_loader",
+    "agent_manager",
+    "response_processor",
+    "data_visualizer",
 ]

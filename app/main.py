@@ -182,18 +182,6 @@ if "api_key" not in st.session_state:
     st.session_state.api_key = os.getenv("OPENAI_API_KEY", "")
 
 
-# Reset session
-def reset_session():
-    """Reset all session state variables and restart the session."""
-    if st.button("Start New Session", key="new_session_btn"):
-        # Clear session state
-        st.session_state.agent = None
-        st.session_state.df = None
-        st.session_state.chat_history = []
-        st.session_state.file_name = None
-        st.rerun()
-
-
 # Main app
 def main():
     """Main application entry point."""
@@ -253,7 +241,9 @@ def main():
                 key="new_chat_btn",
                 help="Start completely fresh with a new dataset and conversation",
             ):
-                reset_session()
+                # Use session manager to reset the session
+                session_manager.reset_session()
+                st.rerun()
 
         st.markdown("<br>", unsafe_allow_html=True)
 

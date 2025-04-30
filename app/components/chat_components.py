@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from app.utils.data_utils import process_response
+from app.utils.data_utils import response_processor
 
 
 def display_chat_history():
@@ -57,7 +57,7 @@ def handle_user_question(question):
                 response = st.session_state.agent.chat(question)
 
                 # Process the response
-                response_type, content = process_response(response)
+                response_type, content = response_processor.process_response(response)
 
                 # Display the response based on type
                 if response_type == "dataframe":

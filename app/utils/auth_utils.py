@@ -91,6 +91,15 @@ class SessionManager:
 
         return True
 
+    def reset_session(self):
+        """Reset all session state variables and restart the session."""
+        # Clear session state but maintain authentication
+        st.session_state.agent = None
+        st.session_state.df = None
+        st.session_state.chat_history = []
+        st.session_state.file_name = None
+        return True
+
 
 # Create singleton instances for use in the application
 auth_manager = Authenticator()

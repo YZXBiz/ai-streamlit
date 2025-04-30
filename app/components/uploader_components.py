@@ -1,6 +1,6 @@
 import streamlit as st
 
-from app.utils.data_utils import initialize_agent, load_dataframe
+from app.utils.data_utils import agent_manager, data_loader
 
 
 def file_uploader():
@@ -12,7 +12,7 @@ def file_uploader():
 
     if uploaded_file is not None:
         # Load the dataframe
-        df, error = load_dataframe(uploaded_file)
+        df, error = data_loader.load_dataframe(uploaded_file)
 
         if error:
             st.error(f"Error loading file: {error}")
@@ -28,7 +28,7 @@ def file_uploader():
             st.session_state.api_key = api_key
 
         # Initialize the agent
-        agent, error = initialize_agent(df, api_key)
+        agent, error = agent_manager.initialize_agent(df, api_key)
 
         if error:
             st.error(f"Error initializing agent: {error}")

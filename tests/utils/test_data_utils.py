@@ -9,10 +9,14 @@ import pandas as pd
 import pytest
 
 from app.utils.data_utils import (
-    display_data_info,
-    initialize_agent,
-    load_dataframe,
-    process_response,
+    AgentManager,
+    DataLoader,
+    DataVisualizer,
+    ResponseProcessor,
+    agent_manager,
+    data_loader,
+    data_visualizer,
+    response_processor,
 )
 
 
@@ -32,7 +36,7 @@ def test_initialize_agent_with_api_key(sample_dataframe):
         mock_agent.return_value = mock_agent_instance
 
         # Call the function
-        agent, error = initialize_agent(sample_dataframe, "test_api_key")
+        agent, error = agent_manager.initialize_agent(sample_dataframe, "test_api_key")
 
         # Verify expected behaviors
         assert error is None
@@ -46,7 +50,7 @@ def test_initialize_agent_without_api_key(sample_dataframe):
     """Test initializing AI agent without providing an API key."""
     # Test when no API key is provided or in environment
     with patch.dict(os.environ, {}, clear=True):
-        agent, error = initialize_agent(sample_dataframe)
+        agent, error = agent_manager.initialize_agent(sample_dataframe)
         assert agent is None
         assert error == "Missing OpenAI API Key"
 
@@ -62,7 +66,7 @@ def test_initialize_agent_without_api_key(sample_dataframe):
         mock_agent.return_value = mock_agent_instance
 
         # Call the function
-        agent, error = initialize_agent(sample_dataframe)
+        agent, error = agent_manager.initialize_agent(sample_dataframe)
 
         # Verify expected behaviors
         assert error is None
@@ -77,7 +81,7 @@ def test_initialize_agent_exception(sample_dataframe):
         mock_openai.side_effect = Exception("Test exception")
 
         # Call the function
-        agent, error = initialize_agent(sample_dataframe, "test_api_key")
+        agent, error = agent_manager.initialize_agent(sample_dataframe, "test_api_key")
 
         # Verify expected behaviors
         assert agent is None
@@ -103,7 +107,7 @@ def test_load_dataframe_csv(mock_uploaded_file):
                 mock_uploaded_file.name = "test.csv"
 
                 # Call the function
-                df, error = load_dataframe(mock_uploaded_file)
+                df, error = data_loader.load_dataframe(mock_uploaded_file)
 
                 # Verify expected behaviors
                 assert error is None
@@ -131,7 +135,7 @@ def test_load_dataframe_excel(mock_uploaded_file):
                 mock_uploaded_file.name = "test.xlsx"
 
                 # Call the function
-                df, error = load_dataframe(mock_uploaded_file)
+                df, error = data_loader.load_dataframe(mock_uploaded_file)
 
                 # Verify expected behaviors
                 assert error is None
@@ -142,7 +146,7 @@ def test_load_dataframe_excel(mock_uploaded_file):
 
 def test_load_dataframe_no_file():
     """Test handling when no file is provided."""
-    df, error = load_dataframe(None)
+    df, error = data_loader.load_dataframe(None)
     assert df is None
     assert error == "No file uploaded"
 
@@ -161,7 +165,7 @@ def test_load_dataframe_unsupported_format(mock_uploaded_file):
             mock_uploaded_file.name = "test.txt"
 
             # Call the function
-            df, error = load_dataframe(mock_uploaded_file)
+            df, error = data_loader.load_dataframe(mock_uploaded_file)
 
             # Verify expected behaviors
             assert df is None
@@ -175,7 +179,7 @@ def test_load_dataframe_exception(mock_uploaded_file):
         mock_temp_file.side_effect = Exception("Test exception")
 
         # Call the function
-        df, error = load_dataframe(mock_uploaded_file)
+        df, error = data_loader.load_dataframe(mock_uploaded_file)
 
         # Verify expected behaviors
         assert df is None
@@ -185,7 +189,7 @@ def test_load_dataframe_exception(mock_uploaded_file):
 def test_process_response_dataframe(sample_dataframe):
     """Test processing a dataframe response."""
     # Call the function with a dataframe
-    response_type, content = process_response(sample_dataframe)
+    response_type, content = response_processor.process_response(sample_dataframe)
 
     # Verify expected behaviors
     assert response_type == "dataframe"
@@ -199,7 +203,7 @@ def test_process_response_figure():
     ax.plot([1, 2, 3], [4, 5, 6])
 
     # Call the function with a figure
-    response_type, content = process_response(fig)
+    response_type, content = response_processor.process_response(fig)
 
     # Verify expected behaviors
     assert response_type == "figure"
@@ -210,7 +214,8 @@ def test_process_response_figure():
 
 
 def test_process_response_image_exists():
-    """Test processing an image path response when file exists."""
+    """Test processing an image path response when the file exists."""
+    # Create a mock image path
     with (
         patch("os.path.exists", return_value=True),
         patch("PIL.Image.open") as mock_image_open,
@@ -224,7 +229,7 @@ def test_process_response_image_exists():
         mock_subplots.return_value = (mock_fig, mock_ax)
 
         # Call the function with an image path
-        response_type, content = process_response("data/charts/test.png")
+        response_type, content = response_processor.process_response("data/charts/test.png")
 
         # Verify expected behaviors
         assert response_type == "figure"
@@ -235,10 +240,10 @@ def test_process_response_image_exists():
 
 
 def test_process_response_image_not_exists():
-    """Test processing an image path response when file doesn't exist."""
+    """Test processing an image path response when the file doesn't exist."""
     with patch("os.path.exists", return_value=False):
         # Call the function with a non-existent image path
-        response_type, content = process_response("data/charts/nonexistent.png")
+        response_type, content = response_processor.process_response("data/charts/nonexistent.png")
 
         # Verify expected behaviors
         assert response_type == "text"
@@ -247,8 +252,8 @@ def test_process_response_image_not_exists():
 
 def test_process_response_text():
     """Test processing a text response."""
-    # Call the function with a text string
-    response_type, content = process_response("This is a text response")
+    # Call the function with text
+    response_type, content = response_processor.process_response("This is a text response")
 
     # Verify expected behaviors
     assert response_type == "text"
@@ -256,13 +261,16 @@ def test_process_response_text():
 
 
 def test_process_response_image_exception():
-    """Test processing an image path when exception occurs during image loading."""
-    with patch("os.path.exists", return_value=True), patch("PIL.Image.open") as mock_image_open:
+    """Test handling exceptions during image processing."""
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("PIL.Image.open") as mock_image_open,
+    ):
         # Setup mock to raise exception
         mock_image_open.side_effect = Exception("Test exception")
 
         # Call the function with an image path
-        response_type, content = process_response("data/charts/test.png")
+        response_type, content = response_processor.process_response("data/charts/test.png")
 
         # Verify expected behaviors
         assert response_type == "image"
@@ -272,9 +280,9 @@ def test_process_response_image_exception():
 def test_display_data_info(mock_streamlit, sample_dataframe):
     """Test displaying dataframe information."""
     # Call the function
-    display_data_info(sample_dataframe)
+    data_visualizer.display_data_info(sample_dataframe)
 
-    # Verify expected behaviors
-    assert mock_streamlit["subheader"].call_count >= 3  # Should call subheader at least 3 times
-    assert mock_streamlit["dataframe"].call_count >= 3  # Should display at least 3 dataframes
-    assert mock_streamlit["write"].called  # Should write something
+    # Verify streamlit components were used correctly
+    assert mock_streamlit["subheader"].call_count == 3  # Data Preview, Shape, Column Info
+    assert mock_streamlit["dataframe"].call_count == 2  # Preview, Column Info
+    assert mock_streamlit["write"].call_count >= 1  # Shape info
