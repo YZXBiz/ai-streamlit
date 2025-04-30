@@ -102,67 +102,6 @@ class AgentManager:
             return None, str(e)
 
 
-class ResponseProcessor:
-    """Processes and categorizes responses from the AI agent."""
-
-    @staticmethod
-    def process_response(response):
-        """
-        Process the response from PandasAI and determine its type.
-
-        Args:
-            response: The response from PandasAI
-
-        Returns:
-            A tuple of (response_type, content)
-        """
-        # Check if response is a DataFrame
-        if hasattr(response, "shape") and hasattr(response, "iloc"):
-            return "dataframe", response
-
-        # Check if response is a matplotlib figure or has a figure attribute
-        elif hasattr(response, "figure") or str(type(response)).find("Figure") != -1:
-            return "figure", response
-
-        # Check if response is a plot/chart path (fallback for compatibility)
-        elif isinstance(response, str) and (
-            response.startswith("data/charts/")
-            or response.startswith("exports/charts/")
-            or response.endswith((".png", ".jpg", ".jpeg"))
-        ):
-            return ResponseProcessor._process_image_path(response)
-
-        # Default to text
-        else:
-            return "text", response
-
-    @staticmethod
-    def _process_image_path(image_path):
-        """Process an image path response into a displayable format."""
-        try:
-            # Try to load the image
-            import matplotlib.pyplot as plt
-            from PIL import Image
-
-            # Create a matplotlib figure with the image
-            fig, ax = plt.subplots(figsize=(10, 6))
-
-            # Check if file exists
-            if os.path.exists(image_path):
-                img = Image.open(image_path)
-                ax.imshow(img)
-                ax.axis("off")  # Hide axes
-
-                # Return as figure for in-chat display
-                return "figure", fig
-            else:
-                # If image file doesn't exist, return as text
-                return "text", f"Chart file not found: {image_path}"
-        except Exception:
-            # Fall back to returning the image path if conversion fails
-            return "image", image_path
-
-
 class DataVisualizer:
     """Handles data visualization and information display."""
 
@@ -209,5 +148,4 @@ class DataVisualizer:
 # Create instances for easy access
 data_loader = DataLoader()
 agent_manager = AgentManager()
-response_processor = ResponseProcessor()
 data_visualizer = DataVisualizer()

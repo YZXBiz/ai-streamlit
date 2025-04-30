@@ -3,8 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from app.utils.data_utils import response_processor
-
 
 def display_chat_history():
     """Display the entire chat history from session state."""
@@ -56,29 +54,35 @@ def handle_user_question(question):
                 # Process the question with AI
                 response = st.session_state.agent.chat(question)
 
-                # Process the response
-                response_type, content = response_processor.process_response(response)
-
-                # Display the response based on type
-                if response_type == "dataframe":
-                    st.dataframe(content)
-                elif response_type == "figure":
-                    # Display matplotlib figure directly
-                    st.pyplot(content)
-                    # Close figure to prevent memory issues
-                    plt.close(content)
-                elif response_type == "image":
-                    # Check if the file exists
-                    if os.path.exists(content):
-                        st.image(content)
+                # Process the response (PandasAI v3 returns objects with attributes)
+                response_type = response.type
+                
+                if response_type == 'chart':
+                    # Display image from file path
+                    image_path = response.value
+                    if os.path.exists(image_path):
+                        st.image(image_path)
+                        add_message("assistant", "image", image_path)
                     else:
-                        st.error(f"Chart file not found: {content}")
-                        st.write(str(response))  # Fall back to displaying the raw response
+                        st.error(f"Chart file not found: {image_path}")
+                        st.write(str(response))
+                        add_message("assistant", "text", str(response))
+                
+                elif response_type == 'string':
+                    # Display text response
+                    st.write(response.value)
+                    add_message("assistant", "text", response.value)
+                
+                elif response_type == 'dataframe':
+                    # Display dataframe
+                    df = response.value
+                    st.dataframe(df)
+                    add_message("assistant", "dataframe", df)
+                
                 else:
-                    st.write(content)
-
-                # Add response to chat history
-                add_message("assistant", response_type, content)
+                    # Fallback for other types
+                    st.write(response)
+                    add_message("assistant", "text", str(response))
 
             except Exception as e:
                 error_msg = f"Error generating response: {str(e)}"

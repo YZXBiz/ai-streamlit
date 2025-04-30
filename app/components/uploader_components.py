@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 from app.utils.data_utils import agent_manager, data_loader
@@ -18,14 +20,11 @@ def file_uploader():
             st.error(f"Error loading file: {error}")
             return
 
-        # Get the API key (from env or user input)
-        api_key = st.session_state.get("api_key", None)
+        # Get the API key from environment variable
+        api_key = os.getenv("OPENAI_API_KEY", "")
         if not api_key:
-            api_key = st.text_input("Enter your OpenAI API Key:", type="password")
-            if not api_key:
-                st.warning("Please enter an OpenAI API key to continue")
-                return
-            st.session_state.api_key = api_key
+            st.error("OpenAI API key not found in environment variables")
+            return
 
         # Initialize the agent
         agent, error = agent_manager.initialize_agent(df, api_key)
@@ -54,7 +53,6 @@ def file_uploader():
                     "content": f"I've analyzed your data from '{uploaded_file.name}'. You can now ask me questions about it!",
                 }
             )
-
         # Add button to continue to chat
         if st.button(
             "Continue to Chat", type="primary", use_container_width=True, key="continue_to_chat_btn"
