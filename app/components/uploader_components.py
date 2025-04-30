@@ -56,7 +56,9 @@ def file_uploader():
             )
 
         # Add button to continue to chat
-        if st.button("Continue to Chat"):
+        if st.button(
+            "Continue to Chat", type="primary", use_container_width=True, key="continue_to_chat_btn"
+        ):
             st.rerun()
     else:
         st.info("Please upload a CSV or Excel file to get started.")

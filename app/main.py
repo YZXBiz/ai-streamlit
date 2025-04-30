@@ -1,13 +1,14 @@
 import os
 
 import streamlit as st
-from dotenv import load_dotenv
-from streamlit_cookies_manager import EncryptedCookieManager
 
 # App configuration - MUST be the first Streamlit command
 st.set_page_config(
     page_title="Chatbot", page_icon="💬", layout="wide", initial_sidebar_state="expanded"
 )
+
+from dotenv import load_dotenv
+from streamlit_cookies_manager import EncryptedCookieManager
 
 # Import components and utilities
 from app.components import chat_interface, file_uploader, reset_chat
@@ -153,7 +154,7 @@ if "api_key" not in st.session_state:
 # Reset session
 def reset_session():
     """Reset all session state variables and restart the session."""
-    if st.button("Start New Session"):
+    if st.button("Start New Session", key="new_session_btn"):
         # Clear session state
         st.session_state.agent = None
         st.session_state.df = None
@@ -192,7 +193,7 @@ def main():
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🚪 Logout", use_container_width=True, type="primary"):
+            if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_btn"):
                 # Clear cookie on logout
                 if cookies.ready():
                     cookies.delete("user_authenticated")
@@ -200,7 +201,7 @@ def main():
                 logout()
                 st.rerun()
         with col2:
-            if st.button("🔄 New Chat", use_container_width=True):
+            if st.button("🔄 New Chat", use_container_width=True, key="new_chat_btn"):
                 reset_session()
 
         st.markdown("<br>", unsafe_allow_html=True)
