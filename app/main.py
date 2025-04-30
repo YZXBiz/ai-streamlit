@@ -20,11 +20,20 @@ load_dotenv()
 st.markdown(
     """
 <style>
+    /* Import Roboto font */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    
+    /* Apply Roboto to all content */
+    html, body, [class*="css"] {
+        font-family: 'Roboto', sans-serif !important;
+    }
+    
     /* Rich sidebar background */
     [data-testid="stSidebarContent"] {
         background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
         color: white;
         padding: 1.5rem 1rem;
+        font-family: 'Roboto', sans-serif;
     }
     
     /* Stylish section cards */
@@ -173,12 +182,11 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        # User actions section in a card
+        # User actions section without card
         st.markdown(
             """
-        <div class="sidebar-card">
             <div class="card-header">🔐 User Actions</div>
-        """,
+            """,
             unsafe_allow_html=True,
         )
 
@@ -195,22 +203,21 @@ def main():
             if st.button("🔄 New Chat", use_container_width=True):
                 reset_session()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # Chat controls in a card
+        # Chat controls without card
         st.markdown(
             """
-        <div class="sidebar-card">
             <div class="card-header">💬 Chat Options</div>
-        """,
+            """,
             unsafe_allow_html=True,
         )
 
         reset_chat()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # About section in a card
+        # About section in a card (keeping this as a card per request)
         st.markdown(
             """
         <div class="sidebar-card">
@@ -218,7 +225,7 @@ def main():
             <div class="about-box">
                 <h4>Data Chat Assistant</h4>
                 <p>Upload your data and ask questions using natural language.</p>
-                <div class="footer">Powered by AI and Streamlit.</div>
+                <div class="footer">Created by Jackson Yang with ❤️</div>
             </div>
         </div>
             """,

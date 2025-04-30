@@ -42,9 +42,6 @@ def file_uploader():
         # Success message
         st.success(f"File '{uploaded_file.name}' uploaded and processed successfully!")
 
-        # Display data information
-        display_data_info(df)
-
         # Add a welcome message to chat history
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
@@ -63,16 +60,3 @@ def file_uploader():
             st.rerun()
     else:
         st.info("Please upload a CSV or Excel file to get started.")
-
-        # Example questions
-        st.subheader("Example Questions You Can Ask:")
-        example_questions = [
-            "What is the average value of [column]?",
-            "Show me the distribution of [column]",
-            "Create a bar chart of [column] grouped by [another column]",
-            "What are the top 5 values in [column]?",
-            "Find correlations between all numeric columns",
-        ]
-
-        for question in example_questions:
-            st.markdown(f"- {question}")
