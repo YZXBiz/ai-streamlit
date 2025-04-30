@@ -61,8 +61,13 @@ st.markdown(
         padding-bottom: 8px;
     }
     
-    /* Button styling */
-    div.stButton > button {
+    /* Comprehensive button styling for all scenarios */
+    /* Base button styles */
+    .stButton button, 
+    .stButton > button, 
+    button[data-baseweb="button"],
+    div.stButton > button[data-baseweb],
+    div:has(> button[data-baseweb="button"]) button {
         border-radius: 8px !important;
         font-weight: 500 !important;
         border: none !important;
@@ -74,21 +79,44 @@ st.markdown(
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
     }
     
-    div.stButton > button:hover {
+    /* Hover styles */
+    .stButton button:hover, 
+    .stButton > button:hover, 
+    button[data-baseweb="button"]:hover,
+    div.stButton > button[data-baseweb]:hover,
+    div:has(> button[data-baseweb="button"]) button:hover {
         background-color: rgba(255, 255, 255, 0.3) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
     }
     
-    /* Primary button - standout */
-    div.stButton > button[kind="primary"] {
+    /* Primary button styles */
+    .stButton button[kind="primary"], 
+    .stButton > button[kind="primary"], 
+    button[data-baseweb="button"][kind="primary"],
+    div.stButton > button[data-baseweb][kind="primary"],
+    div:has(> button[data-baseweb="button"][kind="primary"]) button,
+    [data-testid="stButton"] [kind="primary"] button {
         background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
         color: white !important;
     }
     
-    div.stButton > button[kind="primary"]:hover {
+    /* Primary button hover */
+    .stButton button[kind="primary"]:hover, 
+    .stButton > button[kind="primary"]:hover, 
+    button[data-baseweb="button"][kind="primary"]:hover,
+    div.stButton > button[data-baseweb][kind="primary"]:hover,
+    div:has(> button[data-baseweb="button"][kind="primary"]) button:hover,
+    [data-testid="stButton"] [kind="primary"] button:hover {
         background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
         box-shadow: 0 4px 12px rgba(0, 210, 255, 0.4) !important;
+    }
+    
+    /* Fix for Logout button specifically */
+    button:has(span:contains("Logout")),
+    button:has(span:contains("🚪")) {
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
+        color: white !important;
     }
     
     /* About section */
@@ -192,11 +220,18 @@ def main():
             <div class="card-header">🔐 User Actions</div>
             """,
             unsafe_allow_html=True,
+            help="Actions for managing your session",
         )
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_btn"):
+            if st.button(
+                "🚪 Logout",
+                use_container_width=True,
+                type="primary",
+                key="logout_btn",
+                help="Log out of your current session",
+            ):
                 # Clear cookie on logout
                 if cookies.ready():
                     cookies.delete("user_authenticated")
@@ -204,7 +239,12 @@ def main():
                 logout()
                 st.rerun()
         with col2:
-            if st.button("🔄 New Chat", use_container_width=True, key="new_chat_btn"):
+            if st.button(
+                "🔄 New Chat",
+                use_container_width=True,
+                key="new_chat_btn",
+                help="Start completely fresh with a new dataset and conversation",
+            ):
                 reset_session()
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -215,6 +255,7 @@ def main():
             <div class="card-header">💬 Chat Options</div>
             """,
             unsafe_allow_html=True,
+            help="Options for managing your chat conversation",
         )
 
         reset_chat()

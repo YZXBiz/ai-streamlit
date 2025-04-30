@@ -102,6 +102,10 @@ def chat_interface():
 
 def reset_chat():
     """Reset the chat history."""
-    if st.button("Clear Chat", key="clear_chat_btn"):
+    if st.button(
+        "Clear Chat",
+        key="clear_chat_btn",
+        help="Clear only the conversation history while keeping the current dataset",
+    ):
         st.session_state.chat_history = []
         st.rerun()
