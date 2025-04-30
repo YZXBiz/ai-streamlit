@@ -71,9 +71,10 @@ class ChatController:
             # Process the question with the agent
             with display_thinking_spinner():
                 try:
-                    response = self.agent_model.process_question(
-                        agent, user_question, is_first_question, output_type=output_type
-                    )
+                    if is_first_question:
+                        response = agent.chat(user_question, output_type=output_type)
+                    else:
+                        response = agent.follow_up(user_question, output_type=output_type)
 
                     # Update the first question flag
                     st.session_state.first_question_asked = True
