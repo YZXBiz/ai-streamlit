@@ -86,8 +86,8 @@ class ChatController:
                     # Add response to chat history
                     response_type = response.type
 
-                    if response_type == "plot":
-                        self.add_message("assistant", "plot", response.value)
+                    if response_type == "chart":
+                        self.add_message("assistant", "chart", response.value)
                     elif response_type == "string":
                         self.add_message("assistant", "string", response.value)
                     elif response_type == "dataframe":

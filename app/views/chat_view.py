@@ -51,12 +51,12 @@ def display_chat_history():
                 st.write(message["content"])
             elif message["type"] == "dataframe":
                 st.dataframe(message["content"])
-            elif message["type"] == "image":
+            elif message["type"] == "chart":
                 try:
                     # Display image from file path
                     st.image(message["content"])
                 except Exception as e:
-                    st.error(f"Error displaying image: {str(e)}")
+                    st.error(f"Error displaying chart: {str(e)}")
 
 
 def display_thinking_spinner():

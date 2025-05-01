@@ -19,6 +19,7 @@ class AgentModel:
             # "return_intermediate_steps": False,
             # "enable_cache": False,  # Disable cache to prevent issues with multiple dataframes
             "temperature": 0.5,
+            "persist_conversation": True,  # Ensure conversation history is maintained
         }
 
     def create_agent(

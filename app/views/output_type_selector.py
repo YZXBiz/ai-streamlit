@@ -31,5 +31,5 @@ def render_output_type_selector():
             return "string"
         elif output_type == "Dataframe":
             return "dataframe"
-        elif output_type == "Plot":
-            return "plot"
+        elif output_type == "Chart":
+            return "chart"
