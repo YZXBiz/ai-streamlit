@@ -147,4 +147,40 @@ To Do:
 
 
 
-
+	Store-Category Clustering	B	Exploration	Footfall trade areas	IP: Weighting external features by customer distance (e.g., 70% of customers); Google mobility data, Overlap with "ExtraCare" customers - supplementing Footfall in ultra dense areas, Loyalty factor and market share	Procurement / IT / Market Research	H	5 (weeks IT in proc)	Q2	JY, BCG	Procurement, Mkt. Research	Exploration in early Q2; implementation TBD	
+	Store-Category Clustering	W	Production	BAU: New stores	Done: Logic to assign of new stores to existing clusters		H	2	Q2	JY, BCG		Pre-scaling (~Aug)	
+	Store-Category Clustering	B	Tooling	Visualize clusters (Dashboard UI)	IP: Backlog tool screen - results for business input and profiling		M	2 Wks	Q2	V, Palantir	V, Palantir, Tiff	MVP (Viz.) not interaction/manipulation	
+	Store-Category Clustering	B	Fine-Tuning	Comparison to previous	Done: Compare new cluster result to previous		M	2	Q1	BCG, JY			
+	Store-Category Clustering	B	Fine-Tuning	Flexibility: Granularity for Store Cluster	Done:  Additonal exploration and enhancements for store-clustering granularity (e.g., Category -> Align to NS; item-store POG)	BAU templates	M	5	Q2	JY, BCG			
+	Store-Category Clustering	W	IT Request	Procure additonal external attributes	IP: Footfall, Expenditure are external datasets - one time vs. continued use	Procurement / IT	M	Weeks	Q1/2	BCG, K		Searching data assets, identifying existing vendors	
+	Store-Category Clustering	B/W	IT Request	Clustering model card	Documentation supporting RAI practices	IT feedback on model card; Business	L	2	Q2	BCG	AI Governance		
+	Store-Category Clustering	B	Fine-Tuning	Grid search of clustering	IP: Micro optimization model to determine the optimal clusters		L	Q4	Q3	JY			
+	Store-Category Clustering	B	Fine-Tuning	Objective external selection	IP: Additonal exploration and enhancements for additional data features		L	5	Q3	JY,K			
+	Store-Category Clustering	W	Production	Additonal run-time optimization	Done:  Further improvements to improve speed; Kubeflow and Github testing and integration completed		L	5	Q3	JY			
+	Store-Category Clustering	B	Fine-Tuning	Testing different Clustering Algos (including embeddings)	IP: Experimenting with Hierarchical, DBSCAN, embeddings (combined with K-means), and other algorithms		H	2 Wks	Q3/4	JY			
+	Store-Category Clustering	B	Fine-Tuning	Cluster Description	IP: Pipeline to auto-profile clusters (e.g., cluster name and cluster description)		H	2 Wks	Q3/4	JY			
+	Store-Category Clustering	B	Fine-Tuning	Grocery West - Non-West	Done: Category Nuances		M	3	Q2	JY			
+	Store-Category Clustering	B	Production	Configuration	enable configurations directly in the UI pipeline.		L/M	2	Q3	JY			
+	Store-Category Clustering	B	Fine-Tuning	Feature Engineering Engine	Done: Implemented a comprehensive feature engineering module, incorporating advanced techniques for data transformation, imputation, normalization, outlier handling, and dimensionality reduction across all data segments		M	2 Wks	Q2	JY			
+	Store-Category Clustering	B	Production	Dual-Path Optimized Model Training & Deployment	Done: Developed and deployed parallel model training workflows for distinct internal and external data contexts, including automated optimal hyperparameter tuning and model selection methodologies.		M	2 Wks	Q2	JY			
+	Macro	B	Fine-Tuning	Feature engineering for footfall data	Footfall is impactful, but need to create "un-leaky" features (e.g., Footfall / Population vs. Raw Footfall)		H	3	Q2	BCG, JY		Exploration with go/no-go	
+	Macro	B	Fine-Tuning	Expand external features	Rx data (e.g., acute) and CM review ideas		H	3	Q2	BCG, JY	Mkt. Research		
+	Macro	B	Scaling	Model serialization depending on accuracy	Depending on test MAPE select if POG/POG category, High-Low Sales/Overall model formulation should be run		M	Weeks	Q2	BCG			
+	Macro	B	Formulation	Include Adjacencies data	IP: Incorporate features for POGs adjacent to understand their impact on sales/constraints in optimization model formulation	Variation; basket analysis; layout & constraints	M	Weeks	Q1	BCG, JY, K	Maria, Bus. Strat	POG scaling plan - expect small/outliers/edge cases	Group these
+	Macro	Formulation	Formulation	Adjacencies	Adjacency Halo and influence on productivity, exploration on variance within aisles		M	Weeks	2026	BCG, JY, K	Maria, Bus. Strat	POG scaling plan - expect small/outliers/edge cases	Group these
+	Macro	B	Fine-Tuning	Include POG version details	Include additonal POG version data details (e.g., LP,  secure shelf, etc.)	Micro "awareness"	M	3	TBD	TBD	Bus. Strat	LP dependence 	
+	Macro	B	Fine-Tuning	Refine hyperparameters	Tune hyperparameters for each POG model granularity		M	2	Q1	BCG		POG scaling plan - expect small/outliers/edge cases	
+	Macro	W	Scaling	Scale to all POGs and more stores	Generate productivity curves and optimization for all POGs and more stores		M	2	Q2	BCG	Maria, Bus. Strat	POG scaling plan - expect small/outliers/edge cases	
+	Macro	W	Fine-Tuning	Improve greedy logic	"Aggressiveness" of increase given model performance. Allocation to highest incremental; where the POG width is available		M	3	Q2	BCG			
+	Macro	B	Scaling	[Placeholder task to answer more complex seasonal business questions]			M	10	Q3/4	TBD		Business & Finance dependancy	
+	Macro	B	Scaling	[Placeholder task to utilize model for muscle-move use case]			M	10	Q3/4	TBD		Business & Finance dependancy	
+	Macro	B	Exploration	Advanced MILP formulation	Depending on constraint feedback, can explore more advanced optimization formulation	Adjacencies	L	Weeks	Q3	TBD		Exploration	
+	Macro	B	Scaling	Ingest more historical data	Include historical planogram data before 2023		L	Weeks	Q2	DE	DE		
+	Macro	B	Fine-Tuning	Expand pricing features	Competitor pricing (CPI), promo, inventory, etc.	Water-level from pricing	L	2	Q2	K, DE			
+	Macro	B	Fine-Tuning	Include brand preception data - NPS	Locate and groom marketing NPS data to help account for brand awareness (e.g., vs. State)	Lack at store level	L	1	Q3/4	TBD			
+	Macro	B/W	IT Request	Macro model card	Documentation supporting RAI practices	IT feedback on model card	L	2	Q2	BCG	AI Governance		
+	Macro	W	Documentation	Macro documentation	IP: Workplan, slide and notebook documentation and cleaning, code reviews and activities		L	2	Q1	BCG, K, JY		Starting next week	
+	Macro	W	Scaling	Parallel Processing	IP: Parallely process greedy optimizaing logic by stores to improve optimization run time		L	3	Q1	JY		Support from DE	
+	Macro	W	Formulation	Include DNP instead of gross margin	Include DNP from "Sales Golden Record" (Project Atlas)	IT timelines	L	1	Q2	BCG, DE	Sriram	Will happen when "Atlas/Sales Record" are ready	
+	Macro	W	Production	Orchestration and productionalization	IP: Kubeflow and Github testing and integration		L	3	Q2	JY			
+	Macro	W	Exploration	Macro awareness of Micro recommendations	Feed Micro recommendations into macro optimization model - new logic and constraints	BAU implications	L/M	Weeks	Q2	BCG		Exploration outside pilot, go-no go; Pilot readiness	
