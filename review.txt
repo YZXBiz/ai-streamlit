@@ -1,0 +1,150 @@
+Complete Self-Evaluation
+
+Assessment Period: 01/01/2025 - 12/31/2025
+
+Mid-Year Performance Review Key Steps:
+
+Our approach to performance management brings increased flexibility and a streamlined process for both leaders and colleagues. Outlined below are the high-level key steps in the Mid-Year Performance Review process.
+
+1. Colleague Self-Evaluation
+
+• Colleague can request feedback on themselves or provide their leader with a list of stakeholders who can offer meaningful feedback on their performance throughout the assessment period. All feedback provided throughout the assessment period that is selected to Share With Others will be displayed in the Mid-Year Review form for reference. 
+
+• Colleague documents progress and results achieved against goals and demonstration of Heart At Work Behaviors™ when delivering on those goals and submits Self-Evaluation to leader. 
+
+• Once colleague submits the Self-Evaluation form, the leader will immediately gain access to complete the Leader Evaluation task. 
+
+2. Leader Evaluation
+
+• Leader reviews colleague’s Self-Evaluation comments and feedback from stakeholders to integrate into their Mid-Year Review comments. 
+
+• Leader documents and finalizes comments on colleague’s progress for achievement of goals and demonstration of Heart At Work Behaviors™ when delivering on those goals.
+
+• Leader can send form back to Self-Evaluation, if necessary, during the Leader Evaluation step by opening the Leader Evaluation form and navigating to the Review and Submit tab to select ' Send Back.' Colleagues must then resubmit the form to return it to the Leader Evaluation step. 
+
+• If leader is still making edits to the Leader Evaluation, select 'Save for Later' on the Review and Submit tab to maintain access. 
+
+3. Mid-Year Performance and Feedback Discussion
+
+• Leader and colleague meet 1:1 to discuss performance against achievement of goals, demonstration of Heart At Work Behaviors™ and expectations of collaboration and productivity going forward.
+
+• Leader and colleague should reflect on accomplishments and discuss areas of opportunity for continued development and growth.
+
+• Leader and colleague should discuss colleague's individual development goals tied to their personal career aspirations.
+
+4. Submit Deliver Performance Discussion Task
+
+• After leader and colleague hold performance and feedback discussion, leader submits the Deliver Performance Discussion task. This provides the colleague with the Mid-Year Review form details, including leader comments and ratings. Submission of this task serves as the leader's acknowledgement of the performance and feedback discussion. 
+
+5. Colleague Acknowledgement
+
+• Colleague acknowledges the Mid-Year performance and feedback discussion occurred and submits Acknowledgment task in Workday.
+
+
+
+
+Goals
+Document Goal Achievement
+
+•    In this section, summarize comments regarding goal achievement. Remember, as part of our performance management strategy, we measure performance equally based on WHAT we deliver and HOW we achieve results.
+•    All goals that have been assigned a due date during the performance review period will automatically populate within the performance review form. Colleagues and leaders have the option to add new goals directly within the performance review form as well. 
+•    Colleagues should enter Self-Evaluation comments pertaining to progress toward goal achievement, which will be available for the leader to reference within the performance review form.
+•    Leaders should enter comments summarizing the colleague's results achieved against goals.
+
+Add Existing
+Add Existing
+0 items selected
+Goal
+Goal
+
+
+Description, Actions, Metrics, and Key Dates
+Description, Actions, Metrics, and Key Dates
+
+
+Due Date
+Due Date
+current value is MM/DD/YYYY
+MM
+DD
+YYYY
+Status
+Status
+select one
+
+
+
+
+Heart At Work Behaviors™
+Document Demonstration of Heart At Work Behaviors™
+
+•    In this section, summarize the Heart At Work Behaviors™ demonstrated while working to achieve goals. Remember, it is not only WHAT you achieve but HOW you interact with colleagues and customers to achieve results.
+•    Colleagues should enter Self-Evaluation comments pertaining to demonstration of Heart At Work Behaviors™, which will be available for the leader to reference within the performance review form.
+•    Leaders should enter comments summarizing how the colleague demonstrated Heart At Work Behaviors™ when delivering against the goals. 
+
+6 items
+
+Heart At Work Behaviors
+Sort column
+
+Description
+Sort column
+Put people first
+We are customer obsessed. We walk in others’ shoes to improve the customer and colleague experience. We create an engaging and inclusive work environment where our colleagues reflect the diversity of our customers.
+
+Rise to the challenge
+We boldly innovate to care for our customers. We act swiftly and adapt to feedback. We think big and are willing to take smart risks to innovate. We welcome different points of view and learn from mistakes.
+
+Join forces
+We unite around our goal of serving the customer. We work across teams to provide the best care possible. We listen and learn from each other. We are conscious of our impact on customers, colleagues, and the company. 
+
+Create simplicity
+We design for our customers. We continuously simplify by removing extra steps and innovating to create streamlined solutions. We focus on what matters most to our customers and empower those colleagues closest to the work to make the right call.
+
+Inspire trust
+We work to earn the trust of our customers and colleagues by meeting our commitments and acting with integrity. We bravely do the right thing, even when it is hard. We speak up to challenge ideas and do so with heart.
+
+Champion safety and quality
+We are relentless in our pursuit of the safest and highest quality care. We know that in order to keep patients and consumers safe, our colleagues must also feel safe and protected. We ensure safety is at the heart of every decision we make and everything we do.
+ 
+
+Colleague Summary
+Add Comment
+Add Comment
+
+
+
+Overall Performance
+Document Overall Performance 
+
+•    In this section, summarize overall performance comments and provide examples of what and how those results were achieved.
+•    Colleagues should enter Self-Evaluation comments pertaining to overall performance, which the leader can reference within the performance review form.
+•    Leaders should enter Leader Evaluation comments summarizing overall performance. 
+
+Colleague
+Add Comment
+Add Comment
+
+
+Development Discussion
+A culture of growth and development:
+
+At CVS Health, we believe colleagues should feel empowered to own and drive their career development. Leaders should be supportive by welcoming career conversations and recommending opportunities for their team members to learn and grow. Regular and ongoing development discussions help leaders and colleagues understand individual career aspirations, development needs and ways they can enhance their skills. While development conversations can take place at any time, Goal Setting, Mid-Year and Year-End Performance Reviews are excellent opportunities for colleagues and leaders to check in on development progress to date. 
+
+A development plan is key:
+
+An up-to-date development plan ensures self-accountability and success and can guide development conversations with leaders. Colleagues should reference their plan often to track progress and modify learning activities. It’s important to not only include formal learning (e.g., a training session), but also relationships (e.g., working with a mentor or coach) and experiences (e.g., stretch assignments or job shadowing).
+ 
+To Do: 
+
+•    Use the form below to document 2-3 development activities that align to your short-term career ambitions. Example: Improve project leadership skills.
+•    Identify specific actions to support each development activity and list under “additional information.” Include a variety of learning types such as skills training, education, mentoring, work experiences, etc. Example: Complete Influencing Skills workshop; solicit feedback after leadership presentation; volunteer to lead XYZ project.
+•    Outline start and end dates for completing each action.
+•    Discuss your development plan with your leader and how they can support your goals.
+•    Review your development plan regularly to update progress and dates as you complete development actions.
+
+
+
+
+
+
